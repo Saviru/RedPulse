@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Appearance, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui/Button";
@@ -83,6 +83,44 @@ export default function HomeScreen() {
             variant="secondary"
             onPress={() => router.push("/data-display")}
           />
+        </View>
+
+        <Divider spacing={16} />
+
+        <View style={styles.menu}>
+          <Typo
+            variant="caption"
+            style={[styles.sectionLabel, { color: colors.textMuted }]}
+          >
+            Change Theme
+          </Typo>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              gap: 8,
+              marginBottom: 16,
+            }}
+          >
+            <Button
+              label="Light"
+              variant={theme === "light" ? "primary" : "secondary"}
+              onPress={() => Appearance.setColorScheme("light")}
+              style={{ flex: 1 }}
+            />
+            <Button
+              label="Dark"
+              variant={theme === "dark" ? "primary" : "secondary"}
+              onPress={() => Appearance.setColorScheme("dark")}
+              style={{ flex: 1 }}
+            />
+            <Button
+              label="System"
+              variant="secondary"
+              onPress={() => Appearance.setColorScheme(null)}
+              style={{ flex: 1 }}
+            />
+          </View>
         </View>
 
         <View style={{ height: 32 }} />
