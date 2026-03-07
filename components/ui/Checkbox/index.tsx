@@ -1,0 +1,34 @@
+import { Typo } from "@/components/ui/Typo";
+import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { TouchableOpacity, View } from "react-native";
+
+import { styles } from "./Checkbox.styles";
+import { CheckboxProps } from "./Checkbox.types";
+
+export const Checkbox = ({
+  checked,
+  onToggle,
+  label,
+  disabled = false,
+}: CheckboxProps) => {
+  return (
+    <TouchableOpacity
+      style={[styles.container, disabled && styles.disabled]}
+      // only pass the value if checkbox is enabled
+      onPress={() => !disabled && onToggle(!checked)}
+      activeOpacity={0.7}
+      disabled={disabled}
+    >
+      {/* frame changes color when checked */}
+      <View style={[styles.box, checked && styles.boxChecked]}>
+        {checked && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
+      </View>
+      {label && (
+        <Typo variant="body" style={styles.label}>
+          {label}
+        </Typo>
+      )}
+    </TouchableOpacity>
+  );
+};

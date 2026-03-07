@@ -1,0 +1,35 @@
+import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { Image, View } from "react-native";
+
+import { styles } from "./Avatar.styles";
+import { AvatarProps } from "./Avatar.types";
+
+export const Avatar = ({
+  source,
+  size = 64,
+  fallbackIcon = "person",
+}: AvatarProps) => {
+  return (
+    <View
+      style={[
+        styles.container,
+        // applies half of the width as borderRadius
+        { width: size, height: size, borderRadius: size / 2 },
+      ]}
+    >
+      {/* Shows default icon if no image is provided */}
+      {source ? (
+        <Image
+          source={source}
+          style={[
+            styles.image,
+            { width: size, height: size, borderRadius: size / 2 },
+          ]}
+        />
+      ) : (
+        <Ionicons name={fallbackIcon} size={size * 0.5} color="#8E8E93" />
+      )}
+    </View>
+  );
+};
