@@ -3,6 +3,7 @@ import React from "react";
 import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 interface ScreenLayoutProps {
   children: React.ReactNode;
@@ -19,21 +20,24 @@ interface ScreenLayoutProps {
 export const ScreenLayout = ({
   children,
   scrollable = false,
-  statusBarStyle = "dark",
-  backgroundColor = "#FFFFFF",
+  statusBarStyle,
+  backgroundColor,
   padding = 24,
   edges = ["top", "bottom"],
   style,
   contentContainerStyle,
   footer,
 }: ScreenLayoutProps) => {
+  const { colors, theme } = useThemeColor();
+  const bgColor = backgroundColor || colors.background;
+  const autoStatusBarStyle = statusBarStyle || (theme === "dark" ? "light" : "dark");
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor }, style]}
+      style={[styles.container, { backgroundColor: bgColor }, style]}
       // defines device safe areas
       edges={edges}
     >
-      <StatusBar style={statusBarStyle} />
+      <StatusBar style={autoStatusBarStyle} />
       {scrollable ? (
         <KeyboardAwareScrollView
           contentContainerStyle={[
@@ -68,3 +72,4 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
 });
+
