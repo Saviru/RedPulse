@@ -1,15 +1,59 @@
-import { Text, View } from "react-native";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function Index() {
+import { Button } from "@/components/ui/Button";
+import { Divider } from "@/components/ui/Divider";
+import { Typo } from "@/components/ui/Typo";
+
+export default function HomeScreen() {
+  const router = useRouter();
+
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
-    </View>
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+      <StatusBar style="dark" />
+
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Typo variant="h1" style={styles.title}>
+            RedPulse
+          </Typo>
+          <Typo variant="caption" style={styles.subtitle}>
+            redpulse app
+          </Typo>
+        </View>
+
+        <Divider spacing={16} />
+
+        <View style={styles.menu}>
+          <Typo variant="caption" style={styles.sectionLabel}>
+            testing components
+          </Typo>
+          <Button label="Buttons" variant="secondary" />
+        </View>
+
+        <View style={{ height: 32 }} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#ffffff" },
+  content: { paddingHorizontal: 24, paddingTop: 48, paddingBottom: 16 },
+  header: { marginBottom: 32, alignItems: "center" },
+  title: { fontSize: 32, fontWeight: "800", color: "#11181C", marginBottom: 8 },
+  subtitle: { fontSize: 16, color: "#687076" },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#687076",
+    letterSpacing: 0.5,
+    paddingLeft: 4,
+  },
+  menu: { width: "100%", gap: 12 },
+});
