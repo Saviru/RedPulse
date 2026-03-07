@@ -1,0 +1,61 @@
+import React from 'react';
+import { StyleSheet, View, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+
+import { Typo } from '@/components/ui/Typo';
+import { Button } from '@/components/ui/Button';
+import { Avatar } from '@/components/ui/Avatar';
+
+export default function AvatarsScreen() {
+  const router = useRouter();
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Button
+            label="Back"
+            variant="secondary"
+            icon={<Ionicons name="arrow-back" size={20} color="#1C1C1E" />}
+            onPress={() => router.back()}
+            style={{ width: 100, marginBottom: 16 }}
+          />
+          <Typo variant="h1">Avatar Components</Typo>
+        </View>
+
+        <View style={styles.showcase}>
+          <View style={styles.section}>
+            <Typo variant="caption" color="#FF3B30">Sizes</Typo>
+            <View style={styles.row}>
+              <Avatar size={32} />
+              <Avatar size={48} />
+              <Avatar size={64} />
+              <Avatar size={96} />
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Typo variant="caption" color="#FF3B30">Custom Fallback Icons</Typo>
+            <View style={styles.row}>
+              <Avatar size={56} fallbackIcon="person" />
+              <Avatar size={56} fallbackIcon="people" />
+              <Avatar size={56} fallbackIcon="business" />
+              <Avatar size={56} fallbackIcon="medical" />
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#ffffff' },
+  content: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 40 },
+  header: { marginBottom: 32 },
+  showcase: { gap: 28 },
+  section: { gap: 8 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+});

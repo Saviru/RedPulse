@@ -64,6 +64,12 @@ export default function HomeScreen() {
             variant="secondary"
             onPress={() => router.push("/badges")}
           />
+
+          <Button
+            label="Avatars"
+            variant="secondary"
+            onPress={() => router.push("/avatars")}
+          />
         </View>
 
         <View style={{ height: 32 }} />
