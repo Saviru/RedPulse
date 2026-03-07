@@ -1,4 +1,2 @@
-nodeLinker: hoisted
-
 onlyBuiltDependencies:
   - unrs-resolver
