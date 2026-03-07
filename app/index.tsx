@@ -20,10 +20,10 @@ export default function HomeScreen() {
       >
         <View style={styles.header}>
           <Typo variant="h1" style={styles.title}>
-            RedPulse
+            RedPulse UI Library
           </Typo>
           <Typo variant="caption" style={styles.subtitle}>
-            redpulse app
+            Demo showcase of UI elements.
           </Typo>
         </View>
 
@@ -31,9 +31,13 @@ export default function HomeScreen() {
 
         <View style={styles.menu}>
           <Typo variant="caption" style={styles.sectionLabel}>
-            testing components
+            UI Components
           </Typo>
-          <Button label="Buttons" variant="secondary" />
+          <Button
+            label="Buttons"
+            variant="secondary"
+            onPress={() => router.push("/buttons")}
+          />
         </View>
 
         <View style={{ height: 32 }} />
