@@ -1,21 +1,27 @@
-import React from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useThemeColor } from '@/hooks/useThemeColor';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { useThemeColor } from "@/hooks/useThemeColor";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Typo } from '@/components/ui/Typo';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Typo } from "@/components/ui/Typo";
 
 export default function BadgesScreen() {
   const router = useRouter();
   const { colors } = useThemeColor();
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top", "bottom"]}
+    >
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.header}>
           <Button
             label="Back"
@@ -29,7 +35,9 @@ export default function BadgesScreen() {
 
         <View style={styles.showcase}>
           <View style={styles.section}>
-            <Typo variant="caption" color="#FF3B30">Variants</Typo>
+            <Typo variant="caption" color="#FF3B30">
+              Variants
+            </Typo>
             <View style={styles.row}>
               <Badge label="Default" variant="default" />
               <Badge label="Success" variant="success" />
@@ -40,7 +48,9 @@ export default function BadgesScreen() {
           </View>
 
           <View style={styles.section}>
-            <Typo variant="caption" color="#FF3B30">Use Cases</Typo>
+            <Typo variant="caption" color="#FF3B30">
+              Use Cases
+            </Typo>
             <View style={styles.row}>
               <Badge label="A+" variant="danger" />
               <Badge label="O-" variant="info" />
@@ -56,10 +66,10 @@ export default function BadgesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ffffff' },
+  container: { flex: 1, backgroundColor: "#ffffff" },
   content: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 40 },
   header: { marginBottom: 32 },
   showcase: { gap: 28 },
   section: { gap: 8 },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  row: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
 });

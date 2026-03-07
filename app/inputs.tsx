@@ -10,7 +10,7 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Typo } from "@/components/ui/Typo";
-import { useThemeColor } from '@/hooks/useThemeColor';
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function InputsScreen() {
   const router = useRouter();
@@ -28,7 +28,10 @@ export default function InputsScreen() {
   const [location, setLocation] = useState<string>("");
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top", "bottom"]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top", "bottom"]}
+    >
       <KeyboardAwareScrollView
         style={styles.content}
         contentContainerStyle={{ flexGrow: 1 }}

@@ -11,14 +11,17 @@ import { ListItem } from "@/components/ui/ListItem";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatCard } from "@/components/ui/StatCard";
 import { Typo } from "@/components/ui/Typo";
-import { useThemeColor } from '@/hooks/useThemeColor';
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function DataDisplayScreen() {
   const router = useRouter();
   const { colors } = useThemeColor();
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top", "bottom"]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top", "bottom"]}
+    >
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
