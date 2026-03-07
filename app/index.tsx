@@ -70,6 +70,11 @@ export default function HomeScreen() {
             variant="secondary"
             onPress={() => router.push("/avatars")}
           />
+          <Button
+            label="Data Display and Visuals"
+            variant="secondary"
+            onPress={() => router.push("/data-display")}
+          />
         </View>
 
         <View style={{ height: 32 }} />
