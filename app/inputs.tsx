@@ -10,9 +10,11 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Typo } from "@/components/ui/Typo";
+import { useThemeColor } from '@/hooks/useThemeColor';
 
 export default function InputsScreen() {
   const router = useRouter();
+  const { colors } = useThemeColor();
 
   const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
   const [lastDonationDate, setLastDonationDate] = useState<Date | undefined>(
@@ -26,7 +28,7 @@ export default function InputsScreen() {
   const [location, setLocation] = useState<string>("");
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top", "bottom"]}>
       <KeyboardAwareScrollView
         style={styles.content}
         contentContainerStyle={{ flexGrow: 1 }}
@@ -39,7 +41,7 @@ export default function InputsScreen() {
           <Button
             label="Back"
             variant="secondary"
-            icon={<Ionicons name="arrow-back" size={20} color="#1C1C1E" />}
+            icon={<Ionicons name="arrow-back" size={20} color={colors.text} />}
             onPress={() => router.back()}
             style={{ width: 100, marginBottom: 16 }}
           />

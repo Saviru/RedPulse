@@ -9,9 +9,11 @@ import { Button } from '@/components/ui/Button';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { Radio } from '@/components/ui/Radio';
 import { Toggle } from '@/components/ui/Toggle';
+import { useThemeColor } from '@/hooks/useThemeColor';
 
 export default function SelectionScreen() {
   const router = useRouter();
+  const { colors } = useThemeColor();
 
   const [check1, setCheck1] = useState(false);
   const [check2, setCheck2] = useState(true);
@@ -24,13 +26,13 @@ export default function SelectionScreen() {
   const [toggle3, setToggle3] = useState(false);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Button
             label="Back"
             variant="secondary"
-            icon={<Ionicons name="arrow-back" size={20} color="#1C1C1E" />}
+            icon={<Ionicons name="arrow-back" size={20} color={colors.text} />}
             onPress={() => router.back()}
             style={{ width: 100, marginBottom: 16 }}
           />

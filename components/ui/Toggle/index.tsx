@@ -1,4 +1,5 @@
 import { Typo } from "@/components/ui/Typo";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 import { styles } from "./Toggle.styles";
@@ -10,6 +11,8 @@ export const Toggle = ({
   label,
   disabled = false,
 }: ToggleProps) => {
+  const { colors, theme } = useThemeColor();
+
   return (
     <View style={[styles.container, disabled && styles.disabled]}>
       {label && (
@@ -18,7 +21,11 @@ export const Toggle = ({
         </Typo>
       )}
       <TouchableOpacity
-        style={[styles.track, value && styles.trackActive]} // Changes background from grey to active color when toggled on
+        style={[
+          styles.track,
+          { backgroundColor: theme === "dark" ? "#38383A" : "#E5E5EA" },
+          value && [styles.trackActive, { backgroundColor: colors.tint }],
+        ]} // Changes background from grey to active color when toggled on
         onPress={() => !disabled && onToggle(!value)}
         activeOpacity={0.8}
         disabled={disabled}

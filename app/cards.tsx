@@ -7,18 +7,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { Typo } from '@/components/ui/Typo';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { useThemeColor } from '@/hooks/useThemeColor';
 
 export default function CardsScreen() {
   const router = useRouter();
+  const { colors } = useThemeColor();
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Button
             label="Back"
             variant="secondary"
-            icon={<Ionicons name="arrow-back" size={20} color="#1C1C1E" />}
+            icon={<Ionicons name="arrow-back" size={20} color={colors.text} />}
             onPress={() => router.back()}
             style={{ width: 100, marginBottom: 16 }}
           />

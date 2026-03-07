@@ -1,7 +1,7 @@
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-
 import { styles } from "./Select.styles";
 import { SelectProps } from "./Select.types";
 
@@ -18,6 +18,7 @@ export const Select = ({
 }: SelectProps) => {
   // Track dropdown visibility
   const [isOpen, setIsOpen] = useState(false);
+  const { theme, colors } = useThemeColor();
 
   // Handle option selection
   const handleSelect = (option: string) => {
@@ -28,13 +29,23 @@ export const Select = ({
   return (
     // zIndex to ensure dropdown overlaps other elements
     <View style={[styles.container, style, { zIndex: isOpen ? 1000 : 1 }]}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && (
+        <Text style={[styles.label, { color: colors.textMuted }]}>{label}</Text>
+      )}
 
       <View style={{ position: "relative", zIndex: isOpen ? 1000 : 1 }}>
         <TouchableOpacity
           style={[
             styles.selectBox,
-            !!error && !disabled && styles.selectBoxError,
+            {
+              backgroundColor: theme === "dark" ? colors.surface : "#F2F2F7",
+              borderColor: colors.border,
+            },
+            !!error &&
+              !disabled && [
+                styles.selectBoxError,
+                { borderColor: colors.error },
+              ],
             disabled && styles.selectBoxDisabled,
           ]}
           activeOpacity={0.7}
@@ -44,9 +55,18 @@ export const Select = ({
           {leftIcon && <View style={styles.iconLeft}>{leftIcon}</View>}
 
           {value ? (
-            <Text style={styles.valueText}>{value}</Text>
+            <Text style={[styles.valueText, { color: colors.text }]}>
+              {value}
+            </Text>
           ) : (
-            <Text style={styles.placeholderText}>{placeholder}</Text>
+            <Text
+              style={[
+                styles.placeholderText,
+                { color: theme === "dark" ? "#5C5C5E" : "#8E8E93" },
+              ]}
+            >
+              {placeholder}
+            </Text>
           )}
 
           <View style={styles.iconRight}>
@@ -54,27 +74,42 @@ export const Select = ({
             <Ionicons
               name={isOpen ? "chevron-up" : "chevron-down"}
               size={20}
-              color="#687076"
+              color={colors.icon}
             />
           </View>
         </TouchableOpacity>
 
         {/* The Floating Dropdown Menu */}
         {isOpen && options.length > 0 && (
-          <View style={styles.dropdownMenu}>
+          <View
+            style={[
+              styles.dropdownMenu,
+              {
+                backgroundColor: colors.background,
+                borderColor: colors.border,
+              },
+            ]}
+          >
             <ScrollView nestedScrollEnabled={true}>
               {options.map((option, index) => {
                 const isSelected = value === option;
                 return (
                   <TouchableOpacity
                     key={index}
-                    style={styles.optionItem}
+                    style={[
+                      styles.optionItem,
+                      { borderBottomColor: colors.border },
+                    ]}
                     onPress={() => handleSelect(option)}
                   >
                     <Text
                       style={[
                         styles.optionText,
-                        isSelected && styles.optionTextSelected,
+                        { color: colors.text },
+                        isSelected && [
+                          styles.optionTextSelected,
+                          { color: colors.tint },
+                        ],
                       ]}
                     >
                       {option}
@@ -87,7 +122,9 @@ export const Select = ({
         )}
       </View>
 
-      {error && !disabled && <Text style={styles.errorText}>{error}</Text>}
+      {error && !disabled && (
+        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+      )}
     </View>
   );
 };

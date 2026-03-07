@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -10,15 +11,16 @@ import { Badge } from '@/components/ui/Badge';
 
 export default function BadgesScreen() {
   const router = useRouter();
+  const { colors } = useThemeColor();
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Button
             label="Back"
             variant="secondary"
-            icon={<Ionicons name="arrow-back" size={20} color="#1C1C1E" />}
+            icon={<Ionicons name="arrow-back" size={20} color={colors.text} />}
             onPress={() => router.back()}
             style={{ width: 100, marginBottom: 16 }}
           />

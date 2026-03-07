@@ -2,6 +2,7 @@ import React from "react";
 import { TouchableOpacity, View } from "react-native";
 
 import { Typo } from "@/components/ui/Typo";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 import { styles } from "./Radio.styles";
 import { RadioProps } from "./Radio.types";
@@ -12,6 +13,8 @@ export const Radio = ({
   label,
   disabled = false,
 }: RadioProps) => {
+  const { colors } = useThemeColor();
+
   return (
     <TouchableOpacity
       style={[styles.container, disabled && styles.disabled]}
@@ -20,8 +23,16 @@ export const Radio = ({
       activeOpacity={0.7}
       disabled={disabled}
     >
-      <View style={[styles.circle, selected && styles.circleSelected]}>
-        {selected && <View style={styles.dot} />}
+      <View
+        style={[
+          styles.circle,
+          { borderColor: colors.border, backgroundColor: colors.background },
+          selected && [styles.circleSelected, { borderColor: colors.tint }],
+        ]}
+      >
+        {selected && (
+          <View style={[styles.dot, { backgroundColor: colors.tint }]} />
+        )}
       </View>
       {label && (
         <Typo variant="body" style={styles.label}>

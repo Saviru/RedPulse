@@ -6,13 +6,18 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/components/ui/Button";
 import { Divider } from "@/components/ui/Divider";
 import { Typo } from "@/components/ui/Typo";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { theme, colors } = useThemeColor();
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-      <StatusBar style="dark" />
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top", "bottom"]}
+    >
+      <StatusBar style={theme === "dark" ? "light" : "dark"} />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -27,10 +32,13 @@ export default function HomeScreen() {
           </Typo>
         </View>
 
-        <Divider spacing={16} />
+        <Divider spacing={16} color={colors.border} />
 
         <View style={styles.menu}>
-          <Typo variant="caption" style={styles.sectionLabel}>
+          <Typo
+            variant="caption"
+            style={[styles.sectionLabel, { color: colors.textMuted }]}
+          >
             UI Components
           </Typo>
           <Button
@@ -87,8 +95,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#ffffff" },
   content: { paddingHorizontal: 24, paddingTop: 48, paddingBottom: 16 },
   header: { marginBottom: 32, alignItems: "center" },
-  title: { fontSize: 32, fontWeight: "800", color: "#11181C", marginBottom: 8 },
-  subtitle: { fontSize: 16, color: "#687076" },
+  title: { fontSize: 32, fontWeight: "800", marginBottom: 8 },
+  subtitle: { fontSize: 16 },
   sectionLabel: {
     fontSize: 12,
     fontWeight: "700",

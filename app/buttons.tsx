@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui/Button";
 import { Typo } from "@/components/ui/Typo";
+import { useThemeColor } from '@/hooks/useThemeColor';
 
 const handlePrimaryPress = () => {
   Alert.alert("Success!", "The button architecture is working perfectly.");
@@ -12,15 +13,16 @@ const handlePrimaryPress = () => {
 
 export default function ButtonsScreen() {
   const router = useRouter();
+  const { colors } = useThemeColor();
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top", "bottom"]}>
       <View style={styles.content}>
         <View style={styles.header}>
           <Button
             label="Back"
             variant="secondary"
-            icon={<Ionicons name="arrow-back" size={20} color="#1C1C1E" />}
+            icon={<Ionicons name="arrow-back" size={20} color={colors.text} />}
             onPress={() => router.back()}
             style={{ width: 100, marginBottom: 16 }}
           />

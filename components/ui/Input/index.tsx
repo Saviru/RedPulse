@@ -1,3 +1,4 @@
+import { useThemeColor } from "@/hooks/useThemeColor";
 import React, { forwardRef, useState } from "react";
 import { Text, TextInput, View } from "react-native";
 import { styles } from "./Input.styles";
@@ -20,6 +21,7 @@ export const Input = forwardRef<TextInput, InputProps>(
     ref,
   ) => {
     const [isFocused, setIsFocused] = useState(false);
+    const { theme, colors } = useThemeColor();
 
     const handleFocus = (e: any) => {
       setIsFocused(true);
@@ -33,16 +35,38 @@ export const Input = forwardRef<TextInput, InputProps>(
 
     return (
       <View style={styles.container}>
-        {label && <Text style={styles.label}>{label}</Text>}
+        {label && (
+          <Text style={[styles.label, { color: colors.textMuted }]}>
+            {label}
+          </Text>
+        )}
 
         <View
           style={[
             styles.inputContainer,
+            { backgroundColor: colors.background, borderColor: colors.border },
             // Focused style
-            isFocused && !disabled && styles.inputContainerFocused,
+            isFocused &&
+              !disabled && [
+                styles.inputContainerFocused,
+                {
+                  borderColor: colors.text,
+                  backgroundColor: colors.background,
+                },
+              ],
             // Error Style
-            !!error && !disabled && styles.inputContainerError,
-            disabled && styles.inputContainerDisabled,
+            !!error &&
+              !disabled && [
+                styles.inputContainerError,
+                { borderColor: colors.error },
+              ],
+            disabled && [
+              styles.inputContainerDisabled,
+              {
+                backgroundColor: theme === "dark" ? colors.surface : "#F2F2F7",
+                opacity: 0.7,
+              },
+            ],
             containerStyle,
           ]}
         >
@@ -50,8 +74,8 @@ export const Input = forwardRef<TextInput, InputProps>(
 
           <TextInput
             ref={ref}
-            style={[styles.input, style]}
-            placeholderTextColor="#8E8E93"
+            style={[styles.input, { color: colors.text }, style]}
+            placeholderTextColor={theme === "dark" ? "#5C5C5E" : "#8E8E93"}
             onFocus={handleFocus}
             onBlur={handleBlur}
             editable={!disabled}
@@ -61,7 +85,11 @@ export const Input = forwardRef<TextInput, InputProps>(
           {rightIcon && <View style={styles.iconRight}>{rightIcon}</View>}
         </View>
 
-        {error && !disabled && <Text style={styles.errorText}>{error}</Text>}
+        {error && !disabled && (
+          <Text style={[styles.errorText, { color: colors.error }]}>
+            {error}
+          </Text>
+        )}
       </View>
     );
   },

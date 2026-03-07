@@ -10,6 +10,7 @@ import {
 } from "react-native";
 
 import { Typo } from "@/components/ui/Typo";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 interface AppBarProps {
   title?: string;
@@ -27,6 +28,7 @@ export const AppBar = ({
   style,
 }: AppBarProps) => {
   const router = useRouter();
+  const { colors, theme } = useThemeColor();
 
   const handleBack = () => {
     // Overrides default back routing if a custom handler is provided
@@ -38,22 +40,36 @@ export const AppBar = ({
   };
 
   return (
-    <View style={[styles.container, style]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.background,
+          borderBottomColor: colors.border,
+        },
+        style,
+      ]}
+    >
       <View style={styles.leftSection}>
         {showBack && (
           <TouchableOpacity
             onPress={handleBack}
-            style={styles.backButton}
+            style={[
+              styles.backButton,
+              {
+                backgroundColor: theme === "dark" ? colors.surface : "#F2F2F7",
+              },
+            ]}
             activeOpacity={0.7}
           >
-            <Ionicons name="chevron-back" size={24} color="#11181C" />
+            <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
         )}
       </View>
 
       <View style={styles.centerSection}>
         {title && (
-          <Typo variant="body" style={styles.title}>
+          <Typo variant="body" style={[styles.title, { color: colors.text }]}>
             {title}
           </Typo>
         )}

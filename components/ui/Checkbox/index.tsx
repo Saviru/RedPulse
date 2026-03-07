@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { styles } from "./Checkbox.styles";
 import { CheckboxProps } from "./Checkbox.types";
 
@@ -12,6 +13,8 @@ export const Checkbox = ({
   label,
   disabled = false,
 }: CheckboxProps) => {
+  const { colors } = useThemeColor();
+
   return (
     <TouchableOpacity
       style={[styles.container, disabled && styles.disabled]}
@@ -21,7 +24,16 @@ export const Checkbox = ({
       disabled={disabled}
     >
       {/* frame changes color when checked */}
-      <View style={[styles.box, checked && styles.boxChecked]}>
+      <View
+        style={[
+          styles.box,
+          { borderColor: colors.border, backgroundColor: colors.background },
+          checked && [
+            styles.boxChecked,
+            { backgroundColor: colors.tint, borderColor: colors.tint },
+          ],
+        ]}
+      >
         {checked && <Ionicons name="checkmark" size={16} color="#FFFFFF" />}
       </View>
       {label && (

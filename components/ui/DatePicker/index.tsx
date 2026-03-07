@@ -5,6 +5,7 @@ import DateTimePicker, {
 import React, { useState } from "react";
 import { Platform, Text, TouchableOpacity, View } from "react-native";
 
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { styles } from "../Select/Select.styles";
 import { DatePickerProps } from "./DatePicker.types";
 
@@ -19,6 +20,7 @@ export const DatePicker = ({
 }: DatePickerProps) => {
   // native calendar visibility state
   const [show, setShow] = useState(false);
+  const { colors, theme } = useThemeColor();
 
   const handleDateChange = (
     event: DateTimePickerEvent,
@@ -42,12 +44,19 @@ export const DatePicker = ({
 
   return (
     <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && (
+        <Text style={[styles.label, { color: colors.textMuted }]}>{label}</Text>
+      )}
 
       <TouchableOpacity
         style={[
           styles.selectBox,
-          !!error && !disabled && styles.selectBoxError,
+          {
+            backgroundColor: theme === "dark" ? colors.surface : "#F2F2F7",
+            borderColor: colors.border,
+          },
+          !!error &&
+            !disabled && [styles.selectBoxError, { borderColor: colors.error }],
           disabled && styles.selectBoxDisabled,
           style,
         ]}
@@ -56,13 +65,22 @@ export const DatePicker = ({
         disabled={disabled}
       >
         {displayValue ? (
-          <Text style={styles.valueText}>{displayValue}</Text>
+          <Text style={[styles.valueText, { color: colors.text }]}>
+            {displayValue}
+          </Text>
         ) : (
-          <Text style={styles.placeholderText}>{placeholder}</Text>
+          <Text
+            style={[
+              styles.placeholderText,
+              { color: theme === "dark" ? "#5C5C5E" : "#8E8E93" },
+            ]}
+          >
+            {placeholder}
+          </Text>
         )}
 
         <View style={styles.iconRight}>
-          <Ionicons name="calendar-outline" size={20} color="#687076" />
+          <Ionicons name="calendar-outline" size={20} color={colors.icon} />
         </View>
       </TouchableOpacity>
 
@@ -72,10 +90,13 @@ export const DatePicker = ({
           mode="date"
           display={Platform.OS === "ios" ? "spinner" : "default"}
           onChange={handleDateChange}
+          themeVariant={theme}
         />
       )}
 
-      {error && !disabled && <Text style={styles.errorText}>{error}</Text>}
+      {error && !disabled && (
+        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+      )}
     </View>
   );
 };
