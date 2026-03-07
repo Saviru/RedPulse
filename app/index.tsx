@@ -53,6 +53,11 @@ export default function HomeScreen() {
             variant="secondary"
             onPress={() => router.push("/cards")}
           />
+          <Button
+            label="Selects & Toggles"
+            variant="secondary"
+            onPress={() => router.push("/selections")}
+          />
         </View>
 
         <View style={{ height: 32 }} />
