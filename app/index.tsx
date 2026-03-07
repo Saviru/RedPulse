@@ -48,6 +48,11 @@ export default function HomeScreen() {
             variant="secondary"
             onPress={() => router.push("/texts")}
           />
+          <Button
+            label="Cards"
+            variant="secondary"
+            onPress={() => router.push("/cards")}
+          />
         </View>
 
         <View style={{ height: 32 }} />
