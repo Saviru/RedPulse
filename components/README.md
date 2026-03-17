@@ -11,7 +11,7 @@ Used for all text across the app to maintain consistent styling and scaling.
 | Prop | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `variant` | `'h1', 'h2', 'h3', 'h4', 'body', 'caption'` | Determines the size and weight of the text. |
-| `color` | string | undefined | Overrides the default text color. |
+| `color` | `string` | undefined | Overrides the default text color. |
 | `align` | `'left', 'center', 'right'` | Text alignment. |
 | `children` | `ReactNode` | **Required** | The text content to display. |
 
