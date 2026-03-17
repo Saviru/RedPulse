@@ -64,7 +64,7 @@ This project includes a robust, reusable UI component library.
 - **Data Display:** `<Card />`, `<StatCard />`, `<Avatar />`, `<Badge />`, `<ListItem />`, `<ProgressBar />`
 - **Layout:** `<ScreenLayout />`, `<AppBar />`, `<Divider />`
 
-For a detailed breakdown of component props, tables, and specific usage examples, please refer to our full **[Components Documentation](components/Readme.md)**.
+For a detailed breakdown of component props, tables, and specific usage examples, please refer to our full **[Components Documentation](components/README.md)**.
 
 <br id='l1'>
 

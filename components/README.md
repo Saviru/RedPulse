@@ -10,9 +10,9 @@ Used for all text across the app to maintain consistent styling and scaling.
 
 | Prop | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `variant` | `'h1' | 'h2' | 'h3' | 'h4' | 'body' | 'caption'` | `'body'` | Determines the size and weight of the text. |
-| `color` | `string` | `undefined` | Overrides the default text color. |
-| `align` | `'left' | 'center' | 'right'` | `'left'` | Text alignment. |
+| `variant` | `'h1', 'h2', 'h3', 'h4', 'body', 'caption'` | Determines the size and weight of the text. |
+| `color` | `string` | undefined | Overrides the default text color. |
+| `align` | `'left', 'center', 'right'` | Text alignment. |
 | `children` | `ReactNode` | **Required** | The text content to display. |
 
 **Example Usage:**
@@ -37,8 +37,8 @@ Primary interaction element for forms and actions.
 
 | Prop | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `variant` | `'primary' | 'secondary' | 'outline' | 'ghost'` | `'primary'` | Visual style of the button. |
-| `size` | `'sm' | 'md' | 'lg'` | `'md'` | Sizing footprint of the button. |
+| `variant` | `'primary', 'secondary', 'outline', 'ghost'` | `'primary'` | Visual style of the button. |
+| `size` | `'sm', 'md', 'lg'` | `'md'` | Sizing footprint of the button. |
 | `isLoading` | `boolean` | `false` | Shows a loading indicator and disables press. |
 | `onPress` | `() => void` | **Required** | Function executed on press. |
 | `children` | `ReactNode` | **Required** | Text or icon inside the button. |
@@ -133,7 +133,7 @@ Used to display user profile pictures or placeholders.
 | :--- | :--- | :--- | :--- |
 | `source` | `ImageSourcePropType` | `undefined` | Image source (URL or local require). |
 | `initials` | `string` | `undefined` | Fallback text if no image source is provided. |
-| `size` | `'sm' | 'md' | 'lg'` | `'md'` | Defines the dimensions of the avatar. |
+| `size` | `'sm', 'md', 'lg'` | `'md'` | Defines the dimensions of the avatar. |
 
 **Example Usage:**
 ```tsx
