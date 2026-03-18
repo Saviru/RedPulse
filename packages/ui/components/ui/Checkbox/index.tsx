@@ -1,4 +1,4 @@
-import { Typo } from "@/packages/ui/components/ui/Typo";
+import { Typo } from "@/packages/ui/components/ui";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";

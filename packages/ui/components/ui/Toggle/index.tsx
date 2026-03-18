@@ -1,4 +1,4 @@
-import { Typo } from "@/packages/ui/components/ui/Typo";
+import { Typo } from "@/packages/ui/components/ui";
 import { useThemeColor } from "@/packages/ui/hooks";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";

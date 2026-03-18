@@ -1,4 +1,4 @@
-import { Typo } from "@/packages/ui/components/ui/Typo";
+import { Typo } from "@/packages/ui/components/ui";
 import React from "react";
 import { View } from "react-native";
 

@@ -3,9 +3,9 @@ import { StatusBar } from "expo-status-bar";
 import { Appearance, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Button } from "@/packages/ui/components/ui/Button";
-import { Divider } from "@/packages/ui/components/ui/Divider";
-import { Typo } from "@/packages/ui/components/ui/Typo";
+import { Button , Divider , Typo } from "@/packages/ui/components/ui";
+
+
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Ionicons } from "@expo/vector-icons";
 

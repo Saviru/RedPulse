@@ -9,7 +9,7 @@ import {
   ViewStyle,
 } from "react-native";
 
-import { Typo } from "@/packages/ui/components/ui/Typo";
+import { Typo } from "@/packages/ui/components/ui";
 import { useThemeColor } from "@/packages/ui/hooks";
 
 interface AppBarProps {

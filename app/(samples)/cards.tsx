@@ -4,9 +4,9 @@ import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Button } from "@/packages/ui/components/ui/Button";
-import { Card } from "@/packages/ui/components/ui/Card";
-import { Typo } from "@/packages/ui/components/ui/Typo";
+import { Button , Card , Typo } from "@/packages/ui/components/ui";
+
+
 import { useThemeColor } from "@/packages/ui/hooks";
 
 export default function CardsScreen() {

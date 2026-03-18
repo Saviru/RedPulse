@@ -4,11 +4,11 @@ import React, { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Button } from "@/packages/ui/components/ui/Button";
-import { Checkbox } from "@/packages/ui/components/ui/Checkbox";
-import { Radio } from "@/packages/ui/components/ui/Radio";
-import { Toggle } from "@/packages/ui/components/ui/Toggle";
-import { Typo } from "@/packages/ui/components/ui/Typo";
+import { Button , Checkbox , Radio , Toggle , Typo } from "@/packages/ui/components/ui";
+
+
+
+
 import { useThemeColor } from "@/packages/ui/hooks";
 
 export default function SelectionScreen() {

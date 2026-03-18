@@ -4,9 +4,7 @@ import { Appearance, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Constants from "expo-constants";
 
-import { Button } from "@/packages/ui/components/ui/Button";
-import { Divider } from "@/packages/ui/components/ui/Divider";
-import { Typo } from "@/packages/ui/components/ui/Typo";
+import { Button , Divider , Typo } from "@/packages/ui/components/ui";
 import { useThemeColor } from "@/packages/ui/hooks";
 
 export default function HomeScreen() {

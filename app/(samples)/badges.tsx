@@ -5,9 +5,9 @@ import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Badge } from "@/packages/ui/components/ui/Badge";
-import { Button } from "@/packages/ui/components/ui/Button";
-import { Typo } from "@/packages/ui/components/ui/Typo";
+import { Badge , Button , Typo } from "@/packages/ui/components/ui";
+
+
 
 export default function BadgesScreen() {
   const router = useRouter();

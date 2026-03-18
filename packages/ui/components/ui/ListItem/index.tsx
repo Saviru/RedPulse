@@ -1,4 +1,4 @@
-import { Typo } from "@/packages/ui/components/ui/Typo";
+import { Typo } from "@/packages/ui/components/ui";
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";

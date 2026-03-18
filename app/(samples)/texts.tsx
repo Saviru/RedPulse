@@ -3,8 +3,8 @@ import { useRouter } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Button } from "@/packages/ui/components/ui/Button";
-import { Typo } from "@/packages/ui/components/ui/Typo";
+import { Button , Typo } from "@/packages/ui/components/ui";
+
 import { useThemeColor } from "@/packages/ui/hooks";
 
 export default function TextsScreen() {
