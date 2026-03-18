@@ -35,8 +35,8 @@ export const Card = ({
           variantStyles.elevated,
           {
             backgroundColor: theme === "dark" ? colors.surface : "#FFFFFF",
-            shadowColor: theme === "dark" ? "#b8b8b8" : "#3f3f3f",
-            shadowOpacity: theme === "dark" ? 0.3 : 0.08,
+            shadowColor: theme === "dark" ? "#5a5a5a" : "#3f3f3f",
+            shadowOpacity: 0.08,
           },
         ];
     }

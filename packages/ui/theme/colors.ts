@@ -17,10 +17,10 @@ export const Colors = {
     text: "#ECEDEE",
     textMuted: "#a4a5a7",
     background: "#0f0f0f",
-    surface: "#212222", // Dark elevated surface
+    surface: "#222222", // Dark elevated surface
     tint: tintColorDark,
     icon: "#a9aaaa",
-    border: "#38383A",
+    border: "#383838",
     error: "#FF453A",
     success: "#30D158",
   },
