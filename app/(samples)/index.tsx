@@ -2,21 +2,16 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Appearance, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Constants from "expo-constants";
 
 import { Button } from "@/components/ui/Button";
 import { Divider } from "@/components/ui/Divider";
 import { Typo } from "@/components/ui/Typo";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { Ionicons } from "@expo/vector-icons";
 
-export default function HomeScreen() {
+export default function SamplesHomeScreen() {
   const router = useRouter();
   const { theme, colors } = useThemeColor();
-
-  // Check if dev tools/samples should be visible
-  const showDevTools =
-    Constants.expoConfig?.extra?.showDevTools === true ||
-    process.env.EXPO_PUBLIC_SHOW_DEV_TOOLS === "true";
 
   return (
     <SafeAreaView
@@ -30,45 +25,72 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
+          <Button
+            label="Back"
+            variant="secondary"
+            icon={<Ionicons name="arrow-back" size={20} color={colors.text} />}
+            onPress={() => router.back()}
+            style={{ width: 100, marginBottom: 16 }}
+          />
           <Typo variant="h1" style={styles.title}>
-            RedPulse UI Library
+            UI Component Samples
           </Typo>
           <Typo variant="caption" style={styles.subtitle}>
-            {showDevTools
-              ? "With UI Component Samples"
-              : "Production Build"}
+            Development showcase of UI elements.
           </Typo>
         </View>
 
         <Divider spacing={16} color={colors.border} />
-
-        {showDevTools && (
-          <>
-            <View style={styles.menu}>
-              <Typo
-                variant="caption"
-                style={[styles.sectionLabel, { color: colors.textMuted }]}
-              >
-                UI Component Samples
-              </Typo>
-              <Button
-                label="View All Components"
-                variant="secondary"
-                onPress={() => router.push("/(samples)")}
-              />
-            </View>
-
-            <Divider spacing={16} />
-          </>
-        )}
 
         <View style={styles.menu}>
           <Typo
             variant="caption"
             style={[styles.sectionLabel, { color: colors.textMuted }]}
           >
-            {showDevTools ? "Other Dev Tools" : "App Navigation"}
+            UI Components
           </Typo>
+          <Button
+            label="Buttons"
+            variant="secondary"
+            onPress={() => router.push("/(samples)/buttons")}
+          />
+          <Button
+            label="Inputs"
+            variant="secondary"
+            onPress={() => router.push("/(samples)/inputs")}
+          />
+          <Button
+            label="Texts"
+            variant="secondary"
+            onPress={() => router.push("/(samples)/texts")}
+          />
+          <Button
+            label="Cards"
+            variant="secondary"
+            onPress={() => router.push("/(samples)/cards")}
+          />
+          <Button
+            label="Selects & Toggles"
+            variant="secondary"
+            onPress={() => router.push("/(samples)/selections")}
+          />
+
+          <Button
+            label="Badges"
+            variant="secondary"
+            onPress={() => router.push("/(samples)/badges")}
+          />
+
+          <Button
+            label="Avatars"
+            variant="secondary"
+            onPress={() => router.push("/(samples)/avatars")}
+          />
+          <Button
+            label="Data Display and Visuals"
+            variant="secondary"
+            onPress={() => router.push("/(samples)/data-display")}
+          />
         </View>
 
         <Divider spacing={16} />
@@ -117,8 +139,8 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#ffffff" },
-  content: { paddingHorizontal: 24, paddingTop: 48, paddingBottom: 16 },
-  header: { marginBottom: 32, alignItems: "center" },
+  content: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 16 },
+  header: { marginBottom: 16 },
   title: { fontSize: 32, fontWeight: "800", marginBottom: 8 },
   subtitle: { fontSize: 16 },
   sectionLabel: {
