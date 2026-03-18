@@ -2,7 +2,7 @@ import React from "react";
 import { TouchableOpacity, View } from "react-native";
 
 import { Typo } from "@/packages/ui/components/ui/Typo";
-import { useThemeColor } from "@/packages/ui/theme/useThemeColor";
+import { useThemeColor } from "@/packages/ui/hooks/useThemeColor";
 
 import { styles } from "./Radio.styles";
 import { RadioProps } from "./Radio.types";

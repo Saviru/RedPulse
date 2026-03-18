@@ -5,7 +5,7 @@ import DateTimePicker, {
 import React, { useState } from "react";
 import { Platform, Text, TouchableOpacity, View } from "react-native";
 
-import { useThemeColor } from "@/packages/ui/theme/useThemeColor";
+import { useThemeColor } from "@/packages/ui/hooks/useThemeColor";
 import { styles } from "../Select/Select.styles";
 import { DatePickerProps } from "./DatePicker.types";
 

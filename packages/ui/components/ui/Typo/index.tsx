@@ -1,4 +1,4 @@
-import { useThemeColor } from "@/packages/ui/theme/useThemeColor";
+import { useThemeColor } from "@/packages/ui/hooks/useThemeColor";
 import React from "react";
 import { Text } from "react-native";
 import { styles } from "./Typo.styles";

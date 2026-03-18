@@ -3,7 +3,7 @@ import React from "react";
 import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useThemeColor } from "@/packages/ui/theme/useThemeColor";
+import { useThemeColor } from "@/packages/ui/hooks/useThemeColor";
 
 interface ScreenLayoutProps {
   children: React.ReactNode;

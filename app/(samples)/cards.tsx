@@ -7,7 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/packages/ui/components/ui/Button";
 import { Card } from "@/packages/ui/components/ui/Card";
 import { Typo } from "@/packages/ui/components/ui/Typo";
-import { useThemeColor } from "@/packages/ui/theme/useThemeColor";
+import { useThemeColor } from "@/packages/ui/hooks/useThemeColor";
 
 export default function CardsScreen() {
   const router = useRouter();
