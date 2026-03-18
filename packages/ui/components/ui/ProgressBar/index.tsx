@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 
-import { Typo } from "@/components/ui/Typo";
+import { Typo } from "@/packages/ui/components/ui/Typo";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { styles } from "./ProgressBar.styles";
 import { ProgressBarProps } from "./ProgressBar.types";

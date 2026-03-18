@@ -4,9 +4,9 @@ import { Appearance, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Constants from "expo-constants";
 
-import { Button } from "@/components/ui/Button";
-import { Divider } from "@/components/ui/Divider";
-import { Typo } from "@/components/ui/Typo";
+import { Button } from "@/packages/ui/components/ui/Button";
+import { Divider } from "@/packages/ui/components/ui/Divider";
+import { Typo } from "@/packages/ui/components/ui/Typo";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function HomeScreen() {
@@ -49,7 +49,7 @@ export default function HomeScreen() {
                 variant="caption"
                 style={[styles.sectionLabel, { color: colors.textMuted }]}
               >
-                UI Component Samples
+                Sample UI Components
               </Typo>
               <Button
                 label="View All Components"
@@ -57,19 +57,8 @@ export default function HomeScreen() {
                 onPress={() => router.push("/(samples)")}
               />
             </View>
-
-            <Divider spacing={16} />
           </>
         )}
-
-        <View style={styles.menu}>
-          <Typo
-            variant="caption"
-            style={[styles.sectionLabel, { color: colors.textMuted }]}
-          >
-            {showDevTools ? "Other Dev Tools" : "App Navigation"}
-          </Typo>
-        </View>
 
         <Divider spacing={16} />
 

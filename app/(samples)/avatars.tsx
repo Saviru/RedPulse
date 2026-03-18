@@ -5,9 +5,9 @@ import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Avatar } from "@/components/ui/Avatar";
-import { Button } from "@/components/ui/Button";
-import { Typo } from "@/components/ui/Typo";
+import { Avatar } from "@/packages/ui/components/ui/Avatar";
+import { Button } from "@/packages/ui/components/ui/Button";
+import { Typo } from "@/packages/ui/components/ui/Typo";
 
 export default function AvatarsScreen() {
   const router = useRouter();

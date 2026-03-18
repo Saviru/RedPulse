@@ -4,13 +4,13 @@ import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { Divider } from "@/components/ui/Divider";
-import { ListItem } from "@/components/ui/ListItem";
-import { ProgressBar } from "@/components/ui/ProgressBar";
-import { StatCard } from "@/components/ui/StatCard";
-import { Typo } from "@/components/ui/Typo";
+import { Button } from "@/packages/ui/components/ui/Button";
+import { Card } from "@/packages/ui/components/ui/Card";
+import { Divider } from "@/packages/ui/components/ui/Divider";
+import { ListItem } from "@/packages/ui/components/ui/ListItem";
+import { ProgressBar } from "@/packages/ui/components/ui/ProgressBar";
+import { StatCard } from "@/packages/ui/components/ui/StatCard";
+import { Typo } from "@/packages/ui/components/ui/Typo";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function DataDisplayScreen() {

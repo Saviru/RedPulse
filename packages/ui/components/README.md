@@ -17,7 +17,7 @@ Used for all text across the app to maintain consistent styling and scaling.
 
 **Example Usage:**
 ```tsx
-import Typo from '@/components/ui/Typo';
+import Typo from '@/packages/ui/components/ui/Typo';
 
 export default function TextExample() {
   return (
@@ -45,7 +45,7 @@ Primary interaction element for forms and actions.
 
 **Example Usage:**
 ```tsx
-import Button from '@/components/ui/Button';
+import Button from '@/packages/ui/components/ui/Button';
 
 export default function ButtonExample() {
   return (
@@ -78,7 +78,7 @@ Standard text input field with built-in label and error state handling.
 **Example Usage:**
 ```tsx
 import { useState } from 'react';
-import Input from '@/components/ui/Input';
+import Input from '@/packages/ui/components/ui/Input';
 
 export default function InputExample() {
   const [bloodType, setBloodType] = useState('');
@@ -110,8 +110,8 @@ A flexible container for grouping related content, like donor details or stats.
 
 **Example Usage:**
 ```tsx
-import Card from '@/components/ui/Card';
-import Typo from '@/components/ui/Typo';
+import Card from '@/packages/ui/components/ui/Card';
+import Typo from '@/packages/ui/components/ui/Typo';
 
 export default function CardExample() {
   return (
@@ -137,7 +137,7 @@ Used to display user profile pictures or placeholders.
 
 **Example Usage:**
 ```tsx
-import Avatar from '@/components/ui/Avatar';
+import Avatar from '@/packages/ui/components/ui/Avatar';
 
 export default function AvatarExample() {
   return (
@@ -165,9 +165,9 @@ Foundation for building standard application screens.
 
 **Example Usage:**
 ```tsx
-import ScreenLayout from '@/components/layouts/ScreenLayout';
-import AppBar from '@/components/layouts/AppBar';
-import Typo from '@/components/ui/Typo';
+import ScreenLayout from '@/packages/ui/components/layouts/ScreenLayout';
+import AppBar from '@/packages/ui/components/layouts/AppBar';
+import Typo from '@/packages/ui/components/ui/Typo';
 
 export default function LayoutExample() {
   return (

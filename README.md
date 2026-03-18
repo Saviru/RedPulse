@@ -64,7 +64,7 @@ This project includes a robust, reusable UI component library.
 - **Data Display:** `<Card />`, `<StatCard />`, `<Avatar />`, `<Badge />`, `<ListItem />`, `<ProgressBar />`
 - **Layout:** `<ScreenLayout />`, `<AppBar />`, `<Divider />`
 
-For a detailed breakdown of component props, tables, and specific usage examples, please refer to our full **[Components Documentation](components/README.md)**.
+For a detailed breakdown of component props, tables, and specific usage examples, please refer to our full **[Components Documentation](packages/ui/components/README.md)**.
 
 <br id='l1'>
 
@@ -91,9 +91,9 @@ To keep the development organized and prevent direct pushes to the main branch:
 
 ## Adding or Editing UI Components
 
-To maintain consistency, all UI components live inside the `components/ui` directory. When creating a new component, follow our folder-based structure:
+To maintain consistency, all UI components live inside the `packages/ui/components/ui` directory. When creating a new component, follow our folder-based structure:
 
-1. **Create a new folder** under `components/ui/` (e.g., `components/ui/MyComponent`).
+1. **Create a new folder** under `packages/ui/components/ui/` (e.g., `packages/ui/components/ui/MyComponent`).
 2. **Add the required files**:
    - `index.tsx`: The main React component logic.
    - `MyComponent.styles.ts`: `StyleSheet` definitions.
@@ -115,7 +115,7 @@ RedPulse uses **Expo Router** for file-based routing.
    - Keep complex business logic, API calls, and data layer logic separate from the UI components. Create new directories like `services/`, `store/`, or `utils/` at the root as the app scales.
    - Shared hooks should reside in the `hooks/` directory.
 3. **Composing Pages**:
-   - When building a new screen natively, always import controls, inputs, and layouts from the internal `components/ui` and `components/layouts` kit.
+   - When building a new screen natively, always import controls, inputs, and layouts from the internal `packages/ui/components/ui` and `packages/ui/components/layouts` kit.
 
 Refer [Branching & Forking](#l1) for more details.
 

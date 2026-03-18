@@ -5,11 +5,11 @@ import { StyleSheet, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Button } from "@/components/ui/Button";
-import { DatePicker } from "@/components/ui/DatePicker";
-import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
-import { Typo } from "@/components/ui/Typo";
+import { Button } from "@/packages/ui/components/ui/Button";
+import { DatePicker } from "@/packages/ui/components/ui/DatePicker";
+import { Input } from "@/packages/ui/components/ui/Input";
+import { Select } from "@/packages/ui/components/ui/Select";
+import { Typo } from "@/packages/ui/components/ui/Typo";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function InputsScreen() {
