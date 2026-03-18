@@ -9,7 +9,7 @@ import { Checkbox } from "@/packages/ui/components/ui/Checkbox";
 import { Radio } from "@/packages/ui/components/ui/Radio";
 import { Toggle } from "@/packages/ui/components/ui/Toggle";
 import { Typo } from "@/packages/ui/components/ui/Typo";
-import { useThemeColor } from "@/hooks/useThemeColor";
+import { useThemeColor } from "@/packages/ui/theme/useThemeColor";
 
 export default function SelectionScreen() {
   const router = useRouter();

@@ -4,7 +4,7 @@ import { ActivityIndicator, Text, TouchableOpacity } from "react-native";
 import { styles } from "./Button.styles";
 import { ButtonProps } from "./Button.types";
 
-import { useThemeColor } from "@/hooks/useThemeColor";
+import { useThemeColor } from "@/packages/ui/theme/useThemeColor";
 
 export const Button = ({
   label,

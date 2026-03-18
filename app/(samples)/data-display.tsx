@@ -11,7 +11,7 @@ import { ListItem } from "@/packages/ui/components/ui/ListItem";
 import { ProgressBar } from "@/packages/ui/components/ui/ProgressBar";
 import { StatCard } from "@/packages/ui/components/ui/StatCard";
 import { Typo } from "@/packages/ui/components/ui/Typo";
-import { useThemeColor } from "@/hooks/useThemeColor";
+import { useThemeColor } from "@/packages/ui/theme/useThemeColor";
 
 export default function DataDisplayScreen() {
   const router = useRouter();

@@ -10,7 +10,7 @@ import { DatePicker } from "@/packages/ui/components/ui/DatePicker";
 import { Input } from "@/packages/ui/components/ui/Input";
 import { Select } from "@/packages/ui/components/ui/Select";
 import { Typo } from "@/packages/ui/components/ui/Typo";
-import { useThemeColor } from "@/hooks/useThemeColor";
+import { useThemeColor } from "@/packages/ui/theme/useThemeColor";
 
 export default function InputsScreen() {
   const router = useRouter();

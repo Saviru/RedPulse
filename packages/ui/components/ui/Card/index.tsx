@@ -1,7 +1,7 @@
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 
-import { useThemeColor } from "@/hooks/useThemeColor";
+import { useThemeColor } from "@/packages/ui/theme/useThemeColor";
 import { styles, variantStyles } from "./Card.styles";
 import { CardProps } from "./Card.types";
 

@@ -10,7 +10,7 @@ import {
 } from "react-native";
 
 import { Typo } from "@/packages/ui/components/ui/Typo";
-import { useThemeColor } from "@/hooks/useThemeColor";
+import { useThemeColor } from "@/packages/ui/theme/useThemeColor";
 
 interface AppBarProps {
   title?: string;

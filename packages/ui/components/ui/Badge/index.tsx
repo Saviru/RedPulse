@@ -2,7 +2,7 @@ import { Typo } from "@/packages/ui/components/ui/Typo";
 import React from "react";
 import { View } from "react-native";
 
-import { useThemeColor } from "@/hooks/useThemeColor";
+import { useThemeColor } from "@/packages/ui/theme/useThemeColor";
 import { styles } from "./Badge.styles";
 import { BadgeProps } from "./Badge.types";
 

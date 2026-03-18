@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 
-import { useThemeColor } from "@/hooks/useThemeColor";
+import { useThemeColor } from "@/packages/ui/theme/useThemeColor";
 import { styles } from "./Checkbox.styles";
 import { CheckboxProps } from "./Checkbox.types";
 

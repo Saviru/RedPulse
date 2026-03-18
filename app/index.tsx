@@ -7,7 +7,7 @@ import Constants from "expo-constants";
 import { Button } from "@/packages/ui/components/ui/Button";
 import { Divider } from "@/packages/ui/components/ui/Divider";
 import { Typo } from "@/packages/ui/components/ui/Typo";
-import { useThemeColor } from "@/hooks/useThemeColor";
+import { useThemeColor } from "@/packages/ui/theme/useThemeColor";
 
 export default function HomeScreen() {
   const router = useRouter();
