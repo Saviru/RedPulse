@@ -1,4 +1,4 @@
-import { useThemeColor } from "@/hooks/useThemeColor";
+import { useThemeColor } from "@/packages/ui/hooks";
 import {
   DarkTheme,
   DefaultTheme,
