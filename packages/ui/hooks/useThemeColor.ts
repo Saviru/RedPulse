@@ -1,4 +1,4 @@
-import { Colors } from "@/packages/ui/theme/colors";
+import { Colors } from "@/packages/ui/constants";
 import { useColorScheme } from "react-native";
 
 export function useThemeColor() {

@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { useThemeColor } from "@/packages/ui/hooks/useThemeColor";
+import { useThemeColor } from "@/packages/ui/hooks";
 
 export default function SamplesLayout() {
   const { colors } = useThemeColor();

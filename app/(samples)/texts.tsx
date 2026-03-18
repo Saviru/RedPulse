@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@/packages/ui/components/ui/Button";
 import { Typo } from "@/packages/ui/components/ui/Typo";
-import { useThemeColor } from "@/packages/ui/hooks/useThemeColor";
+import { useThemeColor } from "@/packages/ui/hooks";
 
 export default function TextsScreen() {
   const router = useRouter();

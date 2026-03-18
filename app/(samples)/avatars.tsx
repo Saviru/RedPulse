@@ -1,4 +1,4 @@
-import { useThemeColor } from "@/packages/ui/hooks/useThemeColor";
+import { useThemeColor } from "@/packages/ui/hooks";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";

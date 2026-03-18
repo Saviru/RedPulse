@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Image, View } from "react-native";
 
-import { useThemeColor } from "@/packages/ui/hooks/useThemeColor";
+import { useThemeColor } from "@/packages/ui/hooks";
 import { styles } from "./Avatar.styles";
 import { AvatarProps } from "./Avatar.types";
 
