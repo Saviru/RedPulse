@@ -3,7 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "expo start",
+    "start": "expo start --clear",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
@@ -49,6 +49,7 @@
     "@types/react": "~19.1.0",
     "babel-plugin-module-resolver": "^5.0.2",
     "babel-preset-expo": "~54.0.10",
+    "cross-env": "^10.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "globals": "^17.4.0",
