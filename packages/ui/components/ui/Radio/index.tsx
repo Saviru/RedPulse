@@ -1,7 +1,7 @@
 import React from "react";
 import { TouchableOpacity, View } from "react-native";
 
-import { Typo } from "@/packages/ui/components/ui";
+import { Typo } from "../Typo";
 import { useThemeColor } from "@/packages/ui/hooks";
 
 import { styles } from "./Radio.styles";
