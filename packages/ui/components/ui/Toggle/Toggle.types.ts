@@ -3,4 +3,5 @@ export interface ToggleProps {
   onToggle: (value: boolean) => void;
   label?: string;
   disabled?: boolean;
+  activeColor?: string;
 }

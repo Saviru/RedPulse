@@ -10,6 +10,7 @@ export const Toggle = ({
   onToggle,
   label,
   disabled = false,
+  activeColor,
 }: ToggleProps) => {
   const { colors, theme } = useThemeColor();
 
@@ -24,7 +25,7 @@ export const Toggle = ({
         style={[
           styles.track,
           { backgroundColor: theme === "dark" ? "#38383A" : "#E5E5EA" },
-          value && [styles.trackActive, { backgroundColor: colors.tint }],
+          value && [styles.trackActive, { backgroundColor: activeColor || colors.tint }],
         ]} // Changes background from grey to active color when toggled on
         onPress={() => !disabled && onToggle(!value)}
         activeOpacity={0.8}
