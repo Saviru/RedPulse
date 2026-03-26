@@ -13,3 +13,8 @@ export { Select } from "./Select";
 export { StatCard } from "./StatCard";
 export { Toggle } from "./Toggle";
 export { Typo } from "./Typo";
+export { CircularDonut } from "./CircularDonut";
+export { CustomTabBar } from "./CustomTabBar/CustomTabBar";
+export { SegmentedControl } from "./SegmentedControl";
+export { Accordion } from "./Accordion";
+

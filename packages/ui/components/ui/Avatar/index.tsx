@@ -3,6 +3,7 @@ import React from "react";
 import { Image, View } from "react-native";
 
 import { useThemeColor } from "@/packages/ui/hooks";
+import { Typo } from "../Typo";
 import { styles } from "./Avatar.styles";
 import { AvatarProps } from "./Avatar.types";
 
@@ -10,6 +11,7 @@ export const Avatar = ({
   source,
   size = 64,
   fallbackIcon = "person",
+  fallbackText,
 }: AvatarProps) => {
   const { colors } = useThemeColor();
 
@@ -22,7 +24,6 @@ export const Avatar = ({
         { width: size, height: size, borderRadius: size / 2 },
       ]}
     >
-      {/* Shows default icon if no image is provided */}
       {source ? (
         <Image
           source={source}
@@ -31,6 +32,10 @@ export const Avatar = ({
             { width: size, height: size, borderRadius: size / 2 },
           ]}
         />
+      ) : fallbackText ? (
+        <Typo variant="body" style={{ color: colors.tint, fontWeight: "bold", fontSize: size * 0.4 }}>
+          {fallbackText}
+        </Typo>
       ) : (
         <Ionicons name={fallbackIcon} size={size * 0.5} color={colors.icon} />
       )}

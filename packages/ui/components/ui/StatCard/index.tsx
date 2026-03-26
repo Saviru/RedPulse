@@ -9,6 +9,7 @@ import { StatCardProps } from "./StatCard.types";
 export const StatCard = ({
   label,
   value,
+  subtitle,
   icon,
   accentColor,
   style,
@@ -49,6 +50,14 @@ export const StatCard = ({
         >
           {label}
         </Typo>
+        {subtitle && (
+          <Typo
+            variant="caption"
+            style={{ color: colors.textMuted, marginTop: 4 }}
+          >
+            {subtitle}
+          </Typo>
+        )}
       </View>
     </View>
   );

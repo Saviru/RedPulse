@@ -6,7 +6,7 @@ export const Colors = {
     text: "#1a1a1a",
     textMuted: "#727577",
     background: "#FFFFFF",
-    surface: "#e0e0e0", // Light elevated surfaces
+    surface: "#F4F4F5", // Light elevated surfaces
     tint: tintColorLight,
     icon: "#767879",
     border: "#E5E5EA",

@@ -34,7 +34,11 @@ export const ListItem = ({
             } /* adds a 8-10% opacity to the base hex color of the icon */,
           ]}
         >
-          <Ionicons name={leftIcon} size={20} color={leftIconColor} />
+          {typeof leftIcon === 'string' ? (
+             <Ionicons name={leftIcon as any} size={20} color={leftIconColor} />
+          ) : (
+             leftIcon
+          )}
         </View>
       )}
       <View style={styles.content}>
@@ -50,7 +54,13 @@ export const ListItem = ({
           </Typo>
         )}
       </View>
-      {onPress && <Ionicons name={rightIcon} size={20} color={colors.icon} />}
+      {onPress && (
+         typeof rightIcon === 'string' ? (
+            <Ionicons name={rightIcon as any} size={20} color={colors.icon} />
+         ) : (
+            rightIcon
+         )
+      )}
     </TouchableOpacity>
   );
 };
