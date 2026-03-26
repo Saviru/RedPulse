@@ -17,6 +17,4 @@ export { CircularDonut } from "./CircularDonut";
 export { CustomTabBar } from "./CustomTabBar/CustomTabBar";
 export { SegmentedControl } from "./SegmentedControl";
 export { Accordion } from "./Accordion";
-export { FeedbackCard } from "./FeedbackCard";
-export { FeedbackFormModal } from "./FeedbackFormModal";
-export { ReplyFormModal } from "./ReplyFormModal";
+
