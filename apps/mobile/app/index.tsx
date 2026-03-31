@@ -25,11 +25,6 @@ export default function HomeScreen() {
     >
       <StatusBar style={theme === "dark" ? "light" : "dark"} />
 
-      <AnimatedHeader
-        title="RedPulse UI"
-        scrollY={scrollY}
-      />
-
       <Animated.ScrollView
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -118,74 +113,12 @@ export default function HomeScreen() {
             variant="caption"
             style={[styles.sectionLabel, { color: colors.textMuted }]}
           >
-            Public Screens
+            Hospital
           </Typo>
-          <Button label="Loading" variant="secondary" onPress={() => router.push("/(public)/loading")} />
-          <Button label="Welcome" variant="secondary" onPress={() => router.push("/(public)/welcome")} />
-          <Button label="Login" variant="secondary" onPress={() => router.push("/(public)/login")} />
-          <Button label="Register Type" variant="secondary" onPress={() => router.push("/(public)/register-type")} />
-          <Button label="Register" variant="secondary" onPress={() => router.push("/(public)/register")} />
-          <Button label="Register Org" variant="secondary" onPress={() => router.push("/(public)/register-org")} />
-          <Button label="Register Hospital" variant="secondary" onPress={() => router.push("/(public)/register-hospital")} />
-        </View>
-
-        <Divider spacing={16} color={colors.border} />
-
-        <View style={styles.menu}>
-          <Typo
-            variant="caption"
-            style={[styles.sectionLabel, { color: colors.textMuted }]}
-          >
-            Organization Screens
-          </Typo>
-          <Button label="My Campaigns (Tabs)" variant="secondary" onPress={() => router.push("/(organization)/(tabs)/campaigns" as any)} />
-          <Button label="Org Profile" variant="secondary" onPress={() => router.push("/(organization)/(tabs)/profile" as any)} />
-          <Button label="Edit Profile" variant="secondary" onPress={() => router.push("/(organization)/edit-profile")} />
-          <Button label="Donor Management" variant="secondary" onPress={() => router.push("/(organization)/donor-management")} />
-          <Button label="Donor Profile (Sample)" variant="secondary" onPress={() => router.push({ pathname: "/(organization)/donor-profile-detail", params: { id: "1" } } as any)} />
-        </View>
-
-        <Divider spacing={16} color={colors.border} />
-
-        <View style={styles.menu}>
-          <Typo
-            variant="caption"
-            style={[styles.sectionLabel, { color: colors.textMuted }]}
-          >
-            Hospital Screens
-          </Typo>
-          <Button label="Hospital Profile" variant="secondary" onPress={() => router.push("/(hospital)/(tabs)/profile" as any)} />
+          <Button label="Home" variant="secondary" onPress={() => router.push("/(hospital)/(tabs)/home")} />
+          <Button label="Profile" variant="secondary" onPress={() => router.push("/(hospital)/(tabs)/profile" as any)} />
           <Button label="Edit Profile" variant="secondary" onPress={() => router.push("/(hospital)/edit-profile")} />
-        </View>
-
-        <Divider spacing={16} color={colors.border} />
-
-        <View style={styles.menu}>
-          <Typo
-            variant="caption"
-            style={[styles.sectionLabel, { color: colors.textMuted }]}
-          >
-            Campaign Management
-          </Typo>
-          <Button label="Create Campaign" variant="secondary" onPress={() => router.push("/(organization)/campaign-create" as any)} />
-          <Button label="Manage Campaign" variant="secondary" onPress={() => router.push("/(organization)/campaign-management" as any)} />
-          <Button label="Campaign Invitations" variant="secondary" onPress={() => router.push("/(hospital)/campaign-invitations" as any)} />
-          <Button label="Volunteer for Campaign" variant="secondary" onPress={() => router.push("/(user)/campaign-volunteer" as any)} />
-          <Button label="My Tasks" variant="secondary" onPress={() => router.push("/(user)/campaign-tasks" as any)} />
-        </View>
-
-        <Divider spacing={16} color={colors.border} />
-
-        <View style={styles.menu}>
-          <Typo
-            variant="caption"
-            style={[styles.sectionLabel, { color: colors.textMuted }]}
-          >
-            User Screens
-          </Typo>
-          <Button label="User Profile" variant="secondary" onPress={() => router.push("/(user)/(tabs)/profile")} />
-          <Button label="Rewards" variant="secondary" onPress={() => router.push("/(user)/(tabs)/rewards")} />
-          <Button label="Campaign Registration" variant="secondary" onPress={() => router.push("/(user)/campaign-registration")} />
+          <Button label="Point Shop" variant="secondary" onPress={() => router.push("/(hospital)/manage-shop")} />
         </View>
 
         <View style={{ height: 32 }} />
