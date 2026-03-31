@@ -1,10 +1,18 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
+import { Animated } from 'react-native';
 import { CustomTabBar } from './CustomTabBar';
 
 // Mock dependencies
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 20, left: 0, right: 0 }),
+}));
+
+const mockTabBarOffset = new Animated.Value(0);
+jest.mock('../../../context/ScrollContext', () => ({
+  useScroll: () => ({
+    tabBarOffset: mockTabBarOffset,
+  }),
 }));
 
 jest.mock('@/packages/ui/hooks', () => ({
@@ -20,9 +28,6 @@ jest.mock('@/packages/ui/hooks', () => ({
   }),
 }));
 
-jest.mock('@expo/vector-icons', () => ({
-  MaterialIcons: 'MaterialIcons',
-}));
 
 describe('CustomTabBar', () => {
   const mockNavigation = {
