@@ -1,0 +1,34 @@
+name: Test Before Merging PRs
+
+on:
+  push: # Post check
+    branches: [main]
+  pull_request: # Pre check
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }} # Terminate old workflows when there is a new commit in same PR
+  cancel-in-progress: true
+  
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 'latest'
+          cache: 'pnpm'
+          
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Jest tests
+        run: bun run test
