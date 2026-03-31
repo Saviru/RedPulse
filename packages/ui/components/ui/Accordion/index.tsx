@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { View, Text, TouchableOpacity, Animated, LayoutAnimation, Platform, UIManager } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import { styles } from "./Accordion.styles";
 import { AccordionProps } from "./Accordion.types";

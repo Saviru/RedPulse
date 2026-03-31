@@ -1,6 +1,6 @@
 import { Typo } from "../Typo";
 import { useThemeColor } from "@/packages/ui/hooks";
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import React from "react";
 import { View } from "react-native";
 import { styles } from "./StatCard.styles";
