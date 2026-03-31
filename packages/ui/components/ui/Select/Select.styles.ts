@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 
 const theme = {
   colors: {
@@ -60,11 +60,20 @@ export const styles = StyleSheet.create({
     borderRadius: theme.borderRadius,
     marginTop: 4,
     maxHeight: 200, // Prevents the list from going off screen
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 5,
+      },
+      web: {
+        boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+      },
+    }),
   },
   optionItem: {
     paddingVertical: 14,
