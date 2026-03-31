@@ -62,4 +62,8 @@ export const styles = StyleSheet.create({
     color: theme.colors.borderError,
     marginTop: 6,
   },
+  helperText: {
+    fontSize: 12,
+    marginTop: 4,
+  },
 });

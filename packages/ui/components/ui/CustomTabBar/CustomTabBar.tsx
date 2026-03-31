@@ -1,23 +1,26 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { MaterialIcons } from '@expo/vector-icons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColor } from '@/packages/ui/hooks';
 import { Typo } from '../Typo';
+import { useScroll } from '../../../context/ScrollContext';
 
 export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const { colors, theme } = useThemeColor();
   const insets = useSafeAreaInsets();
+  const { tabBarOffset } = useScroll();
 
   return (
-    <View 
+    <Animated.View 
       style={[
         styles.tabBar, 
         { 
           backgroundColor: colors.surface, 
           borderTopColor: colors.border,
-          paddingBottom: Math.max(insets.bottom, 12), // Safe area logic for bottom padding
+          paddingBottom: Math.max(insets.bottom, 12),
+          transform: [{ translateY: tabBarOffset }],
         }
       ]}
     >
@@ -30,9 +33,7 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
             ? options.title
             : route.name;
 
-        // Custom prop mapped in our layout configuration
         const iconName = (options as any).tabBarIconName || 'circle';
-
         const isFocused = state.index === index;
 
         const onPress = () => {
@@ -55,20 +56,20 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
             onPress={onPress}
             style={styles.tabItem}
           >
-            <View style={styles.iconContainer}>
+            <Animated.View style={styles.iconContainer}>
               <MaterialIcons
                 name={iconName as any}
                 size={24}
                 color={isFocused ? colors.tint : colors.icon}
               />
-            </View>
+            </Animated.View>
             <Typo
               variant="caption"
               style={[
                 styles.tabLabel, 
                 { 
                   color: isFocused ? colors.tint : colors.textMuted, 
-                  fontWeight: '500' // Medium equivalent
+                  fontWeight: '500'
                 }
               ]}
             >
@@ -77,7 +78,7 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
           </TouchableOpacity>
         );
       })}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -88,14 +89,23 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     paddingTop: 8,
     paddingHorizontal: 16,
-    gap: 8, // Native flex gap alternative (for gap-2 Tailwind)
+    gap: 8,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
   },
   tabItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'column',
-    gap: 4, // Tight gap between icon and text (gap-1)
+    gap: 4,
   },
   iconContainer: {
     height: 24,
@@ -104,7 +114,7 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 10,
-    letterSpacing: 0.15, // 0.015em 
-    marginTop: 2, // Slight offset for non-gap environments like older RN bounds
+    letterSpacing: 0.15,
+    marginTop: 2,
   },
 });

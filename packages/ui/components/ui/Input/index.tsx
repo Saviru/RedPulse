@@ -12,6 +12,7 @@ export const Input = forwardRef<TextInput, InputProps>(
       leftIcon,
       rightIcon,
       disabled = false,
+      helperText,
       style,
       onFocus,
       onBlur,
@@ -88,6 +89,12 @@ export const Input = forwardRef<TextInput, InputProps>(
         {error && !disabled && (
           <Text style={[styles.errorText, { color: colors.error }]}>
             {error}
+          </Text>
+        )}
+
+        {helperText && !error && (
+          <Text style={[styles.helperText, { color: colors.textMuted }]}>
+            {helperText}
           </Text>
         )}
       </View>
