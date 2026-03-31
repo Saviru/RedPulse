@@ -1,8 +1,6 @@
 name: Test Before Merging PRs
 
 on:
-  push: # Post check
-    branches: [main]
   pull_request: # Pre check
     branches: [main]
 
