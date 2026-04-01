@@ -127,6 +127,24 @@ export default function HomeScreen() {
             variant="caption"
             style={[styles.sectionLabel, { color: colors.textMuted }]}
           >
+            Public Screens
+          </Typo>
+          <Button label="Loading" variant="secondary" onPress={() => router.push("/(public)/loading")} />
+          <Button label="Welcome" variant="secondary" onPress={() => router.push("/(public)/welcome")} />
+          <Button label="Login" variant="secondary" onPress={() => router.push("/(public)/login")} />
+          <Button label="Register Types" variant="secondary" onPress={() => router.push("/(public)/register-type")} />
+          <Button label="Register Users" variant="secondary" onPress={() => router.push("/(public)/register")} />
+          <Button label="Register Orgs" variant="secondary" onPress={() => router.push("/(public)/register-org")} />
+          <Button label="Register Hospitals" variant="secondary" onPress={() => router.push("/(public)/register-hospital")} />
+        </View>
+
+        <Divider spacing={16} color={colors.border} />
+
+        <View style={styles.menu}>
+          <Typo
+            variant="caption"
+            style={[styles.sectionLabel, { color: colors.textMuted }]}
+          >
             Donor/Requester (User)
           </Typo>
           <Button label="Home" variant="secondary" onPress={() => router.push("/(user)/(tabs)/home")} />
