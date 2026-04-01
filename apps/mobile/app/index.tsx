@@ -116,10 +116,11 @@ export default function HomeScreen() {
             Hospital
           </Typo>
           <Button label="Home" variant="secondary" onPress={() => router.push("/(hospital)/(tabs)/home")} />
-          <Button label="Profile" variant="secondary" onPress={() => router.push("/(hospital)/(tabs)/profile" as any)} />
-          <Button label="Edit Profile" variant="secondary" onPress={() => router.push("/(hospital)/edit-profile")} />
+          <Button label="Profile" variant="secondary" onPress={() => router.push("/(hospital)/(tabs)/profile")} />
           <Button label="Point Shop" variant="secondary" onPress={() => router.push("/(hospital)/(tabs)/manage-shop")} />
         </View>
+
+        <Divider spacing={16} color={colors.border} />
 
         <View style={styles.menu}>
           <Typo
@@ -132,6 +133,20 @@ export default function HomeScreen() {
           <Button label="Profile" variant="secondary" onPress={() => router.push("/(user)/(tabs)/profile")} />
           <Button label="Rewards" variant="secondary" onPress={() => router.push("/(user)/(tabs)/rewards")} />
           <Button label="Point Shop" variant="secondary" onPress={() => router.push("/(user)/(tabs)/shop")} />
+        </View>
+
+        <Divider spacing={16} color={colors.border} />
+
+        <View style={styles.menu}>
+          <Typo
+            variant="caption"
+            style={[styles.sectionLabel, { color: colors.textMuted }]}
+          >
+            Organization
+          </Typo>
+          <Button label="Home" variant="secondary" onPress={() => router.push("/(organization)/(tabs)/home")} />
+          <Button label="Profile" variant="secondary" onPress={() => router.push("/(organization)/(tabs)/profile")} />
+          <Button label="Fundraising" variant="secondary" onPress={() => router.push("/(organization)/(tabs)/fundraising")} />
         </View>
 
         <View style={{ height: 32 }} />
