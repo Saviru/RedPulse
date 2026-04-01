@@ -118,7 +118,20 @@ export default function HomeScreen() {
           <Button label="Home" variant="secondary" onPress={() => router.push("/(hospital)/(tabs)/home")} />
           <Button label="Profile" variant="secondary" onPress={() => router.push("/(hospital)/(tabs)/profile" as any)} />
           <Button label="Edit Profile" variant="secondary" onPress={() => router.push("/(hospital)/edit-profile")} />
-          <Button label="Point Shop" variant="secondary" onPress={() => router.push("/(hospital)/manage-shop")} />
+          <Button label="Point Shop" variant="secondary" onPress={() => router.push("/(hospital)/(tabs)/manage-shop")} />
+        </View>
+
+        <View style={styles.menu}>
+          <Typo
+            variant="caption"
+            style={[styles.sectionLabel, { color: colors.textMuted }]}
+          >
+            Donor/Requester (User)
+          </Typo>
+          <Button label="Home" variant="secondary" onPress={() => router.push("/(user)/(tabs)/home")} />
+          <Button label="Profile" variant="secondary" onPress={() => router.push("/(user)/(tabs)/profile")} />
+          <Button label="Rewards" variant="secondary" onPress={() => router.push("/(user)/(tabs)/rewards")} />
+          <Button label="Point Shop" variant="secondary" onPress={() => router.push("/(user)/(tabs)/shop")} />
         </View>
 
         <View style={{ height: 32 }} />
