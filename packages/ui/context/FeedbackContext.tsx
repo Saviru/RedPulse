@@ -93,46 +93,112 @@ function getApiBaseUrl() {
 }
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const url = `${getApiBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
-  const res = await fetch(url, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
-  });
+  try {
+    const url = `${getApiBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
+    
+    // Create abort controller for timeout (15 seconds)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    
+    try {
+      const res = await fetch(url, {
+        ...init,
+        signal: controller.signal,
+        headers: {
+          "Content-Type": "application/json",
+          ...(init?.headers ?? {}),
+        },
+      });
 
-  const text = await res.text();
-  const payload = text ? (JSON.parse(text) as unknown) : undefined;
+      clearTimeout(timeoutId);
 
-  if (!res.ok) {
-    const msg =
-      (payload as { error?: unknown } | undefined)?.error ??
-      `Request failed (${res.status})`;
-    throw new Error(String(msg));
+      const text = await res.text();
+      
+      let payload: unknown;
+      if (text && text.trim()) {
+        try {
+          payload = JSON.parse(text);
+        } catch (parseError) {
+          console.error("JSON parse error:", parseError, "Response text:", text);
+          throw new Error(`Invalid JSON response from server: ${text.substring(0, 100)}`);
+        }
+      } else {
+        payload = undefined;
+      }
+
+      if (!res.ok) {
+        const msg =
+          (payload as { error?: unknown } | undefined)?.error ??
+          `Request failed with status ${res.status}`;
+        throw new Error(String(msg));
+      }
+
+      return payload as T;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof TypeError && error.message === "Failed to fetch") {
+        throw new Error(`Network error: Cannot reach ${getApiBaseUrl()}. Please check if the API server is running.`);
+      }
+      throw error;
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error occurred";
+    console.error("Request failed:", message);
+    throw error;
   }
-
-  return payload as T;
 }
 
 async function requestFormData<T>(path: string, formData: FormData): Promise<T> {
-  const url = `${getApiBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
-  const res = await fetch(url, {
-    method: "POST",
-    body: formData,
-  });
+  try {
+    const url = `${getApiBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
+    
+    // Create abort controller for timeout (30 seconds for file uploads)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        body: formData,
+        signal: controller.signal,
+      });
 
-  const text = await res.text();
-  const payload = text ? (JSON.parse(text) as unknown) : undefined;
+      clearTimeout(timeoutId);
 
-  if (!res.ok) {
-    const msg =
-      (payload as { error?: unknown } | undefined)?.error ??
-      `Request failed (${res.status})`;
-    throw new Error(String(msg));
+      const text = await res.text();
+      
+      let payload: unknown;
+      if (text && text.trim()) {
+        try {
+          payload = JSON.parse(text);
+        } catch (parseError) {
+          console.error("JSON parse error:", parseError, "Response text:", text);
+          throw new Error(`Invalid JSON response from server: ${text.substring(0, 100)}`);
+        }
+      } else {
+        payload = undefined;
+      }
+
+      if (!res.ok) {
+        const msg =
+          (payload as { error?: unknown } | undefined)?.error ??
+          `Request failed with status ${res.status}`;
+        throw new Error(String(msg));
+      }
+
+      return payload as T;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof TypeError && error.message === "Failed to fetch") {
+        throw new Error(`Network error: Cannot reach ${getApiBaseUrl()}. Please check if the API server is running.`);
+      }
+      throw error;
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error occurred";
+    console.error("Request failed:", message);
+    throw error;
   }
-
-  return payload as T;
 }
 
 export function FeedbackProvider({ children }: { children: ReactNode }) {
@@ -160,42 +226,47 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
   const addFeedback = useCallback(
     async (data: CreateFeedbackPayload) => {
       setError(null);
-      
-      // If there are file attachments, use FormData
-      if (data.attachments && data.attachments.length > 0) {
-        const formData = new FormData();
-        formData.append("userId", data.userId);
-        formData.append("userName", data.userName);
-        formData.append("userRole", data.userRole);
-        formData.append("type", data.type);
-        formData.append("title", data.title);
-        formData.append("description", data.description);
-        formData.append("targetType", data.targetType);
-        formData.append("targetId", data.targetId);
-        formData.append("targetName", data.targetName);
-        formData.append("isAnonymous", String(data.isAnonymous));
-        if (data.category) formData.append("category", data.category);
-        if (data.rating !== undefined) formData.append("rating", String(data.rating));
+      try {
+        // If there are file attachments, use FormData
+        if (data.attachments && data.attachments.length > 0) {
+          const formData = new FormData();
+          formData.append("userId", data.userId);
+          formData.append("userName", data.userName);
+          formData.append("userRole", data.userRole);
+          formData.append("type", data.type);
+          formData.append("title", data.title);
+          formData.append("description", data.description);
+          formData.append("targetType", data.targetType);
+          formData.append("targetId", data.targetId);
+          formData.append("targetName", data.targetName);
+          formData.append("isAnonymous", String(data.isAnonymous));
+          if (data.category) formData.append("category", data.category);
+          if (data.rating !== undefined) formData.append("rating", String(data.rating));
 
-        // Add files to FormData
-        // In React Native, we can pass the file object with uri directly
-        data.attachments.forEach((file) => {
-          formData.append("attachments", {
-            uri: file.uri,
-            type: file.type,
-            name: file.name,
-          } as any);
-        });
+          // Add files to FormData
+          // In React Native, we can pass the file object with uri directly
+          data.attachments.forEach((file) => {
+            formData.append("attachments", {
+              uri: file.uri,
+              type: file.type,
+              name: file.name,
+            } as any);
+          });
 
-        await requestFormData<{ data: FeedbackItem }>("/feedback", formData);
-      } else {
-        // Use regular JSON for submissions without files
-        await requestJson<{ data: FeedbackItem }>("/feedback", {
-          method: "POST",
-          body: JSON.stringify(data),
-        });
+          await requestFormData<{ data: FeedbackItem }>("/feedback", formData);
+        } else {
+          // Use regular JSON for submissions without files
+          await requestJson<{ data: FeedbackItem }>("/feedback", {
+            method: "POST",
+            body: JSON.stringify(data),
+          });
+        }
+        await refresh();
+      } catch (e) {
+        const errorMsg = e instanceof Error ? e.message : "Failed to submit feedback";
+        setError(errorMsg);
+        throw e;
       }
-      await refresh();
     },
     [refresh],
   );
@@ -207,15 +278,21 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
         Pick<FeedbackSubmit, "type" | "title" | "description">,
     ) => {
       setError(null);
-      await requestJson<{ data: FeedbackItem }>(`/feedback/${feedbackId}`, {
-        method: "PUT",
-        body: JSON.stringify({
-          type: data.type,
-          title: data.title,
-          description: data.description,
-        }),
-      });
-      await refresh();
+      try {
+        await requestJson<{ data: FeedbackItem }>(`/feedback/${feedbackId}`, {
+          method: "PUT",
+          body: JSON.stringify({
+            type: data.type,
+            title: data.title,
+            description: data.description,
+          }),
+        });
+        await refresh();
+      } catch (e) {
+        const errorMsg = e instanceof Error ? e.message : "Failed to update feedback";
+        setError(errorMsg);
+        throw e;
+      }
     },
     [refresh],
   );
@@ -223,8 +300,14 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
   const deleteFeedback = useCallback(
     async (feedbackId: string) => {
       setError(null);
-      await requestJson<unknown>(`/feedback/${feedbackId}`, { method: "DELETE" });
-      await refresh();
+      try {
+        await requestJson<unknown>(`/feedback/${feedbackId}`, { method: "DELETE" });
+        await refresh();
+      } catch (e) {
+        const errorMsg = e instanceof Error ? e.message : "Failed to delete feedback";
+        setError(errorMsg);
+        throw e;
+      }
     },
     [refresh],
   );
@@ -232,15 +315,21 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
   const addReply = useCallback(
     async (feedbackId: string, reply: Omit<FeedbackReply, "id" | "createdAt">) => {
       setError(null);
-      // Validate required fields before sending
-      if (!reply.replierId || !reply.replierName || !reply.replierRole || !reply.content) {
-        throw new Error("Missing required fields: replierId, replierName, replierRole, content");
+      try {
+        // Validate required fields before sending
+        if (!reply.replierId || !reply.replierName || !reply.replierRole || !reply.content) {
+          throw new Error("Missing required fields: replierId, replierName, replierRole, content");
+        }
+        await requestJson<{ data: FeedbackReply }>(`/feedback/${feedbackId}/replies`, {
+          method: "POST",
+          body: JSON.stringify(reply),
+        });
+        await refresh();
+      } catch (e) {
+        const errorMsg = e instanceof Error ? e.message : "Failed to add reply";
+        setError(errorMsg);
+        throw e;
       }
-      await requestJson<{ data: FeedbackReply }>(`/feedback/${feedbackId}/replies`, {
-        method: "POST",
-        body: JSON.stringify(reply),
-      });
-      await refresh();
     },
     [refresh],
   );
@@ -248,14 +337,20 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
   const updateReply = useCallback(
     async (feedbackId: string, replyId: string, content: string) => {
       setError(null);
-      await requestJson<{ data: FeedbackReply }>(
-        `/feedback/${feedbackId}/replies/${replyId}`,
-        {
-          method: "PUT",
-          body: JSON.stringify({ content }),
-        },
-      );
-      await refresh();
+      try {
+        await requestJson<{ data: FeedbackReply }>(
+          `/feedback/${feedbackId}/replies/${replyId}`,
+          {
+            method: "PUT",
+            body: JSON.stringify({ content }),
+          },
+        );
+        await refresh();
+      } catch (e) {
+        const errorMsg = e instanceof Error ? e.message : "Failed to update reply";
+        setError(errorMsg);
+        throw e;
+      }
     },
     [refresh],
   );
@@ -263,10 +358,16 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
   const deleteReply = useCallback(
     async (feedbackId: string, replyId: string) => {
       setError(null);
-      await requestJson<unknown>(`/feedback/${feedbackId}/replies/${replyId}`, {
-        method: "DELETE",
-      });
-      await refresh();
+      try {
+        await requestJson<unknown>(`/feedback/${feedbackId}/replies/${replyId}`, {
+          method: "DELETE",
+        });
+        await refresh();
+      } catch (e) {
+        const errorMsg = e instanceof Error ? e.message : "Failed to delete reply";
+        setError(errorMsg);
+        throw e;
+      }
     },
     [refresh],
   );
@@ -283,21 +384,33 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
       }>,
     ) => {
       setError(null);
-      await requestJson<{ data: FeedbackItem }>(`/feedback/${feedbackId}/complaint`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
-      await refresh();
+      try {
+        await requestJson<{ data: FeedbackItem }>(`/feedback/${feedbackId}/complaint`, {
+          method: "PUT",
+          body: JSON.stringify(data),
+        });
+        await refresh();
+      } catch (e) {
+        const errorMsg = e instanceof Error ? e.message : "Failed to update complaint";
+        setError(errorMsg);
+        throw e;
+      }
     },
     [refresh],
   );
 
   const getAnalytics = useCallback(async () => {
-    return await requestJson<{
-      totalComplaints: number;
-      complaintsByCategory: Record<string, number>;
-      complaintsByStatus: Record<string, number>;
-    }>("/analytics");
+    try {
+      return await requestJson<{
+        totalComplaints: number;
+        complaintsByCategory: Record<string, number>;
+        complaintsByStatus: Record<string, number>;
+      }>("/analytics");
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : "Failed to fetch analytics";
+      console.error("Analytics error:", errorMsg);
+      throw e;
+    }
   }, []);
 
   const resetMockData = useCallback(() => {
