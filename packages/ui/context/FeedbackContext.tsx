@@ -32,6 +32,7 @@ type FeedbackSubmit = {
   title: string;
   description: string;
   category?: FeedbackCategory;
+  priority?: ComplaintPriority;
   attachments?: FileAttachment[];
   rating?: number;
   isAnonymous: boolean;
@@ -227,21 +228,55 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
     async (data: CreateFeedbackPayload) => {
       setError(null);
       try {
+        // Validate all required fields
+        if (!data.userId || !data.userName || !data.userRole || !data.type || !data.title || !data.description || !data.targetType || !data.targetId || !data.targetName || typeof data.isAnonymous !== "boolean") {
+          throw new Error("Missing required fields: userId, userName, userRole, type, title, description, targetType, targetId, targetName, and isAnonymous are required");
+        }
+        
+        // Validate rating for feedback type
+        if (data.type === "feedback" && (typeof data.rating !== "number" || data.rating < 1 || data.rating > 5)) {
+          throw new Error("Rating is required for feedback and must be between 1 and 5");
+        }
+        
+        // Build payload with all required and optional fields
+        const payload: any = {
+          userId: data.userId,
+          userName: data.userName,
+          userRole: data.userRole,
+          type: data.type,
+          title: data.title,
+          description: data.description,
+          targetType: data.targetType,
+          targetId: data.targetId,
+          targetName: data.targetName,
+          isAnonymous: data.isAnonymous,
+        };
+        
+        // Add optional fields based on type
+        if (data.category) {
+          payload.category = data.category;
+        }
+        if (data.type === "feedback" && data.rating !== undefined) {
+          payload.rating = data.rating;
+        }
+        
+        // Add priority field (required for complaints, optional for feedback)
+        if (data.type === "complaint") {
+          payload.priority = data.priority || "medium";
+        } else if (data.priority) {
+          payload.priority = data.priority;
+        }
+        
+        console.log("Submitting payload:", payload);
+        
         // If there are file attachments, use FormData
         if (data.attachments && data.attachments.length > 0) {
           const formData = new FormData();
-          formData.append("userId", data.userId);
-          formData.append("userName", data.userName);
-          formData.append("userRole", data.userRole);
-          formData.append("type", data.type);
-          formData.append("title", data.title);
-          formData.append("description", data.description);
-          formData.append("targetType", data.targetType);
-          formData.append("targetId", data.targetId);
-          formData.append("targetName", data.targetName);
-          formData.append("isAnonymous", String(data.isAnonymous));
-          if (data.category) formData.append("category", data.category);
-          if (data.rating !== undefined) formData.append("rating", String(data.rating));
+          
+          // Append all required fields to FormData
+          Object.entries(payload).forEach(([key, value]) => {
+            formData.append(key, String(value));
+          });
 
           // Add files to FormData
           // In React Native, we can pass the file object with uri directly
@@ -258,7 +293,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
           // Use regular JSON for submissions without files
           await requestJson<{ data: FeedbackItem }>("/feedback", {
             method: "POST",
-            body: JSON.stringify(data),
+            body: JSON.stringify(payload),
           });
         }
         await refresh();
@@ -318,7 +353,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
       try {
         // Validate required fields before sending
         if (!reply.replierId || !reply.replierName || !reply.replierRole || !reply.content) {
-          throw new Error("Missing required fields: replierId, replierName, replierRole, content");
+          throw new Error("Missing required fields: replierId, replierName, replierRole, and content are required");
         }
         await requestJson<{ data: FeedbackReply }>(`/feedback/${feedbackId}/replies`, {
           method: "POST",
@@ -338,6 +373,9 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
     async (feedbackId: string, replyId: string, content: string) => {
       setError(null);
       try {
+        if (!content || content.trim().length === 0) {
+          throw new Error("Reply content cannot be empty");
+        }
         await requestJson<{ data: FeedbackReply }>(
           `/feedback/${feedbackId}/replies/${replyId}`,
           {
