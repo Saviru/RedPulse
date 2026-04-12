@@ -18,4 +18,7 @@ export { CustomTabBar } from "./CustomTabBar/CustomTabBar";
 export { SegmentedControl } from "./SegmentedControl";
 export { Accordion } from "./Accordion";
 export { AnimatedHeader } from "./AnimatedHeader";
+export { FeedbackCard } from "./FeedbackCard";
+export { FeedbackFormModal, type FileAttachment, type FeedbackFormPayload } from "./FeedbackFormModal";
+export { ReplyFormModal } from "./ReplyFormModal";
 

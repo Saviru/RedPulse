@@ -33,6 +33,7 @@ type FeedbackSubmit = {
   description: string;
   category?: FeedbackCategory;
   priority?: ComplaintPriority;
+  status?: ComplaintStatus;
   attachments?: FileAttachment[];
   rating?: number;
   isAnonymous: boolean;
@@ -238,7 +239,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
           throw new Error("Rating is required for feedback and must be between 1 and 5");
         }
         
-        // Build payload with all required and optional fields
+        // Build payload with all required and optional fields (provide safe defaults)
         const payload: any = {
           userId: data.userId,
           userName: data.userName,
@@ -249,22 +250,25 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
           targetType: data.targetType,
           targetId: data.targetId,
           targetName: data.targetName,
-          isAnonymous: data.isAnonymous,
+          isAnonymous: !!data.isAnonymous,
+          // Always send attachments and defaults
+          attachments: [],
         };
         
-        // Add optional fields based on type
-        if (data.category) {
-          payload.category = data.category;
-        }
-        if (data.type === "feedback" && data.rating !== undefined) {
-          payload.rating = data.rating;
-        }
-        
-        // Add priority field (required for complaints, optional for feedback)
+        // Add optional/conditional fields
+        if (data.category) payload.category = data.category;
+
+        // Rating: send provided rating, otherwise default to 0
+        payload.rating = typeof data.rating === "number" ? data.rating : 0;
+
+        // Priority & status: complaints require these; provide defaults
         if (data.type === "complaint") {
           payload.priority = data.priority || "medium";
-        } else if (data.priority) {
-          payload.priority = data.priority;
+          payload.status = (data as any).status || "pending";
+        } else {
+          // For feedback keep priority/status only if explicitly provided
+          if (data.priority) payload.priority = data.priority;
+          if ((data as any).status) payload.status = (data as any).status;
         }
         
         console.log("Submitting payload:", payload);
@@ -273,9 +277,10 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
         if (data.attachments && data.attachments.length > 0) {
           const formData = new FormData();
           
-          // Append all required fields to FormData
+          // Append all payload fields to FormData
           Object.entries(payload).forEach(([key, value]) => {
-            formData.append(key, String(value));
+            // Booleans need to be stringified
+            formData.append(key, typeof value === "boolean" ? String(value) : String(value ?? ""));
           });
 
           // Add files to FormData

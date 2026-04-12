@@ -33,24 +33,22 @@ export type FileAttachment = {
   size: number;
 };
 
-export type FeedbackFormPayload = {
-  type: FeedbackType;
-  title: string;
-  description: string;
-  category?: FeedbackCategory | ComplaintCategory;
-  priority?: ComplaintPriority;
-  attachments?: FileAttachment[];
-  rating?: number;
-  targetType: FeedbackTargetType;
-  targetId: string;
-  targetName: string;
-  isAnonymous: boolean;
-};
-
 interface FeedbackFormModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (data: FeedbackFormPayload) => void;
+  onSubmit: (data: {
+    type: FeedbackType;
+    title: string;
+    description: string;
+    category?: FeedbackCategory | ComplaintCategory;
+    priority?: ComplaintPriority;
+    attachments?: FileAttachment[];
+    rating?: number;
+    targetType: FeedbackTargetType;
+    targetId: string;
+    targetName: string;
+    isAnonymous: boolean;
+  }) => void;
   initialData?: FeedbackItem | null;
   /** Used when creating feedback; defaults to demo hospital + organization. */
   targetOptions?: FeedbackTargetSelection[];
@@ -392,14 +390,24 @@ export const FeedbackFormModal: React.FC<FeedbackFormModalProps> = ({
                   category === "emergency" ? 4 :
                   category === "other" ? 5 : -1
                 }
-                onChange={(idx) => setCategory(
-                  idx === 0 ? "technical" :
-                  idx === 1 ? "service" :
-                  idx === 2 ? "donation" :
-                  idx === 3 ? "staff" :
-                  idx === 4 ? "emergency" : "other"
-                )}
+                onChange={(idx) => {
+                  setCategory(
+                    idx === 0 ? "technical" :
+                    idx === 1 ? "service" :
+                    idx === 2 ? "donation" :
+                    idx === 3 ? "staff" :
+                    idx === 4 ? "emergency" : "other"
+                  );
+                  if (errors.category) {
+                    setErrors({ ...errors, category: "" });
+                  }
+                }}
               />
+              {errors.category && (
+                <Typo style={{ color: "#E74C3C", fontSize: 12, marginTop: 4 }}>
+                  {errors.category}
+                </Typo>
+              )}
             </View>
           )}
 
@@ -416,12 +424,22 @@ export const FeedbackFormModal: React.FC<FeedbackFormModalProps> = ({
                   priority === "high" ? 2 :
                   priority === "critical" ? 3 : -1
                 }
-                onChange={(idx) => setPriority(
-                  idx === 0 ? "low" :
-                  idx === 1 ? "medium" :
-                  idx === 2 ? "high" : "critical"
-                )}
+                onChange={(idx) => {
+                  setPriority(
+                    idx === 0 ? "low" :
+                    idx === 1 ? "medium" :
+                    idx === 2 ? "high" : "critical"
+                  );
+                  if (errors.priority) {
+                    setErrors({ ...errors, priority: "" });
+                  }
+                }}
               />
+              {errors.priority && (
+                <Typo style={{ color: "#E74C3C", fontSize: 12, marginTop: 4 }}>
+                  {errors.priority}
+                </Typo>
+              )}
             </View>
           )}
 
@@ -501,50 +519,83 @@ export const FeedbackFormModal: React.FC<FeedbackFormModalProps> = ({
               To: {initialData.targetName}
             </Typo>
           ) : (
-           <View style={{ marginTop: 12 }}>
-             <Typo variant="caption" style={{ marginBottom: 8, color: colors.textMuted }}>
-               Send to
-             </Typo>
-             <SegmentedControl
-               options={targets.map(t =>
-                 t.targetType === "hospital" ? "Hospital" : "Organization",
-               )}
-               selectedIndex={targetIndex}
-               onChange={setTargetIndex}
-             />
+            <View style={{ marginTop: 12 }}>
+              <Typo variant="caption" style={{ marginBottom: 8, color: colors.textMuted }}>
+                Send to
+              </Typo>
+              <SegmentedControl
+                options={targets.map(t =>
+                  t.targetType === "hospital" ? "Hospital" : "Organization",
+                )}
+                selectedIndex={targetIndex}
+                onChange={setTargetIndex}
+              />
             </View>
-           )}
+          )}
 
-           <Input
-             label="Title"
-             value={title}
-             onChangeText={setTitle}
-             placeholder="Enter a short title"
-             style={undefined}
-             containerStyle={{ marginTop: 12 }}
-           />
+          <Input
+            label="Title"
+            value={title}
+            onChangeText={(val) => {
+              setTitle(val);
+              if (errors.title) {
+                setErrors({ ...errors, title: "" });
+              }
+            }}
+            placeholder="Enter a short title"
+            style={errors.title ? { borderColor: "#E74C3C", borderWidth: 1 } : undefined}
+            containerStyle={{ marginTop: 12 }}
+          />
+          {errors.title && (
+            <Typo style={{ color: "#E74C3C", fontSize: 12, marginTop: 4 }}>
+              {errors.title}
+            </Typo>
+          )}
 
-           <Input
-             label="Description"
-             value={description}
-             onChangeText={setDescription}
-             placeholder="Describe your experience"
-             multiline
-             style={{ height: 120, marginTop: 12 }}
-           />
+          <Input
+            label="Description"
+            value={description}
+            onChangeText={(val) => {
+              setDescription(val);
+              if (errors.description) {
+                setErrors({ ...errors, description: "" });
+              }
+            }}
+            placeholder="Describe your experience"
+            multiline
+            style={[
+              { height: 120, marginTop: 12 },
+              errors.description && { borderColor: "#E74C3C", borderWidth: 1 }
+            ]}
+          />
+          {errors.description && (
+            <Typo style={{ color: "#E74C3C", fontSize: 12, marginTop: 4 }}>
+              {errors.description}
+            </Typo>
+          )}
 
-           {type === "feedback" && (
-             <View style={{ marginTop: 12 }}>
-               <Typo variant="caption" style={{ marginBottom: 8, color: colors.textMuted }}>
-                 Rating *
-               </Typo>
-               <SegmentedControl
-                 options={["1", "2", "3", "4", "5"]}
-                 selectedIndex={rating ? rating - 1 : -1}
-                 onChange={(idx) => setRating(idx + 1)}
-               />
-             </View>
-           )}
+          {type === "feedback" && (
+            <View style={{ marginTop: 12 }}>
+              <Typo variant="caption" style={{ marginBottom: 8, color: colors.textMuted }}>
+                Rating <Typo style={{ color: "red" }}>*</Typo>
+              </Typo>
+              <SegmentedControl
+                options={["1", "2", "3", "4", "5"]}
+                selectedIndex={rating ? rating - 1 : -1}
+                onChange={(idx) => {
+                  setRating(idx + 1);
+                  if (errors.rating) {
+                    setErrors({ ...errors, rating: "" });
+                  }
+                }}
+              />
+              {errors.rating && (
+                <Typo style={{ color: "#E74C3C", fontSize: 12, marginTop: 4 }}>
+                  {errors.rating}
+                </Typo>
+              )}
+            </View>
+          )}
 
           <View style={styles.actionsRow}>
             <Button

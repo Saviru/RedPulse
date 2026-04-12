@@ -29,7 +29,7 @@
       [
         "expo-router",
         {
-          "root": "apps/mobile/app"
+          "root": "app"
         }
       ],
       [
