@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { View, StyleSheet, ScrollView, Animated, TouchableOpacity } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -7,6 +7,8 @@ import { useRouter } from "expo-router";
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Card, ProgressBar, AnimatedHeader } from "@/packages/ui/components/ui";
 import { useScroll } from "@/packages/ui/context/ScrollContext";
+import { useAuth } from "@/apps/mobile/src/context/AuthContext";
+import { pointsService } from "@/apps/mobile/src/services/pointsService";
 
 export default function DonorRewardsScreen() {
   const { theme, colors } = useThemeColor();
@@ -14,6 +16,43 @@ export default function DonorRewardsScreen() {
   const insets = useSafeAreaInsets();
   const scrollY = useRef(new Animated.Value(0)).current;
   const { handleScroll } = useScroll();
+  
+  const { user, isLoading: authLoading } = useAuth();
+  const [redemptions, setRedemptions] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchRedemptions = async () => {
+    if (!user) return;
+    try {
+      const [transactions, allOffers] = await Promise.all([
+        pointsService.getTransactions(),
+        pointsService.getOffers()
+      ]);
+      
+      const filtered = transactions
+        .filter(t => t.type === 'REDEMPTION')
+        .map(t => {
+          const offer = allOffers.find(o => o._id === t.targetId);
+          return {
+            ...t,
+            offerTitle: offer ? offer.title : 'Health Reward',
+            pointsCost: offer ? offer.pointsCost : t.amount
+          };
+        });
+      
+      setRedemptions(filtered);
+    } catch (error) {
+      console.error('Error fetching redemptions:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      fetchRedemptions();
+    }
+  }, [authLoading, user]);
 
   const renderRewardTrophy = (iconName: keyof typeof MaterialIcons.glyphMap, title: string, desc: string, date: string, colorClass: { bg: string, border: string, icon: string }, isLocked = false) => (
     <Card variant="elevated" style={[styles.rewardCard, isLocked && { backgroundColor: theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.02)", elevation: 0, shadowOpacity: 0 }, { opacity: isLocked ? 0.5 : 1 }]}>
@@ -68,7 +107,7 @@ export default function DonorRewardsScreen() {
         <View style={[styles.pointsSection, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
           <Typo variant="caption" color={colors.textMuted} style={styles.pointsLabel}>TOTAL POINTS</Typo>
           <View style={styles.pointsRow}>
-            <Typo variant="h1" style={styles.pointsVal}>1,250</Typo>
+            <Typo variant="h1" style={styles.pointsVal}>{(user?.points || 0).toLocaleString()}</Typo>
             <Typo variant="h2" color={colors.tint} style={styles.ptsText}>pts</Typo>
           </View>
 
@@ -107,6 +146,45 @@ export default function DonorRewardsScreen() {
             {renderRewardTrophy("looks-one", "Century Club", "Reached 10 total donations.", "Jan 05, 2024", { bg: `${colors.tint}1A`, border: `${colors.tint}33`, icon: colors.tint })}
             {renderRewardTrophy("water-drop", "First Drop", "Emergency blood request met.", "Feb 21, 2024", { bg: `${colors.tint}1A`, border: `${colors.tint}33`, icon: colors.tint })}
             {renderRewardTrophy("lock", "Blood Brother", "Refer 5 new donors to the system.", "Locked", { bg: colors.border, border: "transparent", icon: colors.icon }, true)}
+          </View>
+        </View>
+
+        <View style={styles.redeemedRewardsSection}>
+          <Typo variant="caption" color={colors.textMuted} style={styles.caseHeaderLabel}>My Redeemed Rewards</Typo>
+          
+          <View style={styles.redemptionList}>
+            {redemptions.length > 0 ? (
+              redemptions.map((redemption) => (
+                <Card key={redemption._id} variant="elevated" style={styles.redemptionCard}>
+                  <View style={styles.redemptionRow}>
+                    <View style={[styles.redemptionIcon, { backgroundColor: `${colors.tint}1A` }]}>
+                      <MaterialIcons name="local-offer" size={24} color={colors.tint} />
+                    </View>
+                    <View style={styles.redemptionContentArea}>
+                      <Typo variant="body" style={{ fontWeight: "bold" }}>{redemption.offerTitle}</Typo>
+                      <Typo variant="caption" color={colors.textMuted}>
+                        {new Date(redemption.timestamp).toLocaleDateString(undefined, { 
+                          year: 'numeric', month: 'short', day: 'numeric' 
+                        })}
+                      </Typo>
+                    </View>
+                    <View style={styles.redemptionPoints}>
+                      <Typo variant="body" color={colors.tint} style={{ fontWeight: "bold" }}>
+                        -{redemption.pointsCost}
+                      </Typo>
+                      <Typo variant="caption" color={colors.textMuted}>pts</Typo>
+                    </View>
+                  </View>
+                </Card>
+              ))
+            ) : (
+              <View style={styles.emptyContainer}>
+                <MaterialIcons name="shopping-bag" size={48} color={colors.border} />
+                <Typo variant="caption" color={colors.textMuted} style={{ marginTop: 12, textAlign: "center" }}>
+                  {isLoading ? "Fetching your rewards..." : "You haven't redeemed any rewards yet."}
+                </Typo>
+              </View>
+            )}
           </View>
         </View>
 
@@ -318,5 +396,39 @@ const styles = StyleSheet.create({
     bottom: -24,
     opacity: 0.1,
     transform: [{ rotate: "12deg" }],
+  },
+  redeemedRewardsSection: {
+    marginTop: 40,
+    paddingHorizontal: 24,
+  },
+  redemptionList: {
+    gap: 12,
+  },
+  redemptionCard: {
+    padding: 16,
+    borderRadius: 16,
+  },
+  redemptionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  redemptionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  redemptionContentArea: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  redemptionPoints: {
+    alignItems: "flex-end",
+  },
+  emptyContainer: {
+    alignItems: "center",
+    paddingVertical: 40,
+    backgroundColor: "transparent",
   },
 });

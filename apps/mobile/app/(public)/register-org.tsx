@@ -2,29 +2,104 @@ import React, { useState, useRef } from "react";
 import { View, StyleSheet, Animated, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import * as ImagePicker from 'expo-image-picker';
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import { useThemeColor } from "@/packages/ui/hooks";
-import { Button, Input, Typo, Divider, Avatar, AnimatedHeader } from "@/packages/ui/components/ui";
+import { Button, Input, Typo, Divider, Avatar, AnimatedHeader, Select } from "@/packages/ui/components/ui";
+import { useAuth } from "../../src/context/AuthContext";
+import { useToast } from "../../src/context/ToastContext";
 
 export default function OrganizationRegistrationScreen() {
   const router = useRouter();
   const { theme, colors } = useThemeColor();
+  const { register } = useAuth();
+  const { showToast } = useToast();
   const insets = useSafeAreaInsets();
   const scrollY = useRef(new Animated.Value(0)).current;
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     orgName: "",
     location: "",
     licenseId: "",
     contactNumber: "",
+    website: "",
+    orgType: "NGO" as "NGO" | "GOVERNMENT" | "PRIVATE" | "OTHER",
+    email: "",
     username: "",
     password: "",
+    avatarUrl: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleRegister = () => {
-    router.replace("/(organization)/(tabs)/profile" as any);
+  const validateEmail = (email: string) => {
+    const re = /\S+@\S+\.\S+/;
+    return re.test(email);
+  };
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      showToast('Sorry, we need camera roll permissions to make this work!', 'error');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setFormData({ ...formData, avatarUrl: result.assets[0].uri });
+    }
+  };
+
+  const handleRegister = async () => {
+    try {
+      if (!formData.orgName || !formData.email || !formData.username || !formData.password || !formData.licenseId || !formData.contactNumber) {
+        showToast("Please fill in all required fields.", "error");
+        return;
+      }
+
+      if (!validateEmail(formData.email)) {
+        showToast("Please enter a valid email address.", "error");
+        return;
+      }
+
+      if (formData.password.length < 6) {
+        showToast("Password must be at least 6 characters long.", "error");
+        return;
+      }
+
+      setIsLoading(true);
+
+      await register({
+        email: formData.email,
+        username: formData.username,
+        password: formData.password,
+        role: "ORGANIZATION",
+        organizationName: formData.orgName,
+        location: formData.location,
+        registrationNumber: formData.licenseId,
+        phone: formData.contactNumber,
+        website: formData.website,
+        orgType: formData.orgType,
+        avatarUrl: formData.avatarUrl,
+      });
+      setIsLoading(false);
+      router.push({ pathname: '/(public)/verify-otp', params: { email: formData.email } } as any);
+    } catch (err: any) {
+      const apiError = err?.response?.data?.errors?.[0]?.msg ||
+        err?.response?.data?.message ||
+        err.message ||
+        "Registration failed";
+      showToast(apiError, "error");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -47,15 +122,15 @@ export default function OrganizationRegistrationScreen() {
           )}
           scrollEventThrottle={16}
           contentContainerStyle={[
-            styles.scrollContent, 
-            { 
+            styles.scrollContent,
+            {
               paddingTop: 80 + insets.top, // Space for header
-              paddingBottom: insets.bottom + 100 
+              paddingBottom: insets.bottom + 100
             }
           ]}
           showsVerticalScrollIndicator={false}
         >
-          
+
           <View style={styles.titleSection}>
             <Typo variant="h1" style={styles.mainTitle}>New Organization</Typo>
             <Typo variant="body" color={colors.textMuted}>Join RedPulse to manage blood donation drives effectively.</Typo>
@@ -65,9 +140,9 @@ export default function OrganizationRegistrationScreen() {
           <View style={styles.avatarPickerSection}>
             <View style={styles.avatarWrapper}>
               <View style={[styles.avatarRing, { borderColor: `${colors.tint}33` }]}>
-                <Avatar size={100} />
+                <Avatar size={100} source={formData.avatarUrl ? { uri: formData.avatarUrl } : undefined} />
               </View>
-              <TouchableOpacity style={[styles.editAvatarBtn, { backgroundColor: colors.tint, borderColor: colors.background }]}>
+              <TouchableOpacity onPress={pickImage} style={[styles.editAvatarBtn, { backgroundColor: colors.tint, borderColor: colors.background }]}>
                 <MaterialIcons name="photo-camera" size={14} color={colors.background} />
               </TouchableOpacity>
             </View>
@@ -80,7 +155,7 @@ export default function OrganizationRegistrationScreen() {
               <Input
                 placeholder="Red Cross Chapter 42"
                 value={formData.orgName}
-                onChangeText={(v) => setFormData({...formData, orgName: v})}
+                onChangeText={(v) => setFormData({ ...formData, orgName: v })}
                 leftIcon={<MaterialIcons name="corporate-fare" size={20} color={colors.icon} />}
               />
             </View>
@@ -90,7 +165,7 @@ export default function OrganizationRegistrationScreen() {
               <Input
                 placeholder="123 Health Ave, New York"
                 value={formData.location}
-                onChangeText={(v) => setFormData({...formData, location: v})}
+                onChangeText={(v) => setFormData({ ...formData, location: v })}
                 leftIcon={<MaterialIcons name="location-on" size={20} color={colors.icon} />}
               />
             </View>
@@ -100,7 +175,7 @@ export default function OrganizationRegistrationScreen() {
               <Input
                 placeholder="LIC-12345678"
                 value={formData.licenseId}
-                onChangeText={(v) => setFormData({...formData, licenseId: v})}
+                onChangeText={(v) => setFormData({ ...formData, licenseId: v })}
                 leftIcon={<MaterialIcons name="badge" size={20} color={colors.icon} />}
               />
             </View>
@@ -111,8 +186,28 @@ export default function OrganizationRegistrationScreen() {
                 placeholder="+1 (555) 000-0000"
                 keyboardType="phone-pad"
                 value={formData.contactNumber}
-                onChangeText={(v) => setFormData({...formData, contactNumber: v})}
+                onChangeText={(v) => setFormData({ ...formData, contactNumber: v })}
                 leftIcon={<MaterialIcons name="call" size={20} color={colors.icon} />}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Typo variant="caption" style={styles.inputLabel}>Official Website</Typo>
+              <Input
+                placeholder="https://www.redpulse.org"
+                value={formData.website}
+                onChangeText={(v) => setFormData({ ...formData, website: v })}
+                leftIcon={<MaterialIcons name="language" size={20} color={colors.icon} />}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Typo variant="caption" style={styles.inputLabel}>Organization Type</Typo>
+              <Select
+                placeholder="Select Type"
+                value={formData.orgType}
+                options={["NGO", "GOVERNMENT", "PRIVATE", "OTHER"]}
+                onSelect={(v: any) => setFormData({ ...formData, orgType: v })}
               />
             </View>
 
@@ -120,12 +215,25 @@ export default function OrganizationRegistrationScreen() {
             <Typo variant="body" style={styles.sectionHeading}>Account Details</Typo>
 
             <View style={styles.inputGroup}>
-              <Typo variant="caption" style={styles.inputLabel}>Username</Typo>
+              <Typo variant="caption" style={styles.inputLabel}>Official Email</Typo>
+              <Input
+                placeholder="org@example.com"
+                value={formData.email}
+                onChangeText={(v) => setFormData({ ...formData, email: v })}
+                leftIcon={<MaterialIcons name="email" size={20} color={colors.icon} />}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Typo variant="caption" style={styles.inputLabel}>Admin Username</Typo>
               <Input
                 placeholder="organization_admin"
                 value={formData.username}
-                onChangeText={(v) => setFormData({...formData, username: v})}
+                onChangeText={(v) => setFormData({ ...formData, username: v })}
                 leftIcon={<MaterialIcons name="person" size={20} color={colors.icon} />}
+                autoCapitalize="none"
               />
             </View>
 
@@ -135,7 +243,7 @@ export default function OrganizationRegistrationScreen() {
                 placeholder="••••••••"
                 secureTextEntry={!showPassword}
                 value={formData.password}
-                onChangeText={(v) => setFormData({...formData, password: v})}
+                onChangeText={(v) => setFormData({ ...formData, password: v })}
                 leftIcon={<MaterialIcons name="lock" size={20} color={colors.icon} />}
                 rightIcon={
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
@@ -149,15 +257,16 @@ export default function OrganizationRegistrationScreen() {
               By registering, you agree to our Terms of Service and Privacy Policy.
             </Typo>
 
-              <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20), borderTopColor: colors.border }]}>
-                <Button
-                  label="Register Organization"
-                  onPress={handleRegister}
-                  icon={<MaterialIcons name="arrow-forward" size={20} />}
-                  iconPosition="right"
-                  style={styles.submitButton}
-                />
-              </View>
+            <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20), borderTopColor: colors.border }]}>
+              <Button
+                label={isLoading ? "Registering..." : "Register Organization"}
+                onPress={handleRegister}
+                icon={<MaterialIcons name="arrow-forward" size={20} />}
+                iconPosition="right"
+                disabled={isLoading}
+                style={styles.submitButton}
+              />
+            </View>
           </View>
         </Animated.ScrollView>
       </KeyboardAvoidingView>

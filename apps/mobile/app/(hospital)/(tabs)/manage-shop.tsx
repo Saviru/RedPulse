@@ -7,14 +7,8 @@ import { useRouter } from "expo-router";
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Card, Button, Input, Select, AnimatedHeader, Divider } from "@/packages/ui/components/ui";
 import { useScroll } from "@/packages/ui/context/ScrollContext";
-
-interface Offer {
-  id: string;
-  title: string;
-  points: string;
-  description: string;
-  type: string;
-}
+import { pointsService, Offer } from "@/apps/mobile/src/services/pointsService";
+import { useAuth } from "@/apps/mobile/src/context/AuthContext";
 
 export default function ManageShopScreen() {
   const { colors } = useThemeColor();
@@ -23,35 +17,53 @@ export default function ManageShopScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
   const { handleScroll } = useScroll();
 
-  const [offers, setOffers] = useState<Offer[]>([
-    { id: "1", title: "Free CBC Checkup", points: "500", description: "Complete Blood Count for primary health monitoring.", type: "Checkup" },
-    { id: "2", title: "20% Lab Discount", points: "1000", description: "Valid for all pathology tests at our main branch.", type: "Discount" },
-  ]);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null);
   const [formData, setFormData] = useState<Partial<Offer>>({
     title: "",
-    points: "",
+    pointsCost: 0,
     description: "",
     type: "Checkup"
   });
 
-  const handleAddEdit = () => {
-    if (!formData.title || !formData.points) return;
-
-    if (editingOffer) {
-      setOffers(offers.map(o => o.id === editingOffer.id ? { ...o, ...formData } as Offer : o));
-    } else {
-      setOffers([...offers, { id: Date.now().toString(), ...formData } as Offer]);
+  const fetchOffers = async () => {
+    try {
+      const data = await pointsService.getOffers();
+      setOffers(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
-    closeModal();
+  };
+
+  React.useEffect(() => {
+    fetchOffers();
+  }, []);
+
+  const handleAddEdit = async () => {
+    if (!formData.title || !formData.pointsCost) return;
+
+    try {
+      if (editingOffer) {
+        await pointsService.updateOffer(editingOffer._id, formData);
+      } else {
+        await pointsService.createOffer(formData);
+      }
+      await fetchOffers();
+      closeModal();
+    } catch (error) {
+       Alert.alert("Error", "Failed to save offer");
+    }
   };
 
   const closeModal = () => {
     setModalVisible(false);
     setEditingOffer(null);
-    setFormData({ title: "", points: "", description: "", type: "Checkup" });
+    setFormData({ title: "", pointsCost: 0, description: "", type: "Checkup" });
   };
 
   const openEdit = (offer: Offer) => {
@@ -63,7 +75,10 @@ export default function ManageShopScreen() {
   const confirmDelete = (id: string) => {
     Alert.alert("Delete Offer", "Are you sure you want to remove this reward?", [
       { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: () => setOffers(offers.filter(o => o.id !== id)) }
+      { text: "Delete", style: "destructive", onPress: async () => {
+         await pointsService.deleteOffer(id);
+         fetchOffers();
+      }}
     ]);
   };
 
@@ -94,25 +109,36 @@ export default function ManageShopScreen() {
         ]}
       >
         <View style={styles.section}>
-          <Typo variant="h2" style={styles.sectionTitle}>Current Offers</Typo>
-          <Typo variant="caption" color={colors.textMuted} style={{ marginBottom: 20 }}>
-            List of rewards available for users to redeem using their points.
-          </Typo>
+          <View style={styles.headerRow}>
+            <View style={{ flex: 1 }}>
+              <Typo variant="h2" style={styles.sectionTitle}>Current Offers</Typo>
+              <Typo variant="caption" color={colors.textMuted}>
+                List of rewards available for users to redeem.
+              </Typo>
+            </View>
+            <TouchableOpacity 
+              style={[styles.activityBtn, { borderColor: colors.tint }]} 
+              onPress={() => router.push('/(hospital)/(tabs)/activity')}
+            >
+              <MaterialIcons name="history" size={20} color={colors.tint} />
+              <Typo variant="caption" color={colors.tint} style={{ marginLeft: 6, fontWeight: "bold" }}>View Activity</Typo>
+            </TouchableOpacity>
+          </View>
 
           {offers.map((offer) => (
-            <Card key={offer.id} variant="elevated" style={styles.offerCard}>
+            <Card key={offer._id} variant="elevated" style={styles.offerCard}>
               <View style={styles.offerHeader}>
                 <View style={styles.offerInfo}>
                   <Typo variant="h2" style={{ fontSize: 18 }}>{offer.title}</Typo>
                   <Typo variant="caption" color={colors.tint} style={{ fontWeight: "bold" }}>
-                    {offer.points} Points • {offer.type}
+                    {offer.pointsCost} Points • {offer.type}
                   </Typo>
                 </View>
                 <View style={styles.offerActions}>
                   <TouchableOpacity onPress={() => openEdit(offer)} style={styles.actionBtn}>
                     <MaterialIcons name="edit" size={20} color={colors.text} />
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => confirmDelete(offer.id)} style={styles.actionBtn}>
+                  <TouchableOpacity onPress={() => confirmDelete(offer._id)} style={styles.actionBtn}>
                     <MaterialIcons name="delete-outline" size={20} color={colors.error} />
                   </TouchableOpacity>
                 </View>
@@ -132,7 +158,7 @@ export default function ManageShopScreen() {
       </Animated.ScrollView>
 
       <TouchableOpacity 
-        style={[styles.fab, { backgroundColor: colors.tint }]} 
+        style={[styles.fab, { backgroundColor: colors.tint, bottom: insets.bottom + 85 }]} 
         onPress={() => setModalVisible(true)}
       >
         <MaterialIcons name="add" size={28} color="#FFF" />
@@ -160,8 +186,8 @@ export default function ManageShopScreen() {
                   label="Points Cost"
                   placeholder="pts"
                   keyboardType="numeric"
-                  value={formData.points}
-                  onChangeText={(t) => setFormData({ ...formData, points: t })}
+                  value={formData.pointsCost?.toString()}
+                  onChangeText={(t) => setFormData({ ...formData, pointsCost: parseInt(t) || 0 })}
                 />
                 <Select 
                   label="Offer Type"
@@ -241,7 +267,6 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: "absolute",
-    bottom: 30,
     right: 20,
     width: 60,
     height: 60,
@@ -253,6 +278,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
+    zIndex: 100,
   },
   modalOverlay: {
     flex: 1,
@@ -274,5 +300,20 @@ const styles = StyleSheet.create({
   },
   formContent: {
     marginBottom: 40,
-  }
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+    gap: 12,
+  },
+  activityBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
 });

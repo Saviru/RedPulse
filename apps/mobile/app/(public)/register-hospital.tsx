@@ -2,29 +2,100 @@ import React, { useState, useRef } from "react";
 import { View, StyleSheet, ScrollView, Animated, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import * as ImagePicker from 'expo-image-picker';
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Button, Input, Typo, Avatar, AnimatedHeader } from "@/packages/ui/components/ui";
+import { useAuth } from "../../src/context/AuthContext";
+import { useToast } from "../../src/context/ToastContext";
 
 export default function HospitalRegistrationScreen() {
   const router = useRouter();
   const { theme, colors } = useThemeColor();
+  const { register } = useAuth();
+  const { showToast } = useToast();
   const insets = useSafeAreaInsets();
   const scrollY = useRef(new Animated.Value(0)).current;
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     hospitalName: "",
     location: "",
     registrationId: "",
     contactNumber: "",
+    email: "",
     username: "",
     password: "",
+    avatarUrl: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleRegister = () => {
-    router.replace("/(hospital)/(tabs)/profile" as any);
+  const validateEmail = (email: string) => {
+    const re = /\S+@\S+\.\S+/;
+    return re.test(email);
+  };
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      showToast('Sorry, we need camera roll permissions to make this work!', 'error');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setFormData({ ...formData, avatarUrl: result.assets[0].uri });
+    }
+  };
+
+  const handleRegister = async () => {
+    try {
+      if (!formData.hospitalName || !formData.email || !formData.username || !formData.password || !formData.registrationId || !formData.contactNumber) {
+        showToast("Please fill in all required fields.", "error");
+        return;
+      }
+
+      if (!validateEmail(formData.email)) {
+        showToast("Please enter a valid email address.", "error");
+        return;
+      }
+
+      if (formData.password.length < 6) {
+        showToast("Password must be at least 6 characters long.", "error");
+        return;
+      }
+
+      setIsLoading(true);
+
+      await register({
+        email: formData.email,
+        username: formData.username,
+        password: formData.password,
+        role: "HOSPITAL",
+        hospitalName: formData.hospitalName,
+        address: formData.location,
+        licenseNumber: formData.registrationId,
+        phone: formData.contactNumber,
+        avatarUrl: formData.avatarUrl,
+      });
+      setIsLoading(false);
+      router.push({ pathname: '/(public)/verify-otp', params: { email: formData.email } } as any);
+    } catch (err: any) {
+      const apiError = err?.response?.data?.errors?.[0]?.msg ||
+        err?.response?.data?.message ||
+        err.message ||
+        "Registration failed";
+      showToast(apiError, "error");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -47,15 +118,15 @@ export default function HospitalRegistrationScreen() {
           )}
           scrollEventThrottle={16}
           contentContainerStyle={[
-            styles.scrollContent, 
-            { 
+            styles.scrollContent,
+            {
               paddingTop: 80 + insets.top, // Space for header
-              paddingBottom: insets.bottom + 100 
+              paddingBottom: insets.bottom + 100
             }
           ]}
           showsVerticalScrollIndicator={false}
         >
-          
+
           <View style={styles.titleSection}>
             <Typo variant="h1" style={styles.mainTitle}>
               Join <Typo variant="h1" color={colors.tint}>RedPulse</Typo>{"\n"}Partner Network
@@ -66,9 +137,9 @@ export default function HospitalRegistrationScreen() {
           <View style={styles.avatarPickerSection}>
             <View style={styles.avatarWrapper}>
               <View style={[styles.avatarRing, { borderColor: `${colors.tint}33` }]}>
-                <Avatar size={100} />
+                <Avatar size={100} source={formData.avatarUrl ? { uri: formData.avatarUrl } : undefined} />
               </View>
-              <TouchableOpacity style={[styles.editAvatarBtn, { backgroundColor: colors.tint, borderColor: colors.background }]}>
+              <TouchableOpacity onPress={pickImage} style={[styles.editAvatarBtn, { backgroundColor: colors.tint, borderColor: colors.background }]}>
                 <MaterialIcons name="photo-camera" size={14} color={colors.background} />
               </TouchableOpacity>
             </View>
@@ -81,7 +152,7 @@ export default function HospitalRegistrationScreen() {
               <Input
                 placeholder="Enter hospital name"
                 value={formData.hospitalName}
-                onChangeText={(v) => setFormData({...formData, hospitalName: v})}
+                onChangeText={(v) => setFormData({ ...formData, hospitalName: v })}
                 rightIcon={<MaterialIcons name="local-hospital" size={20} color={colors.icon} />}
               />
             </View>
@@ -91,7 +162,7 @@ export default function HospitalRegistrationScreen() {
               <Input
                 placeholder="City, Address or Coordinates"
                 value={formData.location}
-                onChangeText={(v) => setFormData({...formData, location: v})}
+                onChangeText={(v) => setFormData({ ...formData, location: v })}
                 rightIcon={<MaterialIcons name="location-on" size={20} color={colors.icon} />}
               />
             </View>
@@ -101,7 +172,7 @@ export default function HospitalRegistrationScreen() {
               <Input
                 placeholder="Govt. issued ID"
                 value={formData.registrationId}
-                onChangeText={(v) => setFormData({...formData, registrationId: v})}
+                onChangeText={(v) => setFormData({ ...formData, registrationId: v })}
                 rightIcon={<MaterialIcons name="badge" size={20} color={colors.icon} />}
               />
             </View>
@@ -112,8 +183,20 @@ export default function HospitalRegistrationScreen() {
                 placeholder="+1 (555) 000-0000"
                 keyboardType="phone-pad"
                 value={formData.contactNumber}
-                onChangeText={(v) => setFormData({...formData, contactNumber: v})}
+                onChangeText={(v) => setFormData({ ...formData, contactNumber: v })}
                 rightIcon={<MaterialIcons name="call" size={20} color={colors.icon} />}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Typo variant="caption" style={styles.inputLabel}>Official Email</Typo>
+              <Input
+                placeholder="hospital@example.com"
+                value={formData.email}
+                onChangeText={(v) => setFormData({ ...formData, email: v })}
+                rightIcon={<MaterialIcons name="email" size={20} color={colors.icon} />}
+                keyboardType="email-address"
+                autoCapitalize="none"
               />
             </View>
 
@@ -122,8 +205,9 @@ export default function HospitalRegistrationScreen() {
               <Input
                 placeholder="Create a username"
                 value={formData.username}
-                onChangeText={(v) => setFormData({...formData, username: v})}
+                onChangeText={(v) => setFormData({ ...formData, username: v })}
                 rightIcon={<MaterialIcons name="person" size={20} color={colors.icon} />}
+                autoCapitalize="none"
               />
             </View>
 
@@ -133,7 +217,7 @@ export default function HospitalRegistrationScreen() {
                 placeholder="Min. 8 characters"
                 secureTextEntry={!showPassword}
                 value={formData.password}
-                onChangeText={(v) => setFormData({...formData, password: v})}
+                onChangeText={(v) => setFormData({ ...formData, password: v })}
                 rightIcon={
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                     <MaterialIcons name={showPassword ? "visibility" : "visibility-off"} size={20} color={colors.icon} />
@@ -146,15 +230,16 @@ export default function HospitalRegistrationScreen() {
               By registering, you agree to our Terms of Service & Privacy Policy.
             </Typo>
 
-              <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20), borderTopColor: colors.border }]}>
-                <Button
-                  label="Register Hospital"
-                  onPress={handleRegister}
-                  icon={<MaterialIcons name="arrow-forward" size={20} />}
-                  iconPosition="right"
-                  style={styles.submitButton}
-                />
-              </View>
+            <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20), borderTopColor: colors.border }]}>
+              <Button
+                label={isLoading ? "Registering..." : "Register Hospital"}
+                onPress={handleRegister}
+                icon={<MaterialIcons name="arrow-forward" size={20} />}
+                iconPosition="right"
+                disabled={isLoading}
+                style={styles.submitButton}
+              />
+            </View>
           </View>
         </Animated.ScrollView>
       </KeyboardAvoidingView>

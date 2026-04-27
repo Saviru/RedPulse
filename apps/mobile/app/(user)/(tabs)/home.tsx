@@ -3,6 +3,7 @@ import { View, StyleSheet, Animated, TouchableOpacity, ScrollView, Image } from 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
+import { useAuth } from "@/apps/mobile/src/context/AuthContext";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Card, Button, AnimatedHeader, Divider, Badge } from "@/packages/ui/components/ui";
@@ -15,11 +16,13 @@ export default function UserHomeScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
   const { handleScroll } = useScroll();
 
+  const { user } = useAuth();
+  
   // Mock Data
   const stats = [
     { label: "Donations", value: "12", icon: "bloodtype" },
     { label: "Lives Saved", value: "36", icon: "favorite" },
-    { label: "Points", value: "1,250", icon: "stars" },
+    { label: "Points", value: (user?.points || 0).toLocaleString(), icon: "stars" },
   ];
 
   return (
@@ -111,10 +114,10 @@ export default function UserHomeScreen() {
                 <MaterialIcons name="stars" size={20} color={colors.tint} />
               </View>
               <View style={{ flex: 1, marginLeft: 12 }}>
-                <Typo variant="body" style={{ fontWeight: "600" }}>Earned 500 Points</Typo>
-                <Typo variant="caption" color={colors.textMuted}>Donation at Saint Mary's</Typo>
+                <Typo variant="body" style={{ fontWeight: "600" }}>Welcome Bonus</Typo>
+                <Typo variant="caption" color={colors.textMuted}>Received 10 Points for joining</Typo>
               </View>
-              <Typo variant="caption" color={colors.textMuted}>2d ago</Typo>
+              <Typo variant="caption" color={colors.textMuted}>Today</Typo>
             </View>
           </Card>
         </View>

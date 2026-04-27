@@ -9,8 +9,6 @@ export default function UserLayout() {
       }}
     >
       <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="campaign-volunteer" />
-      <Stack.Screen name="campaign-tasks" />
     </Stack>
   );
 }

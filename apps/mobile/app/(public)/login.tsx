@@ -7,18 +7,45 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { Button, Input, Typo, Card } from "@/packages/ui/components/ui";
 import { useThemeColor } from "@/packages/ui/hooks";
+import { useAuth } from "../../src/context/AuthContext";
+import { useToast } from "../../src/context/ToastContext";
 
 export default function LoginScreen() {
   const router = useRouter();
   const { theme, colors } = useThemeColor();
+  const { login } = useAuth();
+  const { showToast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
-  const [username, setUsername] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = () => {
-    // Implement actual authentication logic here
-    // @ts-ignore
-    router.replace("/(user)/home"); // Or organization home depending on logic
+  const validateEmail = (email: string) => {
+    const re = /\S+@\S+\.\S+/;
+    return re.test(email);
+  };
+
+  const handleLogin = async () => {
+    try {
+      if (!identifier || !password) {
+        showToast("Please enter email/username and password", "error");
+        return;
+      }
+
+      setIsLoading(true);
+      // We pass the identifier as both email and username, 
+      // the backend will find the user by either matching field.
+      await login({ 
+        email: identifier, 
+        username: identifier, 
+        password 
+      });
+      // Redirection is handled by the effect in _layout.tsx
+    } catch (err: any) {
+      showToast(err?.response?.data?.message || err.message || "Login failed", "error");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -48,13 +75,14 @@ export default function LoginScreen() {
               <Typo variant="h2" style={styles.formHeading}>Welcome Back</Typo>
 
               <View style={styles.inputGroup}>
-                <Typo variant="caption" style={styles.inputLabel}>USERNAME</Typo>
+                <Typo variant="caption" style={styles.inputLabel}>EMAIL OR USERNAME</Typo>
                 <Input
-                  placeholder="Enter your username"
-                  value={username}
-                  onChangeText={setUsername}
+                  placeholder="Enter your email or username"
+                  value={identifier}
+                  onChangeText={setIdentifier}
                   leftIcon={<MaterialIcons name="person" size={20} color={colors.icon} />}
                   containerStyle={styles.input}
+                  autoCapitalize="none"
                 />
               </View>
 
@@ -75,9 +103,10 @@ export default function LoginScreen() {
               </View>
 
               <Button
-                label="Log In"
+                label={isLoading ? "Logging in..." : "Log In"}
                 variant="primary"
                 onPress={handleLogin}
+                disabled={isLoading}
                 style={styles.loginButton}
               />
 

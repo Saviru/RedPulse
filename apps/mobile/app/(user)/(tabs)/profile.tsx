@@ -6,6 +6,8 @@ import { useRouter } from "expo-router";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Input, Button, Avatar, Badge, AnimatedHeader } from "@/packages/ui/components/ui";
+import { useAuth } from "../../../src/context/AuthContext";
+import { Alert } from "react-native";
 
 
 export default function DonorProfileScreen() {
@@ -14,12 +16,63 @@ export default function DonorProfileScreen() {
   const router = useRouter();
   const scrollY = useRef(new Animated.Value(0)).current;
 
+  const { user, logout, updateProfile, requestDeleteAccount, confirmDeleteAccount } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   const [formData, setFormData] = useState({
-    username: "alex_donor_99",
-    location: "San Francisco, CA",
+    username: user?.username || "",
+    location: user?.location || "",
+    fullName: user?.fullName || "",
+    nic: user?.nic || "",
+    dob: user?.dob || "",
+    bloodGroup: user?.bloodGroup || "",
+    phone: user?.phone || "",
+    weight: user?.weight || "",
   });
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Not set";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to log out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Logout", style: "destructive", onPress: logout }
+      ]
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete Account",
+      "Are you absolutely sure? This action is permanent and cannot be undone. All your data will be removed.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: async () => {
+          try {
+            await requestDeleteAccount();
+            router.push('/(user)/verify-delete' as any);
+          } catch (err: any) {
+            Alert.alert("Error", err.message || "Failed to delete account");
+          }
+        }}
+      ]
+    );
+  };
 
   const renderTrophy = (iconName: keyof typeof MaterialIcons.glyphMap, title: string, isThemeTint: boolean, isLocked = false) => {
     const bgColor = isLocked ? colors.surface : (isThemeTint ? `${colors.tint}1A` : `${colors.success}1A`);
@@ -80,11 +133,11 @@ export default function DonorProfileScreen() {
               </TouchableOpacity>
             )}
           </View>
-          <Typo variant="h2" style={styles.userName}>Alex Donor</Typo>
+          <Typo variant="h2" style={styles.userName}>{user?.fullName || user?.username || "User"}</Typo>
           <View style={styles.userBadges}>
-            <Badge label="O+ Positive" variant="info" />
+            <Badge label={user?.bloodGroup || "N/A"} variant="info" />
             <Typo variant="caption" color={colors.textMuted}>•</Typo>
-            <Typo variant="caption" color={colors.textMuted} style={{ fontWeight: "500" }}>12 Donations</Typo>
+            <Typo variant="caption" color={colors.textMuted} style={{ fontWeight: "500" }}>Donor</Typo>
           </View>
         </View>
 
@@ -114,24 +167,70 @@ export default function DonorProfileScreen() {
           {isEditing ? (
             <View style={{ gap: 16 }}>
               <Input
-                value={formData.username}
-                onChangeText={(t) => setFormData({...formData, username: t})}
-                placeholder="Username"
-                leftIcon={<MaterialIcons name="person" size={20} color={colors.icon} />}
+                label="Full Name"
+                value={formData.fullName}
+                onChangeText={(t) => setFormData({...formData, fullName: t})}
+                placeholder="Full Name"
+                leftIcon={<MaterialIcons name="badge" size={20} color={colors.icon} />}
               />
               <Input
+                label="Location"
                 value={formData.location}
                 onChangeText={(t) => setFormData({...formData, location: t})}
                 placeholder="Location"
                 leftIcon={<MaterialIcons name="location-on" size={20} color={colors.icon} />}
               />
+              <Input
+                label="NIC"
+                value={formData.nic}
+                onChangeText={(t) => setFormData({...formData, nic: t})}
+                placeholder="National ID"
+                leftIcon={<MaterialIcons name="lock-open" size={20} color={colors.icon} />}
+              />
+              <Input
+                label="Phone Number"
+                value={formData.phone}
+                onChangeText={(t) => setFormData({...formData, phone: t})}
+                placeholder="Phone Number"
+                keyboardType="phone-pad"
+                leftIcon={<MaterialIcons name="call" size={20} color={colors.icon} />}
+              />
+              <View style={styles.rowInputs}>
+                <View style={{ flex: 1 }}>
+                  <Input
+                    label="Date of Birth"
+                    value={formData.dob}
+                    onChangeText={(t) => setFormData({...formData, dob: t})}
+                    placeholder="YYYY-MM-DD"
+                    leftIcon={<MaterialIcons name="calendar-today" size={20} color={colors.icon} />}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Input
+                    label="Weight (kg)"
+                    value={formData.weight}
+                    onChangeText={(t) => setFormData({...formData, weight: t})}
+                    placeholder="70"
+                    keyboardType="numeric"
+                    leftIcon={<MaterialIcons name="monitor-weight" size={20} color={colors.icon} />}
+                  />
+                </View>
+              </View>
             </View>
           ) : (
             <>
               <View style={[styles.dummyInput, { backgroundColor: colors.surface }]}>
                 <View>
+                  <Typo variant="caption" color={colors.textMuted}>Full Name</Typo>
+                  <Typo variant="body" style={{ fontWeight: "500", marginTop: 4 }}>{user?.fullName}</Typo>
+                </View>
+                <MaterialIcons name="badge" size={20} color={colors.icon} />
+              </View>
+
+              <View style={[styles.dummyInput, { backgroundColor: colors.surface }]}>
+                <View>
                   <Typo variant="caption" color={colors.textMuted}>Username</Typo>
-                  <Typo variant="body" style={{ fontWeight: "500", marginTop: 4 }}>{formData.username}</Typo>
+                  <Typo variant="body" style={{ fontWeight: "500", marginTop: 4 }}>{user?.username}</Typo>
                 </View>
                 <MaterialIcons name="person" size={20} color={colors.icon} />
               </View>
@@ -139,50 +238,103 @@ export default function DonorProfileScreen() {
               <View style={[styles.dummyInput, { backgroundColor: colors.surface }]}>
                 <View>
                   <Typo variant="caption" color={colors.textMuted}>Location</Typo>
-                  <Typo variant="body" style={{ fontWeight: "500", marginTop: 4 }}>{formData.location}</Typo>
+                  <Typo variant="body" style={{ fontWeight: "500", marginTop: 4 }}>{user?.location || "Not set"}</Typo>
                 </View>
                 <MaterialIcons name="location-on" size={20} color={colors.icon} />
+              </View>
+
+              <View style={[styles.dummyInput, { backgroundColor: colors.surface }]}>
+                <View>
+                  <Typo variant="caption" color={colors.textMuted}>NIC Number</Typo>
+                  <Typo variant="body" style={{ fontWeight: "500", marginTop: 4 }}>{user?.nic || "Not set"}</Typo>
+                </View>
+                <MaterialIcons name="lock" size={20} color={colors.icon} />
+              </View>
+
+              <View style={[styles.dummyInput, { backgroundColor: colors.surface }]}>
+                <View>
+                  <Typo variant="caption" color={colors.textMuted}>Phone Number</Typo>
+                  <Typo variant="body" style={{ fontWeight: "500", marginTop: 4 }}>{user?.phone || "Not set"}</Typo>
+                </View>
+                <MaterialIcons name="call" size={20} color={colors.icon} />
+              </View>
+
+              <View style={[styles.dummyInput, { backgroundColor: colors.surface }]}>
+                <View>
+                  <Typo variant="caption" color={colors.textMuted}>Date of Birth</Typo>
+                  <Typo variant="body" style={{ fontWeight: "500", marginTop: 4 }}>{user?.dob ? formatDate(user.dob) : "Not set"}</Typo>
+                </View>
+                <MaterialIcons name="event" size={20} color={colors.icon} />
+              </View>
+
+              <View style={[styles.dummyInput, { backgroundColor: colors.surface }]}>
+                <View>
+                  <Typo variant="caption" color={colors.textMuted}>Weight</Typo>
+                  <Typo variant="body" style={{ fontWeight: "500", marginTop: 4 }}>{user?.weight ? `${user.weight} kg` : "Not set"}</Typo>
+                </View>
+                <MaterialIcons name="monitor-weight" size={20} color={colors.icon} />
+              </View>
+
+              <View style={[styles.dummyInput, { backgroundColor: colors.surface }]}>
+                <View>
+                  <Typo variant="caption" color={colors.textMuted}>Blood Group</Typo>
+                  <Typo variant="body" style={{ fontWeight: "500", marginTop: 4 }}>{user?.bloodGroup || "Not set"}</Typo>
+                </View>
+                <MaterialIcons name="bloodtype" size={20} color={colors.icon} />
               </View>
             </>
           )}
 
         </View>
 
-        <View style={styles.detailsSection}>
-          <View style={[styles.dummyInput, { backgroundColor: colors.surface, opacity: 0.7 }]}>
-            <View>
-              <Typo variant="caption" color={colors.textMuted}>National ID (NIC)</Typo>
-              <Typo variant="body" color={colors.textMuted} style={{ fontWeight: "500", marginTop: 4 }}>952401832V</Typo>
-            </View>
-            <MaterialIcons name="lock" size={20} color={colors.icon} />
+        {!isEditing && (
+          <View style={styles.detailsSection}>
+             <Typo variant="caption" color={colors.error} style={{ fontWeight: "bold", marginBottom: 8, marginLeft: 4 }}>DANGER ZONE</Typo>
+             <View style={[styles.dangerBox, { borderColor: `${colors.error}33`, backgroundColor: `${colors.error}08` }]}>
+                <Typo variant="caption" color={colors.textMuted} style={{ marginBottom: 12 }}>
+                  Permanently delete your account and all associated data. This action is irreversible.
+                </Typo>
+                <Button
+                  label="Delete Account"
+                  variant="danger"
+                  onPress={handleDeleteAccount}
+                  icon={<MaterialIcons name="delete-forever" size={20} />}
+                />
+             </View>
           </View>
+        )}
 
-          <View style={styles.rowInputs}>
-             <View style={[styles.dummyInput, { flex: 1, backgroundColor: colors.surface, opacity: 0.7 }]}>
-               <View>
-                 <Typo variant="caption" color={colors.textMuted}>Date of Birth</Typo>
-                 <Typo variant="body" color={colors.textMuted} style={{ fontWeight: "500", marginTop: 4 }}>12/04/1995</Typo>
-               </View>
-               <MaterialIcons name="lock" size={16} color={colors.icon} />
-             </View>
-             <View style={[styles.dummyInput, { width: 100, backgroundColor: colors.surface, opacity: 0.7 }]}>
-               <View>
-                 <Typo variant="caption" color={colors.textMuted}>Blood</Typo>
-                 <Typo variant="body" color={colors.textMuted} style={{ fontWeight: "bold", marginTop: 4 }}>O+</Typo>
-               </View>
-             </View>
-          </View>
+        <View style={styles.detailsSection}>
+          <Button
+            label="Logout"
+            variant="secondary"
+            style={{ backgroundColor: `${colors.error}1A`, borderColor: colors.error }}
+            onPress={handleLogout}
+            icon={<MaterialIcons name="logout" size={20} color={colors.error} />}
+          />
         </View>
 
         {isEditing && (
           <View style={styles.actionSection}>
             <Button
-              label="Save Changes"
-              icon={<MaterialIcons name="save" size={20} />}
+              label={isSaving ? "Saving..." : "Save Changes"}
+              icon={!isSaving && <MaterialIcons name="save" size={20} />}
               iconPosition="left"
               variant="primary"
               style={styles.saveBtn}
-              onPress={() => setIsEditing(false)}
+              disabled={isSaving}
+              onPress={async () => {
+                setIsSaving(true);
+                try {
+                  await updateProfile(formData);
+                  setIsEditing(false);
+                  Alert.alert("Success", "Profile updated successfully!");
+                } catch (err: any) {
+                  Alert.alert("Error", err.message || "Failed to update profile");
+                } finally {
+                  setIsSaving(false);
+                }
+              }}
             />
           </View>
         )}
@@ -324,5 +476,11 @@ const styles = StyleSheet.create({
   saveBtn: {
     height: 56,
     borderRadius: 16,
+  },
+  dangerBox: {
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderStyle: "dashed",
   },
 });

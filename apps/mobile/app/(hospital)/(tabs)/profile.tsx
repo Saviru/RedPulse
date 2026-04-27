@@ -6,6 +6,8 @@ import { useRouter } from "expo-router";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Input, Button, Avatar, Badge, Toggle, AnimatedHeader } from "@/packages/ui/components/ui";
+import { useAuth } from "../../../src/context/AuthContext";
+import { Alert } from "react-native";
 
 
 export default function HospitalProfileScreen() {
@@ -14,15 +16,48 @@ export default function HospitalProfileScreen() {
   const router = useRouter();
   const scrollY = useRef(new Animated.Value(0)).current;
 
+  const { user, logout, updateProfile, requestDeleteAccount } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [formData, setFormData] = useState({
-    name: "Saint Mary's General",
-    location: "1245 Medical Center Dr, NY",
-    phone: "+1 (555) 012-3456",
-    email: "contact@stmarys.org",
+    name: user?.hospitalName || "",
+    location: user?.address || "",
+    phone: user?.phone || user?.emergencyContact || "",
+    email: user?.email || "",
+    licenseNumber: user?.licenseNumber || "",
     urgentRequests: true,
   });
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to log out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Logout", style: "destructive", onPress: logout }
+      ]
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete Account",
+      "Are you absolutely sure? This action is permanent and cannot be undone. All your data will be removed.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: async () => {
+          try {
+            await requestDeleteAccount();
+            router.push('/(hospital)/verify-delete' as any);
+          } catch (err: any) {
+            Alert.alert("Error", err.message || "Failed to delete account");
+          }
+        }}
+      ]
+    );
+  };
+
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -69,7 +104,7 @@ export default function HospitalProfileScreen() {
               </TouchableOpacity>
             )}
           </View>
-          <Typo variant="h2" style={styles.userName}>{formData.name}</Typo>
+          <Typo variant="h2" style={styles.userName}>{user?.hospitalName || "Hospital Name"}</Typo>
           <View style={styles.userBadges}>
             <Badge label="Hospital" variant="info" />
             <Typo variant="caption" color={colors.textMuted}>•</Typo>
@@ -111,23 +146,37 @@ export default function HospitalProfileScreen() {
                 placeholder="Location"
                 leftIcon={<MaterialIcons name="location-on" size={20} color={colors.icon} />}
               />
+              <Input
+                value={formData.licenseNumber}
+                onChangeText={(t) => setFormData({...formData, licenseNumber: t})}
+                placeholder="License Number"
+                leftIcon={<MaterialIcons name="verified" size={20} color={colors.icon} />}
+              />
             </View>
           ) : (
             <>
               <View style={[styles.dummyInput, { backgroundColor: colors.surface }]}>
                 <View>
                   <Typo variant="caption" color={colors.textMuted}>Hospital Name</Typo>
-                  <Typo variant="body" style={{ fontWeight: "500", marginTop: 4 }}>{formData.name}</Typo>
+                  <Typo variant="body" style={{ fontWeight: "500", marginTop: 4 }}>{user?.hospitalName}</Typo>
                 </View>
                 <MaterialIcons name="local-hospital" size={20} color={colors.icon} />
               </View>
 
               <View style={[styles.dummyInput, { backgroundColor: colors.surface }]}>
                 <View>
-                  <Typo variant="caption" color={colors.textMuted}>Location</Typo>
-                  <Typo variant="body" style={{ fontWeight: "500", marginTop: 4 }}>{formData.location}</Typo>
+                  <Typo variant="caption" color={colors.textMuted}>Address / Location</Typo>
+                  <Typo variant="body" style={{ fontWeight: "500", marginTop: 4 }}>{user?.address || "Not set"}</Typo>
                 </View>
                 <MaterialIcons name="location-on" size={20} color={colors.icon} />
+              </View>
+
+              <View style={[styles.dummyInput, { backgroundColor: colors.surface }]}>
+                <View>
+                  <Typo variant="caption" color={colors.textMuted}>License Number</Typo>
+                  <Typo variant="body" style={{ fontWeight: "500", marginTop: 4 }}>{user?.licenseNumber || "N/A"}</Typo>
+                </View>
+                <MaterialIcons name="verified" size={20} color={colors.icon} />
               </View>
             </>
           )}
@@ -158,8 +207,8 @@ export default function HospitalProfileScreen() {
             <>
               <View style={[styles.dummyInput, { backgroundColor: colors.surface }]}>
                 <View>
-                  <Typo variant="caption" color={colors.textMuted}>Phone</Typo>
-                  <Typo variant="body" color={colors.tint} style={{ fontWeight: "500", marginTop: 4 }}>{formData.phone}</Typo>
+                  <Typo variant="caption" color={colors.textMuted}>Contact Number</Typo>
+                  <Typo variant="body" color={colors.tint} style={{ fontWeight: "500", marginTop: 4 }}>{user?.phone || user?.emergencyContact}</Typo>
                 </View>
                 <MaterialIcons name="call" size={20} color={colors.icon} />
               </View>
@@ -167,7 +216,7 @@ export default function HospitalProfileScreen() {
               <View style={[styles.dummyInput, { backgroundColor: colors.surface }]}>
                 <View>
                   <Typo variant="caption" color={colors.textMuted}>Email</Typo>
-                  <Typo variant="body" style={{ fontWeight: "500", marginTop: 4 }}>{formData.email}</Typo>
+                  <Typo variant="body" style={{ fontWeight: "500", marginTop: 4 }}>{user?.email}</Typo>
                 </View>
                 <MaterialIcons name="alternate-email" size={20} color={colors.icon} />
               </View>
@@ -211,17 +260,61 @@ export default function HospitalProfileScreen() {
               <MaterialIcons name="chevron-right" size={24} color={colors.tint} />
             </TouchableOpacity>
           )}
+
+          <View style={{ marginTop: 12 }}>
+            <Button
+              label="Logout"
+              variant="secondary"
+              style={{ backgroundColor: `${colors.error}1A`, borderColor: colors.error }}
+              onPress={handleLogout}
+              icon={<MaterialIcons name="logout" size={20} color={colors.error} />}
+            />
+          </View>
         </View>
+
+        {!isEditing && (
+          <View style={styles.detailsSection}>
+             <Typo variant="caption" color={colors.error} style={{ fontWeight: "bold", marginBottom: 8, marginLeft: 4 }}>DANGER ZONE</Typo>
+             <View style={[styles.dangerBox, { borderColor: `${colors.error}33`, backgroundColor: `${colors.error}08` }]}>
+                <Typo variant="caption" color={colors.textMuted} style={{ marginBottom: 12 }}>
+                  Permanently delete your account and all associated data. This action is irreversible.
+                </Typo>
+                <Button
+                  label="Delete Account"
+                  variant="danger"
+                  onPress={handleDeleteAccount}
+                  icon={<MaterialIcons name="delete-forever" size={20} />}
+                />
+             </View>
+          </View>
+        )}
 
         {isEditing && (
           <View style={styles.actionSection}>
             <Button
-              label="Save Changes"
-              icon={<MaterialIcons name="save" size={20} />}
+              label={isSaving ? "Saving..." : "Save Changes"}
+              icon={!isSaving && <MaterialIcons name="save" size={20} />}
               iconPosition="left"
               variant="primary"
               style={styles.saveBtn}
-              onPress={() => setIsEditing(false)}
+              disabled={isSaving}
+              onPress={async () => {
+                setIsSaving(true);
+                try {
+                  await updateProfile({
+                    hospitalName: formData.name,
+                    address: formData.location,
+                    phone: formData.phone,
+                    licenseNumber: formData.licenseNumber,
+                  });
+                  setIsEditing(false);
+                  Alert.alert("Success", "Profile updated successfully!");
+                } catch (err: any) {
+                  Alert.alert("Error", err.message || "Failed to update profile");
+                } finally {
+                  setIsSaving(false);
+                }
+              }}
             />
           </View>
         )}
@@ -351,5 +444,11 @@ const styles = StyleSheet.create({
   saveBtn: {
     height: 56,
     borderRadius: 16,
+  },
+  dangerBox: {
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderStyle: "dashed",
   },
 });

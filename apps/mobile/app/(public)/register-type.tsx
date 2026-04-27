@@ -22,13 +22,28 @@ export default function RegisterTypeScreen() {
           </View>
 
           <View style={styles.header}>
-            <Typo variant="h1" style={styles.title}>I represent a...</Typo>
+            <Typo variant="h1" style={styles.title}>Create account as...</Typo>
             <Typo variant="caption" color={colors.textMuted} style={styles.subtitle}>
-              Select your organization type to continue registration.
+              Select your account type to continue registration.
             </Typo>
           </View>
 
           <View style={styles.optionsContainer}>
+            <TouchableOpacity 
+              style={[styles.optionCard, { backgroundColor: theme === "dark" ? colors.background : "#F8F9FA", borderColor: colors.border }]}
+              onPress={() => router.push("/register")}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.iconBox, { backgroundColor: `${colors.tint}1A` }]}>
+                <MaterialIcons name="person" size={28} color={colors.tint} />
+              </View>
+              <View style={styles.optionTextContainer}>
+                <Typo variant="h2" style={styles.optionTitle}>Individual User</Typo>
+                <Typo variant="caption" color={colors.textMuted}>Donors and blood requesters</Typo>
+              </View>
+              <MaterialIcons name="chevron-right" size={24} color={colors.icon} />
+            </TouchableOpacity>
+
             <TouchableOpacity 
               style={[styles.optionCard, { backgroundColor: theme === "dark" ? colors.background : "#F8F9FA", borderColor: colors.border }]}
               onPress={() => router.push("/register-hospital")}

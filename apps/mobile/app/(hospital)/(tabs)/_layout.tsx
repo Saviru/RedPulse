@@ -27,6 +27,14 @@ export default function HospitalTabsLayout() {
           } as any}
         />
         <Tabs.Screen
+          name="activity"
+          options={{
+            title: "Redemptions",
+            tabBarIconName: "history",
+            href: null,
+          } as any}
+        />
+        <Tabs.Screen
           name="requests"
           options={{
             title: "Requests",

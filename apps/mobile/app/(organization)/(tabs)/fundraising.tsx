@@ -7,14 +7,9 @@ import { useRouter } from "expo-router";
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Card, Button, Input, AnimatedHeader, Divider, ProgressBar } from "@/packages/ui/components/ui";
 import { useScroll } from "@/packages/ui/context/ScrollContext";
+import { pointsService, Fundraising } from "@/apps/mobile/src/services/pointsService";
 
-interface FundraisingEvent {
-  id: string;
-  title: string;
-  description: string;
-  targetLKR: string;
-  currentPts: number;
-}
+// Fundraising interface is now imported from pointsService
 
 export default function FundraisingScreen() {
   const { colors } = useThemeColor();
@@ -23,43 +18,68 @@ export default function FundraisingScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
   const { handleScroll } = useScroll();
 
-  const [events, setEvents] = useState<FundraisingEvent[]>([
-    { id: "1", title: "Emergency Blood Drive Fuel", description: "Help us transport blood to rural hospitals during the emergency.", targetLKR: "5000", currentPts: 12500 },
-    { id: "2", title: "Winter Health Kits", description: "Providing basic medical kits to the homeless this winter.", targetLKR: "10000", currentPts: 45000 },
-  ]);
-
+  const [events, setEvents] = useState<Fundraising[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  const [formData, setFormData] = useState<Partial<FundraisingEvent>>({
+  const [activeEvent, setActiveEvent] = useState<Fundraising | null>(null);
+  const [actionSheetVisible, setActionSheetVisible] = useState(false);
+
+  const [formData, setFormData] = useState({
     title: "",
     description: "",
-    targetLKR: "",
+    goalLKR: "",
   });
 
-  const handleCreate = () => {
-    if (!formData.title || !formData.targetLKR) return;
-    
-    const newEvent: FundraisingEvent = {
-      id: Date.now().toString(),
-      title: formData.title,
-      description: formData.description || "",
-      targetLKR: formData.targetLKR,
-      currentPts: 0
-    };
+  const fetchEvents = async () => {
+    try {
+      const data = await pointsService.getFundraisings();
+      setEvents(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    setEvents([...events, newEvent]);
-    closeModal();
+  React.useEffect(() => {
+     fetchEvents();
+  }, []);
+
+  const handleCreate = async () => {
+    if (!formData.title || !formData.goalLKR) return;
+    
+    try {
+      await pointsService.createFundraising({
+        title: formData.title,
+        description: formData.description,
+        goalLKR: parseInt(formData.goalLKR)
+      });
+      await fetchEvents();
+      closeModal();
+    } catch (error) {
+       Alert.alert("Error", "Failed to launch campaign");
+    }
   };
 
   const closeModal = () => {
     setModalVisible(false);
-    setFormData({ title: "", description: "", targetLKR: "" });
+    setFormData({ title: "", description: "", goalLKR: "" });
   };
 
-  const confirmDelete = (id: string) => {
+  const confirmDelete = (event: Fundraising) => {
+    setActionSheetVisible(false);
     Alert.alert("Cancel Event", "Are you sure you want to stop this fundraising campaign?", [
       { text: "No", style: "cancel" },
-      { text: "Cancel Event", style: "destructive", onPress: () => setEvents(events.filter(e => e.id !== id)) }
+      { text: "Cancel Event", style: "destructive", onPress: async () => {
+         await pointsService.deleteFundraising(event._id);
+         fetchEvents();
+      }}
     ]);
+  };
+  
+  const openActionSheet = (event: Fundraising) => {
+    setActiveEvent(event);
+    setActionSheetVisible(true);
   };
 
   const calculatePointsGoal = (lkr: string) => {
@@ -100,19 +120,19 @@ export default function FundraisingScreen() {
           </Typo>
 
           {events.map((event) => {
-            const pointsGoal = calculatePointsGoal(event.targetLKR);
-            const progress = pointsGoal > 0 ? event.currentPts / pointsGoal : 0;
+            const pointsGoal = event.goalLKR * 10;
+            const progress = pointsGoal > 0 ? event.currentPoints / pointsGoal : 0;
             
             return (
-              <Card key={event.id} variant="elevated" style={styles.eventCard}>
+              <Card key={event._id} variant="elevated" style={styles.eventCard}>
                 <View style={styles.eventHeader}>
                   <View style={{ flex: 1 }}>
                     <Typo variant="h2" style={{ fontSize: 18 }}>{event.title}</Typo>
                     <Typo variant="caption" color={colors.tint} style={{ fontWeight: "bold" }}>
-                      Target: LKR {event.targetLKR} ({pointsGoal.toLocaleString()} pts)
+                      Target: LKR {event.goalLKR} ({pointsGoal.toLocaleString()} pts)
                     </Typo>
                   </View>
-                  <TouchableOpacity onPress={() => confirmDelete(event.id)}>
+                  <TouchableOpacity onPress={() => openActionSheet(event)}>
                     <MaterialIcons name="more-vert" size={24} color={colors.text} />
                   </TouchableOpacity>
                 </View>
@@ -122,7 +142,7 @@ export default function FundraisingScreen() {
                 <View style={styles.progressSection}>
                   <View style={styles.progressLabels}>
                     <Typo variant="caption" style={{ fontWeight: "bold" }}>
-                      {event.currentPts.toLocaleString()} pts raised
+                      {event.currentPoints.toLocaleString()} pts raised
                     </Typo>
                     <Typo variant="caption" color={colors.textMuted}>
                       {Math.round(progress * 100)}%
@@ -130,7 +150,7 @@ export default function FundraisingScreen() {
                   </View>
                   <ProgressBar progress={progress} color={colors.tint} />
                   <Typo variant="caption" color={colors.textMuted} style={{ marginTop: 8 }}>
-                    LKR {(event.currentPts / 10).toLocaleString()} raised of {parseInt(event.targetLKR).toLocaleString()} Goal
+                    LKR {(event.currentPoints / 10).toLocaleString()} raised of {event.goalLKR.toLocaleString()} Goal
                   </Typo>
                 </View>
 
@@ -151,7 +171,7 @@ export default function FundraisingScreen() {
       </Animated.ScrollView>
 
       <TouchableOpacity 
-        style={[styles.fab, { backgroundColor: colors.tint }]} 
+        style={[styles.fab, { backgroundColor: colors.tint, bottom: insets.bottom + 85 }]} 
         onPress={() => setModalVisible(true)}
       >
         <MaterialIcons name="campaign" size={28} color="#FFF" />
@@ -179,9 +199,9 @@ export default function FundraisingScreen() {
                   label="Goal in LKR"
                   placeholder="LKR"
                   keyboardType="numeric"
-                  value={formData.targetLKR}
-                  onChangeText={(t) => setFormData({ ...formData, targetLKR: t })}
-                  helperText={formData.targetLKR ? `Points goal: ${calculatePointsGoal(formData.targetLKR).toLocaleString()} pts` : ""}
+                  value={formData.goalLKR}
+                  onChangeText={(t) => setFormData({ ...formData, goalLKR: t })}
+                  helperText={formData.goalLKR ? `Points goal: ${(parseInt(formData.goalLKR) * 10).toLocaleString()} pts` : ""}
                 />
                 <Input 
                   label="Description"
@@ -202,6 +222,48 @@ export default function FundraisingScreen() {
             </ScrollView>
           </View>
         </View>
+      </Modal>
+
+      {/* Action Sheet Modal */}
+      <Modal visible={actionSheetVisible} animationType="fade" transparent>
+        <TouchableOpacity 
+          style={styles.modalOverlay} 
+          activeOpacity={1} 
+          onPress={() => setActionSheetVisible(false)}
+        >
+          <View style={[styles.actionSheetContent, { backgroundColor: colors.surface }]}>
+            <View style={styles.actionSheetHeader}>
+              <Typo variant="h2" style={{ fontSize: 18 }}>{activeEvent?.title}</Typo>
+              <Divider spacing={16} />
+            </View>
+
+            <TouchableOpacity 
+              style={styles.actionItem}
+              onPress={() => {
+                setActionSheetVisible(false);
+                router.push('/(organization)/(tabs)/activity');
+              }}
+            >
+              <MaterialIcons name="volunteer-activism" size={24} color={colors.tint} />
+              <Typo variant="body" style={styles.actionLabel}>View Donations</Typo>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.actionItem}
+              onPress={() => activeEvent && confirmDelete(activeEvent)}
+            >
+              <MaterialIcons name="cancel" size={24} color={colors.error} />
+              <Typo variant="body" style={[styles.actionLabel, { color: colors.error }]}>Cancel Event</Typo>
+            </TouchableOpacity>
+
+            <Button 
+              label="Close" 
+              variant="secondary" 
+              onPress={() => setActionSheetVisible(false)}
+              style={{ marginTop: 12, marginBottom: insets.bottom + 10 }}
+            />
+          </View>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
@@ -252,7 +314,6 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: "absolute",
-    bottom: 30,
     right: 20,
     width: 60,
     height: 60,
@@ -264,6 +325,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
+    zIndex: 100,
   },
   modalOverlay: {
     flex: 1,
@@ -285,5 +347,25 @@ const styles = StyleSheet.create({
   },
   formContent: {
     marginBottom: 40,
-  }
+  },
+  actionSheetContent: {
+    width: "100%",
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+  },
+  actionSheetHeader: {
+    marginBottom: 16,
+  },
+  actionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 16,
+    gap: 16,
+  },
+  actionLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 });
