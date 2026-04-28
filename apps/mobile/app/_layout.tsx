@@ -9,20 +9,36 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { useColorScheme } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { useFonts } from "expo-font";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 SplashScreen.preventAutoHideAsync();
 
 export { ErrorBoundary } from "expo-router";
 
+import { UIThemeProvider } from "@/packages/ui/context/ThemeContext";
+
 export default function RootLayout() {
-  const hasLoadedAssets = true;
-  // Get device theme to pass to the Native navigation container
-  const colorScheme = useColorScheme();
-  const { colors } = useThemeColor();
+  return (
+    <UIThemeProvider>
+      <InnerLayout />
+    </UIThemeProvider>
+  );
+}
+
+function InnerLayout() {
+  const [fontsLoaded] = useFonts({
+    ...MaterialIcons.font,
+    ...Ionicons.font,
+  });
+  const hasLoadedAssets = fontsLoaded;
+  
+  const { theme, colors } = useThemeColor();
 
   // Injects the theme colors into the root configs
   const navTheme =
-    colorScheme === "dark"
+    theme === "dark"
       ? {
           ...DarkTheme,
           colors: { ...DarkTheme.colors, background: colors.background },
