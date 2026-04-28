@@ -1,5 +1,5 @@
 import { useThemeColor } from "@/packages/ui/hooks";
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { styles } from "./Select.styles";

@@ -17,4 +17,5 @@ export { CircularDonut } from "./CircularDonut";
 export { CustomTabBar } from "./CustomTabBar/CustomTabBar";
 export { SegmentedControl } from "./SegmentedControl";
 export { Accordion } from "./Accordion";
+export { AnimatedHeader } from "./AnimatedHeader";
 

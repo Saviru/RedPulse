@@ -8,4 +8,5 @@ export interface InputProps extends TextInputProps {
   rightIcon?: React.ReactNode;
   containerStyle?: StyleProp<ViewStyle>;
   disabled?: boolean;
-}
+  helperText?: string;
+}

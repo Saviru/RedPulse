@@ -35,7 +35,7 @@ export const Radio = ({
         )}
       </View>
       {label && (
-        <Typo variant="body" style={styles.label}>
+        <Typo variant="body" style={[styles.label, { color: colors.text }]}>
           {label}
         </Typo>
       )}
