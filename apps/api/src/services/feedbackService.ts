@@ -9,7 +9,13 @@ import type {
   UpdateComplaintInput,
 } from "../types/feedback";
 
-// Simple in-memory store for Phase 2 (no DB).
+// ---------------------------------------------------------------------------
+// In-memory store (Phase 2)
+// ---------------------------------------------------------------------------
+// This is intentionally simple — no database yet. Process restart wipes the
+// list. When we move to a real DB the public API of this module shouldn't
+// have to change.
+
 let feedbacks: FeedbackItem[] = [
   {
     id: "f1",
@@ -61,49 +67,90 @@ let feedbacks: FeedbackItem[] = [
   },
 ];
 
-function notFound(message: string) {
-  const err = new Error(message) as Error & { status?: number };
-  err.status = 404;
-  return err;
+// ---------------------------------------------------------------------------
+// Error helpers
+// ---------------------------------------------------------------------------
+class HttpError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
 }
 
-function forbidden(message: string) {
-  const err = new Error(message) as Error & { status?: number };
-  err.status = 403;
-  return err;
+const notFound = (msg: string) => new HttpError(404, msg);
+const forbidden = (msg: string) => new HttpError(403, msg);
+
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
+function findFeedback(id: string): FeedbackItem {
+  const item = feedbacks.find(f => f.id === id);
+  if (!item) throw notFound("Feedback not found.");
+  return item;
+}
+
+function findReply(feedback: FeedbackItem, replyId: string): FeedbackReply {
+  const reply = feedback.replies.find(r => r.id === replyId);
+  if (!reply) throw notFound("Reply not found.");
+  return reply;
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+export interface FeedbackFilters {
+  targetType?: string;
+  targetId?: string;
+  userRole?: string;
+  userId?: string;
 }
 
 export const feedbackService = {
-  getAll(filters?: { targetType?: string; targetId?: string; userRole?: string; userId?: string }): FeedbackItem[] {
+  getAll(filters?: FeedbackFilters): FeedbackItem[] {
     let list = [...feedbacks];
+
     if (filters?.targetType && filters?.targetId) {
       list = list.filter(
         f => f.targetType === filters.targetType && f.targetId === filters.targetId,
       );
     }
+
     if (filters?.userRole && filters?.userId) {
       if (filters.userRole === "user") {
         list = list.filter(f => f.userId === filters.userId);
-      } else if (filters.userRole === "hospital" || filters.userRole === "organization") {
-        list = list.filter(f => f.targetType === filters.userRole && (f.assignToId === filters.userId || !f.assignToId));
+      } else if (
+        filters.userRole === "hospital" ||
+        filters.userRole === "organization"
+      ) {
+        list = list.filter(
+          f =>
+            f.targetType === filters.userRole &&
+            (f.assignToId === filters.userId || !f.assignToId),
+        );
       }
     }
-    // newest first
+
+    // Newest first.
     return list.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   },
 
   create(input: CreateFeedbackInput): FeedbackItem {
-    const defaults = input.type === "complaint" 
-      ? { status: "pending" as const, priority: "medium" as const }
-      : {};
-    
+    // IMPORTANT: server-assigned fields (id, createdAt, replies) are listed
+    // AFTER ...input so a malicious client can't override them by sending
+    // those keys in the body.
     const item: FeedbackItem = {
+      ...input,
       id: `f_${randomUUID()}`,
       createdAt: new Date().toISOString(),
       replies: [],
-      ...input,
-      ...defaults,
+      // Complaints always start in "pending" — even if the client tried to
+      // bypass that by sending status=resolved.
+      ...(input.type === "complaint"
+        ? { status: "pending" as const, priority: input.priority ?? "medium" }
+        : {}),
     };
+
     feedbacks = [item, ...feedbacks];
     return item;
   },
@@ -111,7 +158,19 @@ export const feedbackService = {
   update(id: string, input: UpdateFeedbackInput): FeedbackItem {
     const idx = feedbacks.findIndex(f => f.id === id);
     if (idx < 0) throw notFound("Feedback not found.");
-    const updated = { ...feedbacks[idx], ...input };
+
+    // Only merge the whitelisted fields from UpdateFeedbackInput. Everything
+    // else (id, userId, createdAt, replies, ...) is preserved.
+    const existing = feedbacks[idx];
+    const updated: FeedbackItem = {
+      ...existing,
+      type: input.type,
+      title: input.title,
+      description: input.description,
+      category: input.category ?? existing.category,
+      attachments: input.attachments ?? existing.attachments,
+    };
+
     feedbacks = feedbacks.map(f => (f.id === id ? updated : f));
     return updated;
   },
@@ -123,55 +182,69 @@ export const feedbackService = {
   },
 
   addReply(feedbackId: string, input: CreateReplyInput): FeedbackReply {
-    const feedback = feedbacks.find(f => f.id === feedbackId);
-    if (!feedback) throw notFound("Feedback not found.");
+    const feedback = findFeedback(feedbackId);
+
     if (input.replierRole !== "hospital" && input.replierRole !== "organization") {
       throw forbidden("Invalid replier role.");
     }
     if (feedback.targetType !== input.replierRole) {
       throw forbidden("Only the assigned entity can reply to this feedback.");
     }
+
     const reply: FeedbackReply = {
+      ...input,
       id: `r_${randomUUID()}`,
       createdAt: new Date().toISOString(),
-      ...input,
     };
+
     feedback.replies = [...feedback.replies, reply];
     return reply;
   },
 
   updateReply(feedbackId: string, replyId: string, content: string): FeedbackReply {
-    const feedback = feedbacks.find(f => f.id === feedbackId);
-    if (!feedback) throw notFound("Feedback not found.");
-    const idx = feedback.replies.findIndex(r => r.id === replyId);
-    if (idx < 0) throw notFound("Reply not found.");
-    const existing = feedback.replies[idx];
+    const feedback = findFeedback(feedbackId);
+    const existing = findReply(feedback, replyId);
+
     if (existing.replierRole !== feedback.targetType) {
       throw forbidden("This reply cannot be managed for this feedback.");
     }
-    const updated = { ...existing, content };
+
+    const updated: FeedbackReply = { ...existing, content };
     feedback.replies = feedback.replies.map(r => (r.id === replyId ? updated : r));
     return updated;
   },
 
   deleteReply(feedbackId: string, replyId: string): void {
-    const feedback = feedbacks.find(f => f.id === feedbackId);
-    if (!feedback) throw notFound("Feedback not found.");
-    const reply = feedback.replies.find(r => r.id === replyId);
-    if (!reply) throw notFound("Reply not found.");
+    const feedback = findFeedback(feedbackId);
+    const reply = findReply(feedback, replyId);
+
     if (reply.replierRole !== feedback.targetType) {
       throw forbidden("This reply cannot be managed for this feedback.");
     }
+
     feedback.replies = feedback.replies.filter(r => r.id !== replyId);
   },
 
   updateComplaint(id: string, input: UpdateComplaintInput): FeedbackItem {
     const idx = feedbacks.findIndex(f => f.id === id);
     if (idx < 0) throw notFound("Feedback not found.");
-    const updated = { ...feedbacks[idx], ...input };
+
+    const existing = feedbacks[idx];
+    // Only merge whitelisted fields. Everything else (id, userId, type, ...)
+    // is preserved so a client cannot rewrite the record.
+    const updated: FeedbackItem = {
+      ...existing,
+      status: input.status ?? existing.status,
+      priority: input.priority ?? existing.priority,
+      assignToId: input.assignToId ?? existing.assignToId,
+      rating: input.rating ?? existing.rating,
+      resolutionFeedback: input.resolutionFeedback ?? existing.resolutionFeedback,
+    };
+
     feedbacks = feedbacks.map(f => (f.id === id ? updated : f));
-    // Simulate notification
-    console.log(`Complaint ${id} status updated to ${updated.status}`);
+
+    // TODO: replace this with a real notification path (email, push, etc.)
+    // and a structured logger that redacts PII. Avoid logging full records.
     return updated;
   },
 
@@ -185,29 +258,24 @@ export const feedbackService = {
   } {
     const complaints = feedbacks.filter(f => f.type === "complaint");
     const feedbackItems = feedbacks.filter(f => f.type === "feedback");
-    
+
     const byCategory: Record<string, number> = {};
     const byStatus: Record<string, number> = {};
     const ratingDistribution: Record<number, number> = {};
-    
-    complaints.forEach(c => {
-      if (c.category) {
-        byCategory[c.category] = (byCategory[c.category] || 0) + 1;
-      }
-      if (c.status) {
-        byStatus[c.status] = (byStatus[c.status] || 0) + 1;
-      }
-    });
-    
-    feedbackItems.forEach(f => {
-      if (f.rating) {
-        ratingDistribution[f.rating] = (ratingDistribution[f.rating] || 0) + 1;
-      }
-    });
-    
+
+    for (const c of complaints) {
+      if (c.category) byCategory[c.category] = (byCategory[c.category] || 0) + 1;
+      if (c.status) byStatus[c.status] = (byStatus[c.status] || 0) + 1;
+    }
+
+    for (const f of feedbackItems) {
+      if (f.rating) ratingDistribution[f.rating] = (ratingDistribution[f.rating] || 0) + 1;
+    }
+
     const totalRating = feedbackItems.reduce((sum, f) => sum + (f.rating || 0), 0);
-    const averageRating = feedbackItems.length > 0 ? totalRating / feedbackItems.length : 0;
-    
+    const averageRating =
+      feedbackItems.length > 0 ? totalRating / feedbackItems.length : 0;
+
     return {
       totalComplaints: complaints.length,
       complaintsByCategory: byCategory,
@@ -218,4 +286,3 @@ export const feedbackService = {
     };
   },
 };
-

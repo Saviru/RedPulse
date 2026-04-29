@@ -14,6 +14,8 @@ interface ReplyFormModalProps {
   initialData?: FeedbackReply | null;
 }
 
+const REPLY_MAX_LENGTH = 2000;
+
 export const ReplyFormModal: React.FC<ReplyFormModalProps> = ({
   visible,
   onClose,
@@ -22,18 +24,23 @@ export const ReplyFormModal: React.FC<ReplyFormModalProps> = ({
 }) => {
   const { colors } = useThemeColor();
   const [content, setContent] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (initialData) {
-      setContent(initialData.content);
-    } else {
-      setContent("");
-    }
+    setContent(initialData ? initialData.content : "");
+    setError(null);
   }, [initialData, visible]);
 
   const handleSubmit = () => {
     const trimmed = content.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      setError("Reply cannot be empty.");
+      return;
+    }
+    if (trimmed.length > REPLY_MAX_LENGTH) {
+      setError(`Reply is too long (max ${REPLY_MAX_LENGTH} characters).`);
+      return;
+    }
     onSubmit(trimmed);
     onClose();
   };
@@ -45,7 +52,7 @@ export const ReplyFormModal: React.FC<ReplyFormModalProps> = ({
       animationType="slide"
       onRequestClose={onClose}
     >
-      <View style={[styles.backdrop, { backgroundColor: "rgba(0,0,0,0.5)" }]}>
+      <View style={styles.backdrop}>
         <View style={[styles.container, { backgroundColor: colors.surface }]}>
           <Typo variant="h2" style={styles.title}>
             {initialData ? "Edit Reply" : "Add Reply"}
@@ -54,11 +61,20 @@ export const ReplyFormModal: React.FC<ReplyFormModalProps> = ({
           <Input
             label="Reply"
             value={content}
-            onChangeText={setContent}
+            onChangeText={text => {
+              setContent(text);
+              if (error) setError(null);
+            }}
             placeholder="Type your reply"
             multiline
             style={{ height: 120 }}
           />
+
+          {error && (
+            <Typo variant="caption" style={{ color: colors.error, marginTop: 4 }}>
+              {error}
+            </Typo>
+          )}
 
           <View style={styles.actionsRow}>
             <Button
@@ -70,6 +86,7 @@ export const ReplyFormModal: React.FC<ReplyFormModalProps> = ({
             <Button
               label={initialData ? "Save" : "Submit"}
               onPress={handleSubmit}
+              disabled={!content.trim()}
             />
           </View>
         </View>
@@ -81,6 +98,7 @@ export const ReplyFormModal: React.FC<ReplyFormModalProps> = ({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 16,

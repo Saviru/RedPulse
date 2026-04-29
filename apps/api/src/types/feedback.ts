@@ -4,9 +4,19 @@ export type ReplierRole = "user" | "hospital" | "organization";
 
 export type FeedbackTargetType = "hospital" | "organization";
 
-export type ComplaintCategory = "technical" | "service" | "donation" | "staff" | "emergency" | "other";
+export type ComplaintCategory =
+  | "technical"
+  | "service"
+  | "donation"
+  | "staff"
+  | "emergency"
+  | "other";
 
-export type FeedbackCategory = "suggestion" | "compliment" | "general" | "feature_request";
+export type FeedbackCategory =
+  | "suggestion"
+  | "compliment"
+  | "general"
+  | "feature_request";
 
 export type ComplaintStatus = "pending" | "in_progress" | "resolved" | "rejected";
 
@@ -32,7 +42,8 @@ export interface FeedbackItem {
   type: FeedbackType;
   title: string;
   description: string;
-  category?: FeedbackCategory;
+  /** Holds a FeedbackCategory or a ComplaintCategory depending on `type`. */
+  category?: FeedbackCategory | ComplaintCategory;
   attachments?: string[];
   status?: ComplaintStatus;
   priority?: ComplaintPriority;
@@ -61,7 +72,7 @@ export type CreateFeedbackInput = Pick<
   | "attachments"
   | "isAnonymous"
 > & {
-  // Rating only applies to feedback, not complaints
+  // Rating only applies to feedback, not complaints.
   rating?: number;
 };
 
@@ -70,10 +81,12 @@ export type UpdateFeedbackInput = Pick<
   "type" | "title" | "description" | "category" | "attachments"
 >;
 
-export type UpdateComplaintInput = Partial<Pick<
-  FeedbackItem,
-  "status" | "priority" | "assignToId" | "rating" | "resolutionFeedback"
->>;
+export type UpdateComplaintInput = Partial<
+  Pick<
+    FeedbackItem,
+    "status" | "priority" | "assignToId" | "rating" | "resolutionFeedback"
+  >
+>;
 
 export type CreateReplyInput = Pick<
   FeedbackReply,
@@ -81,4 +94,3 @@ export type CreateReplyInput = Pick<
 >;
 
 export type UpdateReplyInput = Pick<FeedbackReply, "content">;
-

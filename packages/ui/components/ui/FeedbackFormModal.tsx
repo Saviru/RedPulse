@@ -1,5 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Modal, StyleSheet, View, ScrollView, TouchableOpacity, Platform } from "react-native";
+import {
+  Alert,
+  Modal,
+  StyleSheet,
+  View,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -8,6 +15,7 @@ import { Button } from "./Button";
 import { Input } from "./Input";
 import { Typo } from "./Typo";
 import { Toggle } from "./Toggle";
+import { SegmentedControl } from "./SegmentedControl";
 import { useThemeColor } from "@/packages/ui/hooks/useThemeColor";
 import {
   FEEDBACK_TARGET_PRESETS,
@@ -18,8 +26,10 @@ import {
   type ComplaintCategory,
   type ComplaintPriority,
 } from "@/packages/ui/constants/mockFeedback";
-import { SegmentedControl } from "./SegmentedControl";
 
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 export type FeedbackTargetSelection = {
   targetType: FeedbackTargetType;
   targetId: string;
@@ -56,6 +66,63 @@ interface FeedbackFormModalProps {
   targetOptions?: FeedbackTargetSelection[];
 }
 
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+const ALLOWED_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "application/pdf",
+]);
+
+const FEEDBACK_CATEGORIES: { label: string; value: FeedbackCategory }[] = [
+  { label: "Suggestion", value: "suggestion" },
+  { label: "Compliment", value: "compliment" },
+  { label: "General", value: "general" },
+  { label: "Feature Request", value: "feature_request" },
+];
+
+const COMPLAINT_CATEGORIES: { label: string; value: ComplaintCategory }[] = [
+  { label: "Technical", value: "technical" },
+  { label: "Service", value: "service" },
+  { label: "Donation", value: "donation" },
+  { label: "Staff", value: "staff" },
+  { label: "Emergency", value: "emergency" },
+  { label: "Other", value: "other" },
+];
+
+const PRIORITY_OPTIONS: ComplaintPriority[] = ["low", "medium", "high", "critical"];
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+function mimeFromName(name: string): string {
+  const ext = name.split(".").pop()?.toLowerCase() ?? "";
+  switch (ext) {
+    case "jpg":
+    case "jpeg":
+      return "image/jpeg";
+    case "png":
+      return "image/png";
+    case "pdf":
+      return "application/pdf";
+    default:
+      return "application/octet-stream";
+  }
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes <= 0) return "—";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB"];
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
+  return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 export const FeedbackFormModal: React.FC<FeedbackFormModalProps> = ({
   visible,
   onClose,
@@ -73,7 +140,9 @@ export const FeedbackFormModal: React.FC<FeedbackFormModalProps> = ({
   const [type, setType] = useState<FeedbackType>("feedback");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState<FeedbackCategory | ComplaintCategory | undefined>();
+  const [category, setCategory] = useState<
+    FeedbackCategory | ComplaintCategory | undefined
+  >();
   const [priority, setPriority] = useState<ComplaintPriority | undefined>();
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [targetIndex, setTargetIndex] = useState(0);
@@ -81,93 +150,25 @@ export const FeedbackFormModal: React.FC<FeedbackFormModalProps> = ({
   const [rating, setRating] = useState<number | undefined>();
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-
-  const isValidFileType = (mimeType: string): boolean => {
-    const validTypes = ["image/jpeg", "image/png", "application/pdf"];
-    return validTypes.includes(mimeType);
-  };
-
-  const validateForm = (): Record<string, string> => {
-    const newErrors: Record<string, string> = {};
-
-    const trimmedTitle = title.trim();
-    const trimmedDescription = description.trim();
-
-    if (!trimmedTitle) {
-      newErrors.title = "Title is required";
-    }
-
-    if (!trimmedDescription) {
-      newErrors.description = "Description is required";
-    }
-
-    if (type === "feedback" && !rating) {
-      newErrors.rating = "Rating is required for feedback";
-    }
-
-    if (type === "complaint" && !category) {
-      newErrors.category = "Category is required for complaints";
-    }
-
-    if (type === "complaint" && !priority) {
-      newErrors.priority = "Priority is required for complaints";
-    }
-
-    return newErrors;
-  };
-
-  const isFormValid = (): boolean => {
-    const formErrors = validateForm();
-    return Object.keys(formErrors).length === 0;
-  };
-
+  // Reset form whenever the modal opens or the editing target changes.
   useEffect(() => {
-    // Convert backend attachment URIs (string[]) to FileAttachment[] for the UI.
-    const uris: string[] = initialData?.attachments ?? [];
-
     if (initialData) {
       setType(initialData.type);
       setTitle(initialData.title);
       setDescription(initialData.description);
       setCategory(initialData.category);
       setPriority(initialData.priority);
-
-      const mimeFromName = (name: string): string => {
-        const ext = name.split('.').pop()?.toLowerCase() ?? '';
-        switch (ext) {
-          case 'jpg':
-          case 'jpeg':
-            return 'image/jpeg';
-          case 'png':
-            return 'image/png';
-          case 'gif':
-            return 'image/gif';
-          case 'webp':
-            return 'image/webp';
-          case 'pdf':
-            return 'application/pdf';
-          case 'txt':
-            return 'text/plain';
-          default:
-            return 'application/octet-stream';
-        }
-      };
-
-      const fileAttachments: FileAttachment[] = uris.map((uri) => {
-        const name = uri.split('/').pop() || uri;
-        return {
-          uri,
-          name,
-          type: name.endsWith('.pdf') ? 'application/pdf' : mimeFromName(name),
-          size: 0, // size is unknown from backend URIs
-        };
-      });
-
-      setAttachments(fileAttachments);
-
       setIsAnonymous(initialData.isAnonymous);
       setRating(initialData.rating);
+
+      const uris = initialData.attachments ?? [];
+      setAttachments(
+        uris.map<FileAttachment>(uri => {
+          const name = uri.split("/").pop() || uri;
+          return { uri, name, type: mimeFromName(name), size: 0 };
+        }),
+      );
+
       const idx = targets.findIndex(
         t =>
           t.targetId === initialData.targetId &&
@@ -188,27 +189,26 @@ export const FeedbackFormModal: React.FC<FeedbackFormModalProps> = ({
     setErrors({});
   }, [initialData, visible, targets]);
 
-  const handleSubmit = () => {
-    // Simple guard to prevent empty submissions
-    if (!title || !description || !title.trim() || !description.trim()) {
-      const missingErrors: Record<string, string> = {};
-      if (!title || !title.trim()) missingErrors.title = "Title is required";
-      if (!description || !description.trim()) missingErrors.description = "Description is required";
-      setErrors(missingErrors);
-      return;
-    }
+  const validate = (): Record<string, string> => {
+    const e: Record<string, string> = {};
+    if (!title.trim()) e.title = "Title is required";
+    if (!description.trim()) e.description = "Description is required";
+    if (type === "feedback" && !rating) e.rating = "Rating is required for feedback";
+    if (type === "complaint" && !category) e.category = "Category is required for complaints";
+    if (type === "complaint" && !priority) e.priority = "Priority is required for complaints";
+    return e;
+  };
 
-    const formErrors = validateForm();
-    
+  const isFormValid = Object.keys(validate()).length === 0;
+
+  const handleSubmit = () => {
+    const formErrors = validate();
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
       return;
     }
 
-    const trimmedTitle = title.trim();
-    const trimmedDescription = description.trim();
-
-    const targetFields = initialData
+    const target = initialData
       ? {
           targetType: initialData.targetType,
           targetId: initialData.targetId,
@@ -218,53 +218,57 @@ export const FeedbackFormModal: React.FC<FeedbackFormModalProps> = ({
 
     onSubmit({
       type,
-      title: trimmedTitle,
-      description: trimmedDescription,
+      title: title.trim(),
+      description: description.trim(),
       category,
       priority: type === "complaint" ? priority : undefined,
       attachments: attachments.length > 0 ? attachments : undefined,
       rating: type === "feedback" ? rating : undefined,
       isAnonymous,
-      ...targetFields,
+      ...target,
     });
     onClose();
+  };
+
+  const validateAndAddFile = (file: FileAttachment): boolean => {
+    if (!ALLOWED_MIME_TYPES.has(file.type)) {
+      Alert.alert(
+        "Unsupported file type",
+        "Only JPG, PNG, and PDF files can be attached.",
+      );
+      return false;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      Alert.alert("File too large", "Maximum attachment size is 5 MB.");
+      return false;
+    }
+    setAttachments(prev => [...prev, file]);
+    return true;
   };
 
   const handlePickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        // mediaTypes: ["images"] is the modern replacement for the deprecated
+        // ImagePicker.MediaTypeOptions.Images.
+        mediaTypes: ["images"],
         allowsEditing: false,
         quality: 0.8,
       });
+      if (result.canceled || !result.assets[0]) return;
 
-      if (!result.canceled && result.assets[0]) {
-        const asset = result.assets[0];
-        const fileName = asset.uri.split("/").pop() || `image_${Date.now()}.jpg`;
-        const mimeType = asset.type === "image" ? "image/jpeg" : "image/png";
-        const fileSize = asset.fileSize || 0;
+      const asset = result.assets[0];
+      const fileName = asset.fileName || asset.uri.split("/").pop() || `image_${Date.now()}.jpg`;
+      const mimeType = asset.mimeType ?? mimeFromName(fileName);
 
-        if (!isValidFileType(mimeType)) {
-          alert("Invalid file type. Only images (JPG, PNG) and PDFs are allowed.");
-          return;
-        }
-
-        if (fileSize > MAX_FILE_SIZE) {
-          alert("File is too large. Maximum size is 5MB.");
-          return;
-        }
-
-        const newFile: FileAttachment = {
-          uri: asset.uri,
-          name: fileName,
-          type: mimeType,
-          size: fileSize,
-        };
-
-        setAttachments([...attachments, newFile]);
-      }
-    } catch (error) {
-      alert("Error picking image: " + (error instanceof Error ? error.message : "Unknown error"));
+      validateAndAddFile({
+        uri: asset.uri,
+        name: fileName,
+        type: mimeType,
+        size: asset.fileSize ?? 0,
+      });
+    } catch (e) {
+      Alert.alert("Couldn't add image", e instanceof Error ? e.message : "Unknown error");
     }
   };
 
@@ -274,46 +278,68 @@ export const FeedbackFormModal: React.FC<FeedbackFormModalProps> = ({
         type: "application/pdf",
         copyToCacheDirectory: true,
       });
+      if (result.canceled || !result.assets[0]) return;
 
-      if (!result.canceled && result.assets[0]) {
-        const asset = result.assets[0];
-        const fileSize = asset.size || 0;
-
-        if (asset.mimeType !== "application/pdf") {
-          alert("Invalid file type. Only PDFs are allowed.");
-          return;
-        }
-
-        if (fileSize > MAX_FILE_SIZE) {
-          alert("File is too large. Maximum size is 5MB.");
-          return;
-        }
-
-        const newFile: FileAttachment = {
-          uri: asset.uri,
-          name: asset.name,
-          type: "application/pdf",
-          size: fileSize,
-        };
-
-        setAttachments([...attachments, newFile]);
-      }
-    } catch (error) {
-      alert("Error picking document: " + (error instanceof Error ? error.message : "Unknown error"));
+      const asset = result.assets[0];
+      validateAndAddFile({
+        uri: asset.uri,
+        name: asset.name,
+        type: "application/pdf",
+        size: asset.size ?? 0,
+      });
+    } catch (e) {
+      Alert.alert(
+        "Couldn't add document",
+        e instanceof Error ? e.message : "Unknown error",
+      );
     }
   };
 
   const handleRemoveAttachment = (index: number) => {
-    setAttachments(attachments.filter((_, i) => i !== index));
+    setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
-  };
+  // -------------------------------------------------------------------------
+  // Render
+  // -------------------------------------------------------------------------
+  const renderCategoryChips = (
+    options: { label: string; value: FeedbackCategory | ComplaintCategory }[],
+  ) => (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <View style={styles.chipRow}>
+        {options.map(({ label, value }) => {
+          const selected = category === value;
+          return (
+            <TouchableOpacity
+              key={value}
+              onPress={() => setCategory(value)}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              style={[
+                styles.chip,
+                { borderColor: colors.tint },
+                selected && { backgroundColor: colors.tint },
+              ]}
+            >
+              <Typo
+                variant="caption"
+                style={[
+                  styles.chipText,
+                  { color: selected ? "#FFFFFF" : colors.text },
+                ]}
+              >
+                {label}
+              </Typo>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </ScrollView>
+  );
+
+  const renderRequiredAsterisk = () => (
+    <Typo style={{ color: colors.error }}>*</Typo>
+  );
 
   return (
     <Modal
@@ -323,7 +349,7 @@ export const FeedbackFormModal: React.FC<FeedbackFormModalProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.backdrop}>
-        <ScrollView 
+        <ScrollView
           style={[styles.container, { backgroundColor: colors.surface }]}
           contentContainerStyle={{ paddingBottom: 16 }}
           keyboardShouldPersistTaps="handled"
@@ -332,6 +358,7 @@ export const FeedbackFormModal: React.FC<FeedbackFormModalProps> = ({
             {initialData ? "Edit Feedback" : "New Feedback"}
           </Typo>
 
+          {/* Type toggle */}
           <View style={styles.typeRow}>
             <Button
               label="Feedback"
@@ -355,90 +382,64 @@ export const FeedbackFormModal: React.FC<FeedbackFormModalProps> = ({
             />
           </View>
 
+          {/* Category */}
           {type === "feedback" && (
             <View style={{ marginTop: 12 }}>
-              <Typo variant="caption" style={{ marginBottom: 8, color: colors.textMuted }}>
+              <Typo variant="caption" style={[styles.fieldLabel, { color: colors.textMuted }]}>
                 Category
               </Typo>
-              <SegmentedControl
-                options={["Suggestion", "Compliment", "General", "Feature Request"]}
-                selectedIndex={
-                  category === "suggestion" ? 0 :
-                  category === "compliment" ? 1 :
-                  category === "general" ? 2 :
-                  category === "feature_request" ? 3 : -1
-                }
-                onChange={(idx) => setCategory(
-                  idx === 0 ? "suggestion" :
-                  idx === 1 ? "compliment" :
-                  idx === 2 ? "general" : "feature_request"
-                )}
-              />
+              {renderCategoryChips(FEEDBACK_CATEGORIES)}
             </View>
           )}
 
           {type === "complaint" && (
             <View style={{ marginTop: 12 }}>
-              <Typo variant="caption" style={{ marginBottom: 8, color: colors.textMuted }}>
-                Category <Typo style={{ color: "red" }}>*</Typo>
+              <Typo variant="caption" style={[styles.fieldLabel, { color: colors.textMuted }]}>
+                Category {renderRequiredAsterisk()}
               </Typo>
-              <SegmentedControl
-                options={["Technical", "Service", "Donation", "Staff", "Emergency", "Other"]}
-                selectedIndex={
-                  category === "technical" ? 0 :
-                  category === "service" ? 1 :
-                  category === "donation" ? 2 :
-                  category === "staff" ? 3 :
-                  category === "emergency" ? 4 :
-                  category === "other" ? 5 : -1
-                }
-                onChange={(idx) => setCategory(
-                  idx === 0 ? "technical" :
-                  idx === 1 ? "service" :
-                  idx === 2 ? "donation" :
-                  idx === 3 ? "staff" :
-                  idx === 4 ? "emergency" : "other"
-                )}
-              />
+              {renderCategoryChips(COMPLAINT_CATEGORIES)}
+              {errors.category && (
+                <Typo variant="caption" style={{ color: colors.error, marginTop: 4 }}>
+                  {errors.category}
+                </Typo>
+              )}
             </View>
           )}
 
+          {/* Priority */}
           {type === "complaint" && (
             <View style={{ marginTop: 12 }}>
-              <Typo variant="caption" style={{ marginBottom: 8, color: colors.textMuted }}>
-                Priority <Typo style={{ color: "red" }}>*</Typo>
+              <Typo variant="caption" style={[styles.fieldLabel, { color: colors.textMuted }]}>
+                Priority {renderRequiredAsterisk()}
               </Typo>
               <SegmentedControl
                 options={["Low", "Medium", "High", "Critical"]}
-                selectedIndex={
-                  priority === "low" ? 0 :
-                  priority === "medium" ? 1 :
-                  priority === "high" ? 2 :
-                  priority === "critical" ? 3 : -1
-                }
-                onChange={(idx) => setPriority(
-                  idx === 0 ? "low" :
-                  idx === 1 ? "medium" :
-                  idx === 2 ? "high" : "critical"
-                )}
+                selectedIndex={priority ? PRIORITY_OPTIONS.indexOf(priority) : -1}
+                onChange={idx => setPriority(PRIORITY_OPTIONS[idx])}
               />
+              {errors.priority && (
+                <Typo variant="caption" style={{ color: colors.error, marginTop: 4 }}>
+                  {errors.priority}
+                </Typo>
+              )}
             </View>
           )}
 
+          {/* Attachments — only for complaints */}
           {type === "complaint" && (
             <View style={{ marginTop: 12 }}>
-              <Typo variant="caption" style={{ marginBottom: 8, color: colors.textMuted }}>
+              <Typo variant="caption" style={[styles.fieldLabel, { color: colors.textMuted }]}>
                 Attachments (Images & PDFs)
               </Typo>
               <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
                 <Button
-                  label="📷 Add Image"
+                  label="Add Image"
                   variant="secondary"
                   onPress={handlePickImage}
                   style={{ flex: 1 }}
                 />
                 <Button
-                  label="📄 Add PDF"
+                  label="Add PDF"
                   variant="secondary"
                   onPress={handlePickDocument}
                   style={{ flex: 1 }}
@@ -446,24 +447,24 @@ export const FeedbackFormModal: React.FC<FeedbackFormModalProps> = ({
               </View>
 
               {attachments.length > 0 && (
-                <View style={{ 
-                  backgroundColor: colors.border, 
-                  borderRadius: 8, 
-                  padding: 8,
-                  marginBottom: 8 
-                }}>
+                <View
+                  style={{
+                    backgroundColor: colors.border,
+                    borderRadius: 8,
+                    padding: 8,
+                    marginBottom: 8,
+                  }}
+                >
                   {attachments.map((file, index) => (
                     <View
-                      key={index}
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        paddingVertical: 6,
-                        paddingHorizontal: 8,
-                        backgroundColor: colors.surface,
-                        marginBottom: index < attachments.length - 1 ? 6 : 0,
-                        borderRadius: 6,
-                      }}
+                      key={`${file.uri}-${index}`}
+                      style={[
+                        styles.attachmentRow,
+                        {
+                          backgroundColor: colors.surface,
+                          marginBottom: index < attachments.length - 1 ? 6 : 0,
+                        },
+                      ]}
                     >
                       <MaterialIcons
                         name={file.type === "application/pdf" ? "picture-as-pdf" : "image"}
@@ -475,19 +476,21 @@ export const FeedbackFormModal: React.FC<FeedbackFormModalProps> = ({
                         <Typo variant="caption" style={{ color: colors.text }}>
                           {file.name}
                         </Typo>
-                        <Typo variant="caption" style={{ color: colors.textMuted, fontSize: 11 }}>
+                        <Typo
+                          variant="caption"
+                          style={{ color: colors.textMuted, fontSize: 11 }}
+                        >
                           {formatFileSize(file.size)}
                         </Typo>
                       </View>
                       <TouchableOpacity
                         onPress={() => handleRemoveAttachment(index)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Remove attachment ${file.name}`}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         style={{ padding: 4 }}
                       >
-                        <MaterialIcons
-                          name="close"
-                          size={18}
-                          color={colors.textMuted}
-                        />
+                        <MaterialIcons name="close" size={18} color={colors.textMuted} />
                       </TouchableOpacity>
                     </View>
                   ))}
@@ -496,56 +499,75 @@ export const FeedbackFormModal: React.FC<FeedbackFormModalProps> = ({
             </View>
           )}
 
+          {/* Target */}
           {initialData ? (
             <Typo variant="caption" style={{ marginTop: 12, color: colors.textMuted }}>
               To: {initialData.targetName}
             </Typo>
           ) : (
-           <View style={{ marginTop: 12 }}>
-             <Typo variant="caption" style={{ marginBottom: 8, color: colors.textMuted }}>
-               Send to
-             </Typo>
-             <SegmentedControl
-               options={targets.map(t =>
-                 t.targetType === "hospital" ? "Hospital" : "Organization",
-               )}
-               selectedIndex={targetIndex}
-               onChange={setTargetIndex}
-             />
+            <View style={{ marginTop: 12 }}>
+              <Typo variant="caption" style={[styles.fieldLabel, { color: colors.textMuted }]}>
+                Send to
+              </Typo>
+              <SegmentedControl
+                options={targets.map(t =>
+                  t.targetType === "hospital" ? "Hospital" : "Organization",
+                )}
+                selectedIndex={targetIndex}
+                onChange={setTargetIndex}
+              />
             </View>
-           )}
+          )}
 
-           <Input
-             label="Title"
-             value={title}
-             onChangeText={setTitle}
-             placeholder="Enter a short title"
-             style={undefined}
-             containerStyle={{ marginTop: 12 }}
-           />
+          {/* Title */}
+          <Input
+            label="Title"
+            value={title}
+            onChangeText={setTitle}
+            placeholder="Enter a short title"
+            containerStyle={{ marginTop: 12 }}
+          />
+          {errors.title && (
+            <Typo variant="caption" style={{ color: colors.error }}>
+              {errors.title}
+            </Typo>
+          )}
 
-           <Input
-             label="Description"
-             value={description}
-             onChangeText={setDescription}
-             placeholder="Describe your experience"
-             multiline
-             style={{ height: 120, marginTop: 12 }}
-           />
+          {/* Description */}
+          <Input
+            label="Description"
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Describe your experience"
+            multiline
+            style={{ height: 120, marginTop: 12 }}
+          />
+          {errors.description && (
+            <Typo variant="caption" style={{ color: colors.error }}>
+              {errors.description}
+            </Typo>
+          )}
 
-           {type === "feedback" && (
-             <View style={{ marginTop: 12 }}>
-               <Typo variant="caption" style={{ marginBottom: 8, color: colors.textMuted }}>
-                 Rating *
-               </Typo>
-               <SegmentedControl
-                 options={["1", "2", "3", "4", "5"]}
-                 selectedIndex={rating ? rating - 1 : -1}
-                 onChange={(idx) => setRating(idx + 1)}
-               />
-             </View>
-           )}
+          {/* Rating — feedback only */}
+          {type === "feedback" && (
+            <View style={{ marginTop: 12 }}>
+              <Typo variant="caption" style={[styles.fieldLabel, { color: colors.textMuted }]}>
+                Rating {renderRequiredAsterisk()}
+              </Typo>
+              <SegmentedControl
+                options={["1", "2", "3", "4", "5"]}
+                selectedIndex={rating ? rating - 1 : -1}
+                onChange={idx => setRating(idx + 1)}
+              />
+              {errors.rating && (
+                <Typo variant="caption" style={{ color: colors.error, marginTop: 4 }}>
+                  {errors.rating}
+                </Typo>
+              )}
+            </View>
+          )}
 
+          {/* Actions */}
           <View style={styles.actionsRow}>
             <Button
               label="Cancel"
@@ -556,7 +578,7 @@ export const FeedbackFormModal: React.FC<FeedbackFormModalProps> = ({
             <Button
               label={initialData ? "Save" : "Submit"}
               onPress={handleSubmit}
-              disabled={!isFormValid()}
+              disabled={!isFormValid}
             />
           </View>
         </ScrollView>
@@ -565,6 +587,9 @@ export const FeedbackFormModal: React.FC<FeedbackFormModalProps> = ({
   );
 };
 
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
@@ -583,9 +608,34 @@ const styles = StyleSheet.create({
   typeRow: {
     flexDirection: "row",
   },
+  fieldLabel: {
+    marginBottom: 8,
+  },
   actionsRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
     marginTop: 16,
+  },
+  chipRow: {
+    flexDirection: "row",
+    gap: 8,
+    paddingVertical: 2,
+  },
+  chip: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1.5,
+  },
+  chipText: {
+    fontWeight: "600",
+    fontSize: 13,
+  },
+  attachmentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderRadius: 6,
   },
 });

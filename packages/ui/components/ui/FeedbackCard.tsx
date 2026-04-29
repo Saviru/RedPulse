@@ -1,5 +1,13 @@
-import React from "react";
-import { View, StyleSheet, TouchableOpacity, Linking, Image, Platform } from "react-native";
+import React, { useCallback } from "react";
+import {
+  Alert,
+  Linking,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { Image } from "expo-image";
 import { MaterialIcons } from "@expo/vector-icons";
 
 import { Card } from "./Card";
@@ -17,6 +25,13 @@ import {
   type ComplaintPriority,
 } from "@/packages/ui/constants/mockFeedback";
 
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+type ThemeColors = ReturnType<typeof useThemeColor>["colors"];
+
+type BadgeVariant = "default" | "info" | "success" | "warning" | "danger";
+
 export interface FeedbackCardProps {
   feedback: FeedbackItem;
   currentUserRole: ReplierRole;
@@ -30,161 +45,179 @@ export interface FeedbackCardProps {
   onApproveComplaint?: (feedbackId: string) => void;
 }
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 const toFeedbackLabel = (type: FeedbackType) =>
   type === "complaint" ? "Complaint" : "Feedback";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
+  if (isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
 };
 
-const getStatusBadgeVariant = (status: ComplaintStatus) => {
+const getStatusBadgeVariant = (status: ComplaintStatus): BadgeVariant => {
   switch (status) {
-    case "pending":
-      return "warning";
-    case "in_progress":
-      return "info";
-    case "resolved":
-      return "success";
-    case "rejected":
-      return "danger";
-    default:
-      return "default";
+    case "pending": return "warning";
+    case "in_progress": return "info";
+    case "resolved": return "success";
+    case "rejected": return "danger";
+    default: return "default";
   }
 };
 
-const getPriorityBadgeVariant = (priority: ComplaintPriority) => {
+const getPriorityBadgeVariant = (priority: ComplaintPriority): BadgeVariant => {
   switch (priority) {
-    case "low":
-      return "success";
-    case "medium":
-      return "warning";
+    case "low": return "success";
+    case "medium": return "warning";
     case "high":
-      return "danger";
     case "critical":
       return "danger";
-    default:
-      return "default";
+    default: return "default";
   }
 };
 
-const renderStars = (rating: number, colors: any) => {
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-      {[1, 2, 3, 4, 5].map((star) => (
-        <MaterialIcons
-          key={star}
-          name={star <= rating ? "star" : "star-border"}
-          size={16}
-          color={star <= rating ? colors.tint : colors.textMuted}
-        />
-      ))}
-      <Typo variant="caption" style={{ color: colors.textMuted, marginLeft: 4 }}>
-        {rating}/5
-      </Typo>
-    </View>
-  );
+const formatCategoryLabel = (category: string) =>
+  category.charAt(0).toUpperCase() + category.slice(1).replace("_", " ");
+
+// File-name based detection. The server only ever stores .jpg/.png/.pdf so
+// these checks are sufficient for our current allow-list.
+const isPdfAttachment = (uri: string) => uri.toLowerCase().endsWith(".pdf");
+const isImageAttachment = (uri: string) =>
+  /\.(jpg|jpeg|png|gif|webp)$/i.test(uri);
+
+const getApiBaseUrl = () => {
+  const env = process.env.EXPO_PUBLIC_API_BASE_URL;
+  if (typeof env === "string" && env.trim().length > 0) {
+    return env.replace(/\/$/, "");
+  }
+  return Platform.OS === "android"
+    ? "http://10.0.2.2:4000"
+    : "http://127.0.0.1:4000";
 };
 
-const renderAttachment = (attachment: string, index: number, colors: any) => {
-  const isPdf = attachment.toLowerCase().endsWith(".pdf");
-  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(attachment);
+const resolveAttachmentUrl = (attachment: string): string =>
+  attachment.startsWith("http") ? attachment : `${getApiBaseUrl()}${attachment}`;
 
-  const getApiBaseUrl = () => {
-    const env = process.env.EXPO_PUBLIC_API_BASE_URL;
-    if (typeof env === "string" && env.trim().length > 0) return env.replace(/\/$/, "");
-    return Platform.OS === "android" ? "http://10.0.2.2:4000" : "http://127.0.0.1:4000";
-  };
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+const StarRating: React.FC<{ rating: number; colors: ThemeColors }> = ({
+  rating,
+  colors,
+}) => (
+  <View style={styles.row}>
+    {[1, 2, 3, 4, 5].map(star => (
+      <MaterialIcons
+        key={star}
+        name={star <= rating ? "star" : "star-border"}
+        size={16}
+        color={star <= rating ? colors.tint : colors.textMuted}
+      />
+    ))}
+    <Typo variant="caption" style={{ color: colors.textMuted, marginLeft: 4 }}>
+      {rating}/5
+    </Typo>
+  </View>
+);
 
-  const handleOpen = async () => {
+interface IconActionProps {
+  name: keyof typeof MaterialIcons.glyphMap;
+  color: string;
+  label: string;
+  onPress: () => void;
+  size?: number;
+}
+
+const IconAction: React.FC<IconActionProps> = ({
+  name,
+  color,
+  label,
+  onPress,
+  size = 20,
+}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    accessibilityRole="button"
+    accessibilityLabel={label}
+    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+    style={styles.iconButton}
+  >
+    <MaterialIcons name={name} size={size} color={color} />
+  </TouchableOpacity>
+);
+
+interface AttachmentTileProps {
+  attachment: string;
+  colors: ThemeColors;
+}
+
+const AttachmentTile: React.FC<AttachmentTileProps> = ({ attachment, colors }) => {
+  const url = resolveAttachmentUrl(attachment);
+
+  const handleOpen = useCallback(async () => {
     try {
-      const url = attachment.startsWith("http") 
-        ? attachment 
-        : `${getApiBaseUrl()}${attachment}`;
       await Linking.openURL(url);
     } catch (error) {
-      alert("Could not open file: " + (error instanceof Error ? error.message : "Unknown error"));
+      Alert.alert(
+        "Couldn't open file",
+        error instanceof Error ? error.message : "Unknown error",
+      );
     }
-  };
+  }, [url]);
 
-  const getImageUri = () => {
-    if (attachment.startsWith("http")) return attachment;
-    return `${getApiBaseUrl()}${attachment}`;
-  };
+  const isImage = isImageAttachment(attachment);
+  const isPdf = isPdfAttachment(attachment);
+
+  let iconName: keyof typeof MaterialIcons.glyphMap = "attachment";
+  let label = "Tap to download";
+  if (isPdf) {
+    iconName = "picture-as-pdf";
+    label = "Tap to open PDF";
+  }
 
   return (
     <TouchableOpacity
-      key={index}
       onPress={handleOpen}
-      style={{
-        marginRight: 8,
-        marginBottom: 8,
-        alignItems: "center",
-      }}
+      accessibilityRole="button"
+      accessibilityLabel={`Open attachment ${attachment.split("/").pop() ?? ""}`}
+      style={styles.attachmentTile}
     >
       {isImage ? (
-        <View>
-          <Image
-            source={{ uri: getImageUri() }}
-            style={{
-              width: 80,
-              height: 80,
-              borderRadius: 8,
-              marginBottom: 4,
-              backgroundColor: colors.border,
-            }}
-          />
-          <Typo variant="caption" style={{ color: colors.tint, textAlign: "center", fontSize: 10 }}>
-            Tap to view
-          </Typo>
-        </View>
-      ) : isPdf ? (
-        <View style={{ alignItems: "center" }}>
-          <View
-            style={{
-              width: 80,
-              height: 80,
-              borderRadius: 8,
-              backgroundColor: colors.border,
-              justifyContent: "center",
-              alignItems: "center",
-              marginBottom: 4,
-            }}
-          >
-            <MaterialIcons name="picture-as-pdf" size={40} color={colors.tint} />
-          </View>
-          <Typo variant="caption" style={{ color: colors.tint, textAlign: "center", fontSize: 10 }}>
-            Tap to open PDF
-          </Typo>
-        </View>
+        <Image
+          source={{ uri: url }}
+          style={[styles.attachmentThumb, { backgroundColor: colors.border }]}
+          contentFit="cover"
+        />
       ) : (
-        <View style={{ alignItems: "center" }}>
-          <View
-            style={{
-              width: 80,
-              height: 80,
-              borderRadius: 8,
-              backgroundColor: colors.border,
-              justifyContent: "center",
-              alignItems: "center",
-              marginBottom: 4,
-            }}
-          >
-            <MaterialIcons name="attachment" size={40} color={colors.tint} />
-          </View>
-          <Typo variant="caption" style={{ color: colors.tint, textAlign: "center", fontSize: 10 }}>
-            Tap to download
-          </Typo>
+        <View
+          style={[
+            styles.attachmentThumb,
+            styles.attachmentIconBox,
+            { backgroundColor: colors.border },
+          ]}
+        >
+          <MaterialIcons name={iconName} size={40} color={colors.tint} />
         </View>
       )}
+      <Typo
+        variant="caption"
+        style={{ color: colors.tint, textAlign: "center", fontSize: 10 }}
+      >
+        {isImage ? "Tap to view" : label}
+      </Typo>
     </TouchableOpacity>
   );
 };
 
+// ---------------------------------------------------------------------------
+// FeedbackCard
+// ---------------------------------------------------------------------------
 export const FeedbackCard: React.FC<FeedbackCardProps> = ({
   feedback,
   currentUserRole,
@@ -199,8 +232,8 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({
 }) => {
   const { colors } = useThemeColor();
 
-  // Defensive defaults in case backend returns partial objects
-  const safeFeedback = {
+  // Defensive defaults — the API can in theory return partial objects.
+  const safe = {
     ...feedback,
     userName: feedback.userName || "Unknown",
     createdAt: feedback.createdAt || new Date().toISOString(),
@@ -212,61 +245,63 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({
   const canActAsTarget =
     !isUser &&
     (currentUserRole === "hospital" || currentUserRole === "organization") &&
-    currentUserRole === safeFeedback.targetType;
+    currentUserRole === safe.targetType;
+
+  const showOwnerActions = isUser && (onEditFeedback || onDeleteFeedback);
 
   return (
     <Card style={styles.card}>
       <View style={styles.headerRow}>
         <View style={{ flex: 1 }}>
           <Typo variant="h2" style={styles.title}>
-            {safeFeedback.title}
+            {safe.title}
           </Typo>
+
           <Typo variant="caption" style={{ color: colors.textMuted, marginBottom: 8 }}>
-            {safeFeedback.isAnonymous ? "Anonymous" : safeFeedback.userName} • {toFeedbackLabel(safeFeedback.type)} • To:{" "}
-            {safeFeedback.targetName} • {formatDate(safeFeedback.createdAt)}
+            {safe.isAnonymous ? "Anonymous" : safe.userName}
+            {" • "}
+            {toFeedbackLabel(safe.type)}
+            {" • To: "}
+            {safe.targetName}
+            {" • "}
+            {formatDate(safe.createdAt)}
           </Typo>
-          
-          {/* Badges row */}
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 4 }}>
-            {safeFeedback.category && (
-              <Badge 
-                label={safeFeedback.category.charAt(0).toUpperCase() + safeFeedback.category.slice(1).replace('_', ' ')}
-                variant="info"
+
+          <View style={styles.badgeRow}>
+            {safe.category && (
+              <Badge label={formatCategoryLabel(safe.category)} variant="info" />
+            )}
+            {safe.type === "complaint" && safe.status && (
+              <Badge
+                label={`Status: ${safe.status}`}
+                variant={getStatusBadgeVariant(safe.status)}
               />
             )}
-            {safeFeedback.type === "complaint" && safeFeedback.status && (
-              <Badge 
-                label={`Status: ${safeFeedback.status}`}
-                variant={getStatusBadgeVariant(safeFeedback.status as any)}
-              />
-            )}
-            {safeFeedback.type === "complaint" && safeFeedback.priority && (
-              <Badge 
-                label={`Priority: ${safeFeedback.priority}`}
-                variant={getPriorityBadgeVariant(safeFeedback.priority as any)}
+            {safe.type === "complaint" && safe.priority && (
+              <Badge
+                label={`Priority: ${safe.priority}`}
+                variant={getPriorityBadgeVariant(safe.priority)}
               />
             )}
           </View>
         </View>
 
-        {isUser && (onEditFeedback || onDeleteFeedback) && (
+        {showOwnerActions && (
           <View style={styles.iconActions}>
             {onEditFeedback && (
-              <MaterialIcons
+              <IconAction
                 name="edit"
-                size={20}
                 color={colors.tint}
-                style={styles.iconButton}
-                onPress={() => onEditFeedback(safeFeedback)}
+                label="Edit feedback"
+                onPress={() => onEditFeedback(safe)}
               />
             )}
             {onDeleteFeedback && (
-              <MaterialIcons
+              <IconAction
                 name="delete"
-                size={20}
                 color={colors.error}
-                style={styles.iconButton}
-                onPress={() => onDeleteFeedback(safeFeedback.id)}
+                label="Delete feedback"
+                onPress={() => onDeleteFeedback(safe.id)}
               />
             )}
           </View>
@@ -274,43 +309,60 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({
       </View>
 
       <Typo variant="body" style={styles.description}>
-        {safeFeedback.description}
+        {safe.description}
       </Typo>
 
-      {safeFeedback.type === "feedback" && safeFeedback.rating ? (
+      {safe.type === "feedback" && safe.rating ? (
         <View style={{ marginTop: 8 }}>
-          {renderStars(safeFeedback.rating, colors)}
+          <StarRating rating={safe.rating} colors={colors} />
         </View>
       ) : null}
 
-      {safeFeedback.attachments && safeFeedback.attachments.length > 0 && (
+      {safe.attachments.length > 0 && (
         <View style={{ marginTop: 12 }}>
-          <Typo variant="caption" style={{ color: colors.textMuted, marginBottom: 8, fontWeight: "600" }}>
-            📎 Attachments ({safeFeedback.attachments.length})
+          <Typo
+            variant="caption"
+            style={{ color: colors.textMuted, marginBottom: 8, fontWeight: "600" }}
+          >
+            Attachments ({safe.attachments.length})
           </Typo>
-          <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-            {safeFeedback.attachments.map((attachment, index) => renderAttachment(attachment, index, colors))}
+          <View style={styles.attachmentRow}>
+            {safe.attachments.map((attachment, index) => (
+              <AttachmentTile
+                key={`${attachment}-${index}`}
+                attachment={attachment}
+                colors={colors}
+              />
+            ))}
           </View>
         </View>
       )}
 
-      {safeFeedback.type === "complaint" && safeFeedback.status === "resolved" && (
-        <View style={{ marginTop: 12, backgroundColor: colors.success + "15", padding: 12, borderRadius: 8 }}>
-          <Typo variant="caption" style={{ color: colors.success, fontWeight: "600", marginBottom: 4 }}>
-            ✓ Resolved
+      {safe.type === "complaint" && safe.status === "resolved" && (
+        <View
+          style={[
+            styles.resolutionBox,
+            { backgroundColor: colors.success + "15" },
+          ]}
+        >
+          <Typo
+            variant="caption"
+            style={{ color: colors.success, fontWeight: "600", marginBottom: 4 }}
+          >
+            Resolved
           </Typo>
-          {safeFeedback.resolutionFeedback && (
+          {safe.resolutionFeedback && (
             <Typo variant="caption" style={{ color: colors.text }}>
-              {safeFeedback.resolutionFeedback}
+              {safe.resolutionFeedback}
             </Typo>
           )}
         </View>
       )}
 
-      {safeFeedback.replies.length > 0 && (
+      {safe.replies.length > 0 && (
         <View style={styles.repliesWrap}>
           <Divider spacing={12} color={colors.border} />
-          {safeFeedback.replies.map(reply => (
+          {safe.replies.map(reply => (
             <View key={reply.id} style={styles.replyRow}>
               <View style={{ flex: 1 }}>
                 <Typo variant="caption" style={{ color: colors.textMuted, marginBottom: 2 }}>
@@ -327,21 +379,21 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({
               {(onEditReply || onDeleteReply) && canActAsTarget && (
                 <View style={styles.iconActions}>
                   {onEditReply && (
-                    <MaterialIcons
+                    <IconAction
                       name="edit"
-                      size={18}
                       color={colors.tint}
-                      style={styles.iconButton}
-                      onPress={() => onEditReply(safeFeedback.id, reply)}
+                      label="Edit reply"
+                      onPress={() => onEditReply(safe.id, reply)}
+                      size={18}
                     />
                   )}
                   {onDeleteReply && (
-                    <MaterialIcons
+                    <IconAction
                       name="delete"
-                      size={18}
                       color={colors.error}
-                      style={styles.iconButton}
-                      onPress={() => onDeleteReply(safeFeedback.id, reply.id)}
+                      label="Delete reply"
+                      onPress={() => onDeleteReply(safe.id, reply.id)}
+                      size={18}
                     />
                   )}
                 </View>
@@ -351,63 +403,68 @@ export const FeedbackCard: React.FC<FeedbackCardProps> = ({
         </View>
       )}
 
-      {canActAsTarget && onAddReply && safeFeedback.status !== "rejected" && (
+      {canActAsTarget && onAddReply && safe.status !== "rejected" && (
         <View style={styles.addReplyRow}>
           <Button
             label="Add Reply"
             variant="secondary"
-            onPress={() => onAddReply(safeFeedback.id)}
+            onPress={() => onAddReply(safe.id)}
           />
         </View>
       )}
 
-      {isUser && safeFeedback.type === "complaint" && safeFeedback.status === "resolved" && !safeFeedback.rating && onRateResolution && (
-        <View style={styles.addReplyRow}>
-          <Button
-            label="Rate This Resolution (1-5 stars)"
-            variant="secondary"
-            onPress={() => onRateResolution(safeFeedback.id, 5, "")}
-          />
-        </View>
-      )}
+      {isUser &&
+        safe.type === "complaint" &&
+        safe.status === "resolved" &&
+        !safe.rating &&
+        onRateResolution && (
+          <View style={styles.addReplyRow}>
+            <Button
+              label="Rate This Resolution (1-5 stars)"
+              variant="secondary"
+              onPress={() => onRateResolution(safe.id, 5, "")}
+            />
+          </View>
+        )}
 
-      {canActAsTarget && safeFeedback.type === "complaint" && safeFeedback.status === "pending" && (
-        <View style={[styles.addReplyRow, { flexDirection: 'row', gap: 8 }]}>
-          <Button
-            label="Approve"
-            variant="primary"
-            onPress={() => onApproveComplaint?.(safeFeedback.id)}
-            style={{ flex: 1 }}
-          />
-          <Button
-            label="Reject"
-            variant="secondary"
-            onPress={() => onRejectComplaint?.(safeFeedback.id)}
-            style={{ flex: 1 }}
-          />
-        </View>
-      )}
+      {canActAsTarget &&
+        safe.type === "complaint" &&
+        safe.status === "pending" && (
+          <View style={[styles.addReplyRow, styles.actionRow]}>
+            <Button
+              label="Approve"
+              variant="primary"
+              onPress={() => onApproveComplaint?.(safe.id)}
+              style={{ flex: 1 }}
+            />
+            <Button
+              label="Reject"
+              variant="secondary"
+              onPress={() => onRejectComplaint?.(safe.id)}
+              style={{ flex: 1 }}
+            />
+          </View>
+        )}
     </Card>
   );
 };
 
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
-  card: {
-    marginBottom: 12,
-  },
-  headerRow: {
+  card: { marginBottom: 12 },
+  row: { flexDirection: "row", alignItems: "center" },
+  headerRow: { flexDirection: "row", alignItems: "flex-start" },
+  title: { marginBottom: 2 },
+  description: { marginTop: 8 },
+  badgeRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    flexWrap: "wrap",
+    gap: 6,
+    marginBottom: 4,
   },
-  title: {
-    marginBottom: 2,
-  },
-  description: {
-    marginTop: 8,
-  },
-  repliesWrap: {
-    marginTop: 12,
-  },
+  repliesWrap: { marginTop: 12 },
   replyRow: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -422,9 +479,41 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     paddingHorizontal: 4,
+    minWidth: 28,
+    minHeight: 28,
+    alignItems: "center",
+    justifyContent: "center",
   },
   addReplyRow: {
     marginTop: 12,
     alignItems: "flex-end",
+  },
+  actionRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  attachmentRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  attachmentTile: {
+    marginRight: 8,
+    marginBottom: 8,
+    alignItems: "center",
+  },
+  attachmentThumb: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    marginBottom: 4,
+  },
+  attachmentIconBox: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  resolutionBox: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 8,
   },
 });

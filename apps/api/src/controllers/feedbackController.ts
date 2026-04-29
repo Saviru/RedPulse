@@ -1,168 +1,251 @@
 import type { Request, Response, NextFunction } from "express";
 
-import { feedbackService } from "../services/feedbackService";
+import { feedbackService, type FeedbackFilters } from "../services/feedbackService";
 import type {
   CreateFeedbackInput,
   CreateReplyInput,
   UpdateFeedbackInput,
+  UpdateComplaintInput,
+  FeedbackTargetType,
+  FeedbackCategory,
+  ComplaintCategory,
+  ComplaintStatus,
+  ComplaintPriority,
+  ReplierRole,
 } from "../types/feedback";
 
+// ---------------------------------------------------------------------------
+// Type guards
+// ---------------------------------------------------------------------------
+const FEEDBACK_TARGET_TYPES = ["hospital", "organization"] as const;
+const FEEDBACK_CATEGORIES = [
+  "suggestion",
+  "compliment",
+  "general",
+  "feature_request",
+] as const;
+const COMPLAINT_CATEGORIES = [
+  "technical",
+  "service",
+  "donation",
+  "staff",
+  "emergency",
+  "other",
+] as const;
+const COMPLAINT_STATUSES = ["pending", "in_progress", "resolved", "rejected"] as const;
+const COMPLAINT_PRIORITIES = ["low", "medium", "high", "critical"] as const;
+const REPLIER_ROLES = ["user", "hospital", "organization"] as const;
+
+const oneOf = <T extends string>(allowed: readonly T[]) =>
+  (value: unknown): value is T =>
+    typeof value === "string" && (allowed as readonly string[]).includes(value);
+
+const isFeedbackTargetType = oneOf<FeedbackTargetType>(FEEDBACK_TARGET_TYPES);
+const isFeedbackCategory = oneOf<FeedbackCategory>(FEEDBACK_CATEGORIES);
+const isComplaintCategory = oneOf<ComplaintCategory>(COMPLAINT_CATEGORIES);
+const isComplaintStatus = oneOf<ComplaintStatus>(COMPLAINT_STATUSES);
+const isComplaintPriority = oneOf<ComplaintPriority>(COMPLAINT_PRIORITIES);
+const isReplierRole = oneOf<ReplierRole>(REPLIER_ROLES);
+
+// ---------------------------------------------------------------------------
+// Small parsing helpers
+// ---------------------------------------------------------------------------
+const TITLE_MAX = 200;
+const DESCRIPTION_MAX = 5000;
+const REPLY_MAX = 2000;
+const ID_MAX = 100;
+const NAME_MAX = 200;
+
 function asString(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function asTrimmed(value: unknown, max: number): string {
   if (typeof value !== "string") return "";
-  return value;
+  const trimmed = value.trim();
+  return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
 }
 
-function isFeedbackTargetType(value: unknown): value is "hospital" | "organization" {
-  return value === "hospital" || value === "organization";
+function parseRating(value: unknown): number | undefined {
+  if (typeof value === "number") return value;
+  if (typeof value === "string" && value.trim()) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : undefined;
+  }
+  return undefined;
 }
 
-function isFeedbackCategory(value: unknown): value is "suggestion" | "compliment" | "general" | "feature_request" {
-  return value === "suggestion" || value === "compliment" || value === "general" || value === "feature_request";
+function parseBoolean(value: unknown, fallback = false): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") return value === "true";
+  return fallback;
 }
 
-function isComplaintCategory(value: unknown): value is "technical" | "service" | "donation" | "staff" | "emergency" | "other" {
-  return value === "technical" || value === "service" || value === "donation" || value === "staff" || value === "emergency" || value === "other";
+class ValidationError extends Error {
+  status = 400;
+  constructor(message: string) {
+    super(message);
+  }
 }
 
-function isComplaintStatus(value: unknown): value is "pending" | "in_progress" | "resolved" | "rejected" {
-  return value === "pending" || value === "in_progress" || value === "resolved" || value === "rejected";
-}
-
-function isComplaintPriority(value: unknown): value is "low" | "medium" | "high" | "critical" {
-  return value === "low" || value === "medium" || value === "high" || value === "critical";
-}
-
+// ---------------------------------------------------------------------------
+// Controller
+// ---------------------------------------------------------------------------
 export const feedbackController = {
   getAll(req: Request, res: Response) {
+    const filters: FeedbackFilters = {};
+
     const targetType = asString(req.query.targetType);
     const targetId = asString(req.query.targetId);
-    const userRole = asString(req.query.userRole);
-    const userId = asString(req.query.userId);
-    const filters: any = {};
     if (targetType && targetId) {
       filters.targetType = targetType;
       filters.targetId = targetId;
     }
+
+    const userRole = asString(req.query.userRole);
+    const userId = asString(req.query.userId);
     if (userRole && userId) {
       filters.userRole = userRole;
       filters.userId = userId;
     }
+
     res.json({ data: feedbackService.getAll(filters) });
   },
 
   create(req: Request, res: Response, next: NextFunction) {
     try {
-      const body = req.body as Partial<CreateFeedbackInput>;
-      const targetId = asString(body.targetId);
-      const targetName = asString(body.targetName);
+      const body = (req.body ?? {}) as Record<string, unknown>;
 
-      // Convert isAnonymous from string to boolean if it came from FormData, default to false
-      let isAnonymous = false;
-      if (typeof body.isAnonymous === "boolean") {
-        isAnonymous = body.isAnonymous;
-      } else if (typeof body.isAnonymous === "string") {
-        isAnonymous = body.isAnonymous === "true";
-      }
+      // Required string fields.
+      const title = asTrimmed(body.title, TITLE_MAX);
+      const description = asTrimmed(body.description, DESCRIPTION_MAX);
+      const userId = asTrimmed(body.userId, ID_MAX);
+      const userName = asTrimmed(body.userName, NAME_MAX);
+      const userRole = asTrimmed(body.userRole, ID_MAX);
+      const targetId = asTrimmed(body.targetId, ID_MAX);
+      const targetName = asTrimmed(body.targetName, NAME_MAX);
 
-      // Basic required fields with explicit errors
-      if (!body.type || (body.type !== "feedback" && body.type !== "complaint")) {
-        return res.status(400).json({ error: "Missing or invalid field: type" });
+      if (body.type !== "feedback" && body.type !== "complaint") {
+        throw new ValidationError("Missing or invalid field: type");
       }
-      if (!body.title || typeof body.title !== "string" || body.title.trim().length === 0) {
-        return res.status(400).json({ error: "Missing or invalid field: title" });
-      }
-      if (!body.description || typeof body.description !== "string" || body.description.trim().length === 0) {
-        return res.status(400).json({ error: "Missing or invalid field: description" });
-      }
-
-      if (!body.userId || typeof body.userId !== "string" || body.userId.trim().length === 0) {
-        return res.status(400).json({ error: "Missing or invalid field: userId" });
-      }
-      if (!body.userName || typeof body.userName !== "string" || body.userName.trim().length === 0) {
-        return res.status(400).json({ error: "Missing or invalid field: userName" });
-      }
-      if (!body.userRole || typeof body.userRole !== "string" || body.userRole.trim().length === 0) {
-        return res.status(400).json({ error: "Missing or invalid field: userRole" });
-      }
-
+      if (!title) throw new ValidationError("Missing or invalid field: title");
+      if (!description) throw new ValidationError("Missing or invalid field: description");
+      if (!userId) throw new ValidationError("Missing or invalid field: userId");
+      if (!userName) throw new ValidationError("Missing or invalid field: userName");
+      if (!userRole) throw new ValidationError("Missing or invalid field: userRole");
       if (!isFeedbackTargetType(body.targetType)) {
-        return res.status(400).json({ error: "Missing or invalid field: targetType" });
+        throw new ValidationError("Missing or invalid field: targetType");
       }
-      if (!targetId || targetId.trim().length === 0) {
-        return res.status(400).json({ error: "Missing or invalid field: targetId" });
-      }
-      if (!targetName || targetName.trim().length === 0) {
-        return res.status(400).json({ error: "Missing or invalid field: targetName" });
-      }
+      if (!targetId) throw new ValidationError("Missing or invalid field: targetId");
+      if (!targetName) throw new ValidationError("Missing or invalid field: targetName");
 
-      // Complaint-specific required fields
-      if (body.type === "complaint") {
-        if (!body.priority || !isComplaintPriority(body.priority)) {
-          return res.status(400).json({ error: "Missing or invalid field: priority" });
-        }
+      const isAnonymous = parseBoolean(body.isAnonymous, false);
 
-        // ✅ AUTO SET DEFAULT STATUS
-        if (!body.status || !isComplaintStatus(body.status)) {
-          body.status = "pending";
-        }
-        // Complaints should not have rating on creation; ignore if provided
-        if (body.rating !== undefined) {
-          delete (body as any).rating;
-        }
-      }
+      // Per-type validation.
+      let category: FeedbackCategory | ComplaintCategory | undefined;
+      let priority: ComplaintPriority | undefined;
+      let rating: number | undefined;
 
-      // Rating is required ONLY for feedback, not for complaints
       if (body.type === "feedback") {
-        let rating: number | undefined;
-        if (typeof body.rating === "number") {
-          rating = body.rating;
-        } else if (typeof body.rating === "string") {
-          rating = parseFloat(body.rating);
+        if (body.category !== undefined && !isFeedbackCategory(body.category)) {
+          throw new ValidationError("Invalid feedback category.");
         }
+        category = body.category as FeedbackCategory | undefined;
 
-        if (typeof rating !== "number" || rating < 1 || rating > 5) {
-          return res.status(400).json({ error: "Rating is required for feedback (1-5)." });
+        const parsedRating = parseRating(body.rating);
+        if (typeof parsedRating !== "number" || parsedRating < 1 || parsedRating > 5) {
+          throw new ValidationError("Rating is required for feedback (1-5).");
         }
-        // Update body with parsed rating
-        (body as any).rating = rating;
+        rating = parsedRating;
+      } else {
+        // complaint
+        if (body.category !== undefined && !isComplaintCategory(body.category)) {
+          throw new ValidationError("Invalid complaint category.");
+        }
+        category = body.category as ComplaintCategory | undefined;
+
+        if (!isComplaintPriority(body.priority)) {
+          throw new ValidationError("Missing or invalid field: priority");
+        }
+        priority = body.priority;
+        // Complaints never have a rating at creation time.
       }
 
-      if (body.type === "feedback" && body.category && !isFeedbackCategory(body.category)) {
-        return res.status(400).json({ error: "Invalid feedback category." });
-      }
-      if (body.type === "complaint" && body.category && !isComplaintCategory(body.category)) {
-        return res.status(400).json({ error: "Invalid complaint category." });
-      }
-
-      // Handle file attachments
-      const attachments: string[] = [];
-      if (req.files && Array.isArray(req.files)) {
-        req.files.forEach((file: any) => {
-          // Store the relative path to the file
-          attachments.push(`/uploads/${file.filename}`);
-        });
+      // Attachments come from multer when uploaded; otherwise from the body.
+      let attachments: string[] | undefined;
+      if (Array.isArray(req.files)) {
+        const filenames = (req.files as Express.Multer.File[]).map(
+          f => `/uploads/${f.filename}`,
+        );
+        if (filenames.length > 0) attachments = filenames;
+      } else if (Array.isArray(body.attachments)) {
+        attachments = body.attachments.filter((a): a is string => typeof a === "string");
       }
 
-      const created = feedbackService.create({
-        ...body as CreateFeedbackInput,
+      const input: CreateFeedbackInput = {
+        userId,
+        userName,
+        userRole: userRole as ReplierRole,
+        targetType: body.targetType,
+        targetId,
+        targetName,
+        type: body.type,
+        title,
+        description,
+        category,
+        priority,
+        attachments,
         isAnonymous,
-        attachments: attachments.length > 0 ? attachments : body.attachments,
-      });
+        rating,
+      };
+
+      const created = feedbackService.create(input);
       return res.status(201).json({ data: created });
     } catch (e) {
       return next(e);
     }
   },
 
-
   update(req: Request, res: Response, next: NextFunction) {
     try {
       const id = asString(req.params.id);
-      const body = req.body as Partial<UpdateFeedbackInput>;
-      if (!body.type || !body.title || !body.description) {
-        return res.status(400).json({ error: "Missing required fields." });
+      const body = (req.body ?? {}) as Record<string, unknown>;
+
+      if (body.type !== "feedback" && body.type !== "complaint") {
+        throw new ValidationError("Missing or invalid field: type");
       }
-      const updated = feedbackService.update(id, body as UpdateFeedbackInput);
+
+      const title = asTrimmed(body.title, TITLE_MAX);
+      const description = asTrimmed(body.description, DESCRIPTION_MAX);
+      if (!title) throw new ValidationError("Missing or invalid field: title");
+      if (!description) throw new ValidationError("Missing or invalid field: description");
+
+      let category: FeedbackCategory | ComplaintCategory | undefined;
+      if (body.type === "feedback") {
+        if (body.category !== undefined && !isFeedbackCategory(body.category)) {
+          throw new ValidationError("Invalid feedback category.");
+        }
+        category = body.category as FeedbackCategory | undefined;
+      } else {
+        if (body.category !== undefined && !isComplaintCategory(body.category)) {
+          throw new ValidationError("Invalid complaint category.");
+        }
+        category = body.category as ComplaintCategory | undefined;
+      }
+
+      const attachments = Array.isArray(body.attachments)
+        ? body.attachments.filter((a): a is string => typeof a === "string")
+        : undefined;
+
+      const input: UpdateFeedbackInput = {
+        type: body.type,
+        title,
+        description,
+        category,
+        attachments,
+      };
+
+      const updated = feedbackService.update(id, input);
       return res.json({ data: updated });
     } catch (e) {
       return next(e);
@@ -182,11 +265,27 @@ export const feedbackController = {
   addReply(req: Request, res: Response, next: NextFunction) {
     try {
       const feedbackId = asString(req.params.id);
-      const body = req.body as Partial<CreateReplyInput>;
-      if (!body.replierId || !body.replierName || !body.replierRole || !body.content) {
-        return res.status(400).json({ error: "Missing required fields." });
+      const body = (req.body ?? {}) as Record<string, unknown>;
+
+      const replierId = asTrimmed(body.replierId, ID_MAX);
+      const replierName = asTrimmed(body.replierName, NAME_MAX);
+      const content = asTrimmed(body.content, REPLY_MAX);
+
+      if (!replierId) throw new ValidationError("Missing or invalid field: replierId");
+      if (!replierName) throw new ValidationError("Missing or invalid field: replierName");
+      if (!isReplierRole(body.replierRole)) {
+        throw new ValidationError("Missing or invalid field: replierRole");
       }
-      const created = feedbackService.addReply(feedbackId, body as CreateReplyInput);
+      if (!content) throw new ValidationError("Missing or invalid field: content");
+
+      const input: CreateReplyInput = {
+        replierId,
+        replierName,
+        replierRole: body.replierRole,
+        content,
+      };
+
+      const created = feedbackService.addReply(feedbackId, input);
       return res.status(201).json({ data: created });
     } catch (e) {
       return next(e);
@@ -197,45 +296,15 @@ export const feedbackController = {
     try {
       const feedbackId = asString(req.params.id);
       const replyId = asString(req.params.replyId);
-      const content = (req.body as { content?: unknown } | undefined)?.content;
-      if (typeof content !== "string" || content.trim().length === 0) {
-        return res.status(400).json({ error: "Missing required fields." });
-      }
+      const body = (req.body ?? {}) as Record<string, unknown>;
+      const content = asTrimmed(body.content, REPLY_MAX);
+      if (!content) throw new ValidationError("Missing or invalid field: content");
+
       const updated = feedbackService.updateReply(feedbackId, replyId, content);
       return res.json({ data: updated });
     } catch (e) {
       return next(e);
     }
-  },
-
-  updateComplaint(req: Request, res: Response, next: NextFunction) {
-    try {
-      const id = asString(req.params.id);
-      const body = req.body as any;
-      const updateData: any = {};
-      if (body.status && !isComplaintStatus(body.status)) {
-        return res.status(400).json({ error: "Invalid status." });
-      }
-      if (body.priority && !isComplaintPriority(body.priority)) {
-        return res.status(400).json({ error: "Invalid priority." });
-      }
-      // Ignore rating field for complaints - only allow for resolution feedback
-      if (body.rating !== undefined) {
-        delete body.rating;
-      }
-      if (body.status) updateData.status = body.status;
-      if (body.priority) updateData.priority = body.priority;
-      if (body.assignToId) updateData.assignToId = body.assignToId;
-      if (body.resolutionFeedback) updateData.resolutionFeedback = body.resolutionFeedback;
-      const updated = feedbackService.updateComplaint(id, updateData);
-      return res.json({ data: updated });
-    } catch (e) {
-      return next(e);
-    }
-  },
-
-  analytics(req: Request, res: Response) {
-    res.json(feedbackService.analytics());
   },
 
   deleteReply(req: Request, res: Response, next: NextFunction) {
@@ -248,5 +317,53 @@ export const feedbackController = {
       return next(e);
     }
   },
-};
 
+  updateComplaint(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = asString(req.params.id);
+      const body = (req.body ?? {}) as Record<string, unknown>;
+
+      const input: UpdateComplaintInput = {};
+
+      if (body.status !== undefined) {
+        if (!isComplaintStatus(body.status)) {
+          throw new ValidationError("Invalid status.");
+        }
+        input.status = body.status;
+      }
+
+      if (body.priority !== undefined) {
+        if (!isComplaintPriority(body.priority)) {
+          throw new ValidationError("Invalid priority.");
+        }
+        input.priority = body.priority;
+      }
+
+      if (typeof body.assignToId === "string" && body.assignToId.trim()) {
+        input.assignToId = body.assignToId.trim().slice(0, ID_MAX);
+      }
+
+      if (typeof body.resolutionFeedback === "string") {
+        input.resolutionFeedback = body.resolutionFeedback.trim().slice(0, DESCRIPTION_MAX);
+      }
+
+      // Allow setting a rating only when resolving — used for resolution
+      // satisfaction ratings on complaints.
+      if (body.rating !== undefined && input.status === "resolved") {
+        const parsed = parseRating(body.rating);
+        if (typeof parsed === "number" && parsed >= 1 && parsed <= 5) {
+          input.rating = parsed;
+        }
+      }
+
+      const updated = feedbackService.updateComplaint(id, input);
+      return res.json({ data: updated });
+    } catch (e) {
+      return next(e);
+    }
+  },
+
+  analytics(_req: Request, res: Response) {
+    res.json(feedbackService.analytics());
+  },
+};

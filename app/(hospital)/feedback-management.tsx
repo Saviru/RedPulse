@@ -1,33 +1,62 @@
-import React, { useState } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import React, { useMemo, useState } from "react";
+import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 
 import {
   Button,
-  Typo,
   FeedbackCard,
   ReplyFormModal,
   SegmentedControl,
+  Typo,
 } from "@/packages/ui/components/ui";
-import { useThemeColor, useFeedback } from "@/packages/ui/hooks";
+import { useFeedback, useThemeColor } from "@/packages/ui/hooks";
 import type { FeedbackReply } from "@/packages/ui/constants/mockFeedback";
+
+// TODO: replace with the authenticated hospital identity once auth lands.
+const HOSPITAL_ID = "h1";
+const HOSPITAL_NAME = "Colombo General Hospital";
+
+const TAB_OPTIONS = ["Feedbacks", "Complaints"] as const;
 
 export default function HospitalFeedbackManagementScreen() {
   const router = useRouter();
   const { colors } = useThemeColor();
-  const { feedbacks, isLoading, error, refresh, addReply, updateReply, deleteReply } =
-    useFeedback();
-
-  const HOSPITAL_ID = "h1";
-  const HOSPITAL_NAME = "Colombo General Hospital";
+  const {
+    feedbacks,
+    isLoading,
+    error,
+    refresh,
+    addReply,
+    updateReply,
+    deleteReply,
+  } = useFeedback();
 
   const [tabIndex, setTabIndex] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [activeFeedbackId, setActiveFeedbackId] = useState<string | null>(null);
   const [editingReply, setEditingReply] = useState<FeedbackReply | null>(null);
 
+  // -------------------------------------------------------------------------
+  // Derived state
+  // -------------------------------------------------------------------------
+  const hospitalFeedbacks = useMemo(
+    () =>
+      feedbacks.filter(
+        f => f.targetType === "hospital" && f.targetId === HOSPITAL_ID,
+      ),
+    [feedbacks],
+  );
+
+  const visibleFeedbacks = useMemo(() => {
+    const targetType = tabIndex === 0 ? "feedback" : "complaint";
+    return hospitalFeedbacks.filter(f => f.type === targetType);
+  }, [hospitalFeedbacks, tabIndex]);
+
+  // -------------------------------------------------------------------------
+  // Actions
+  // -------------------------------------------------------------------------
   const handleAddReplyClick = (feedbackId: string) => {
     setActiveFeedbackId(feedbackId);
     setEditingReply(null);
@@ -42,6 +71,7 @@ export default function HospitalFeedbackManagementScreen() {
 
   const handleSubmitReply = (content: string) => {
     if (!activeFeedbackId) return;
+
     if (editingReply) {
       updateReply(activeFeedbackId, editingReply.id, content);
     } else {
@@ -54,13 +84,48 @@ export default function HospitalFeedbackManagementScreen() {
     }
   };
 
-  const forThisHospital = feedbacks.filter(
-    f => f.targetType === "hospital" && f.targetId === HOSPITAL_ID,
-  );
+  // -------------------------------------------------------------------------
+  // Render
+  // -------------------------------------------------------------------------
+  const renderListBody = () => {
+    if (isLoading) {
+      return (
+        <Typo variant="body" style={[styles.emptyText, { color: colors.textMuted }]}>
+          Loading feedback...
+        </Typo>
+      );
+    }
 
-  const filteredFeedbacks = forThisHospital.filter(f =>
-    tabIndex === 0 ? f.type === "complaint" : f.type === "feedback",
-  );
+    if (error) {
+      return (
+        <View style={styles.errorBox}>
+          <Typo variant="body" style={[styles.emptyText, { color: colors.textMuted }]}>
+            {error}
+          </Typo>
+          <Button label="Retry" variant="secondary" onPress={refresh} />
+        </View>
+      );
+    }
+
+    if (visibleFeedbacks.length === 0) {
+      return (
+        <Typo variant="body" style={[styles.emptyText, { color: colors.textMuted }]}>
+          No records found.
+        </Typo>
+      );
+    }
+
+    return visibleFeedbacks.map(f => (
+      <FeedbackCard
+        key={f.id}
+        feedback={f}
+        currentUserRole="hospital"
+        onAddReply={handleAddReplyClick}
+        onEditReply={handleEditReplyClick}
+        onDeleteReply={deleteReply}
+      />
+    ));
+  };
 
   return (
     <SafeAreaView
@@ -70,6 +135,9 @@ export default function HospitalFeedbackManagementScreen() {
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           style={styles.backButton}
         >
           <MaterialIcons name="arrow-back" size={24} color={colors.text} />
@@ -82,7 +150,7 @@ export default function HospitalFeedbackManagementScreen() {
 
       <View style={styles.tabsContainer}>
         <SegmentedControl
-          options={["Complaints", "Feedbacks"]}
+          options={[...TAB_OPTIONS]}
           selectedIndex={tabIndex}
           onChange={setTabIndex}
         />
@@ -92,47 +160,7 @@ export default function HospitalFeedbackManagementScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {isLoading ? (
-          <Typo
-            variant="body"
-            style={{
-              textAlign: "center",
-              color: colors.textMuted,
-              marginTop: 40,
-            }}
-          >
-            Loading feedback...
-          </Typo>
-        ) : error ? (
-          <View style={{ alignItems: "center", marginTop: 40, gap: 12 }}>
-            <Typo variant="body" style={{ textAlign: "center", color: colors.textMuted }}>
-              {error}
-            </Typo>
-            <Button label="Retry" variant="secondary" onPress={refresh} />
-          </View>
-        ) : filteredFeedbacks.length === 0 ? (
-          <Typo
-            variant="body"
-            style={{
-              textAlign: "center",
-              color: colors.textMuted,
-              marginTop: 40,
-            }}
-          >
-            No records found.
-          </Typo>
-        ) : (
-          filteredFeedbacks.map(f => (
-            <FeedbackCard
-              key={f.id}
-              feedback={f}
-              currentUserRole="hospital"
-              onAddReply={handleAddReplyClick}
-              onEditReply={handleEditReplyClick}
-              onDeleteReply={deleteReply}
-            />
-          ))
-        )}
+        {renderListBody()}
       </ScrollView>
 
       <ReplyFormModal
@@ -157,4 +185,6 @@ const styles = StyleSheet.create({
   headerTitle: { flex: 1, textAlign: "center", fontSize: 20 },
   tabsContainer: { paddingHorizontal: 16, marginBottom: 8 },
   content: { padding: 16, paddingBottom: 32 },
+  emptyText: { textAlign: "center", marginTop: 40 },
+  errorBox: { alignItems: "center", marginTop: 40, gap: 12 },
 });
