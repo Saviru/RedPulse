@@ -48,7 +48,7 @@ const isComplaintPriority = oneOf<ComplaintPriority>(COMPLAINT_PRIORITIES);
 const isReplierRole = oneOf<ReplierRole>(REPLIER_ROLES);
 
 // ---------------------------------------------------------------------------
-// Small parsing helpers
+// Parsing / sanitization helpers
 // ---------------------------------------------------------------------------
 const TITLE_MAX = 200;
 const DESCRIPTION_MAX = 5000;
@@ -89,34 +89,38 @@ class ValidationError extends Error {
 }
 
 // ---------------------------------------------------------------------------
-// Controller
+// Controller — all handlers are async to await Mongo I/O
 // ---------------------------------------------------------------------------
 export const feedbackController = {
-  getAll(req: Request, res: Response) {
-    const filters: FeedbackFilters = {};
+  async getAll(req: Request, res: Response, next: NextFunction) {
+    try {
+      const filters: FeedbackFilters = {};
 
-    const targetType = asString(req.query.targetType);
-    const targetId = asString(req.query.targetId);
-    if (targetType && targetId) {
-      filters.targetType = targetType;
-      filters.targetId = targetId;
+      const targetType = asString(req.query.targetType);
+      const targetId = asString(req.query.targetId);
+      if (targetType && targetId) {
+        filters.targetType = targetType;
+        filters.targetId = targetId;
+      }
+
+      const userRole = asString(req.query.userRole);
+      const userId = asString(req.query.userId);
+      if (userRole && userId) {
+        filters.userRole = userRole;
+        filters.userId = userId;
+      }
+
+      const data = await feedbackService.getAll(filters);
+      return res.json({ data });
+    } catch (e) {
+      return next(e);
     }
-
-    const userRole = asString(req.query.userRole);
-    const userId = asString(req.query.userId);
-    if (userRole && userId) {
-      filters.userRole = userRole;
-      filters.userId = userId;
-    }
-
-    res.json({ data: feedbackService.getAll(filters) });
   },
 
-  create(req: Request, res: Response, next: NextFunction) {
+  async create(req: Request, res: Response, next: NextFunction) {
     try {
       const body = (req.body ?? {}) as Record<string, unknown>;
 
-      // Required string fields.
       const title = asTrimmed(body.title, TITLE_MAX);
       const description = asTrimmed(body.description, DESCRIPTION_MAX);
       const userId = asTrimmed(body.userId, ID_MAX);
@@ -141,7 +145,6 @@ export const feedbackController = {
 
       const isAnonymous = parseBoolean(body.isAnonymous, false);
 
-      // Per-type validation.
       let category: FeedbackCategory | ComplaintCategory | undefined;
       let priority: ComplaintPriority | undefined;
       let rating: number | undefined;
@@ -158,7 +161,6 @@ export const feedbackController = {
         }
         rating = parsedRating;
       } else {
-        // complaint
         if (body.category !== undefined && !isComplaintCategory(body.category)) {
           throw new ValidationError("Invalid complaint category.");
         }
@@ -168,10 +170,8 @@ export const feedbackController = {
           throw new ValidationError("Missing or invalid field: priority");
         }
         priority = body.priority;
-        // Complaints never have a rating at creation time.
       }
 
-      // Attachments come from multer when uploaded; otherwise from the body.
       let attachments: string[] | undefined;
       if (Array.isArray(req.files)) {
         const filenames = (req.files as Express.Multer.File[]).map(
@@ -199,14 +199,14 @@ export const feedbackController = {
         rating,
       };
 
-      const created = feedbackService.create(input);
+      const created = await feedbackService.create(input);
       return res.status(201).json({ data: created });
     } catch (e) {
       return next(e);
     }
   },
 
-  update(req: Request, res: Response, next: NextFunction) {
+  async update(req: Request, res: Response, next: NextFunction) {
     try {
       const id = asString(req.params.id);
       const body = (req.body ?? {}) as Record<string, unknown>;
@@ -245,24 +245,24 @@ export const feedbackController = {
         attachments,
       };
 
-      const updated = feedbackService.update(id, input);
+      const updated = await feedbackService.update(id, input);
       return res.json({ data: updated });
     } catch (e) {
       return next(e);
     }
   },
 
-  remove(req: Request, res: Response, next: NextFunction) {
+  async remove(req: Request, res: Response, next: NextFunction) {
     try {
       const id = asString(req.params.id);
-      feedbackService.remove(id);
+      await feedbackService.remove(id);
       return res.status(204).send();
     } catch (e) {
       return next(e);
     }
   },
 
-  addReply(req: Request, res: Response, next: NextFunction) {
+  async addReply(req: Request, res: Response, next: NextFunction) {
     try {
       const feedbackId = asString(req.params.id);
       const body = (req.body ?? {}) as Record<string, unknown>;
@@ -285,14 +285,14 @@ export const feedbackController = {
         content,
       };
 
-      const created = feedbackService.addReply(feedbackId, input);
+      const created = await feedbackService.addReply(feedbackId, input);
       return res.status(201).json({ data: created });
     } catch (e) {
       return next(e);
     }
   },
 
-  updateReply(req: Request, res: Response, next: NextFunction) {
+  async updateReply(req: Request, res: Response, next: NextFunction) {
     try {
       const feedbackId = asString(req.params.id);
       const replyId = asString(req.params.replyId);
@@ -300,25 +300,25 @@ export const feedbackController = {
       const content = asTrimmed(body.content, REPLY_MAX);
       if (!content) throw new ValidationError("Missing or invalid field: content");
 
-      const updated = feedbackService.updateReply(feedbackId, replyId, content);
+      const updated = await feedbackService.updateReply(feedbackId, replyId, content);
       return res.json({ data: updated });
     } catch (e) {
       return next(e);
     }
   },
 
-  deleteReply(req: Request, res: Response, next: NextFunction) {
+  async deleteReply(req: Request, res: Response, next: NextFunction) {
     try {
       const feedbackId = asString(req.params.id);
       const replyId = asString(req.params.replyId);
-      feedbackService.deleteReply(feedbackId, replyId);
+      await feedbackService.deleteReply(feedbackId, replyId);
       return res.status(204).send();
     } catch (e) {
       return next(e);
     }
   },
 
-  updateComplaint(req: Request, res: Response, next: NextFunction) {
+  async updateComplaint(req: Request, res: Response, next: NextFunction) {
     try {
       const id = asString(req.params.id);
       const body = (req.body ?? {}) as Record<string, unknown>;
@@ -347,8 +347,6 @@ export const feedbackController = {
         input.resolutionFeedback = body.resolutionFeedback.trim().slice(0, DESCRIPTION_MAX);
       }
 
-      // Allow setting a rating only when resolving — used for resolution
-      // satisfaction ratings on complaints.
       if (body.rating !== undefined && input.status === "resolved") {
         const parsed = parseRating(body.rating);
         if (typeof parsed === "number" && parsed >= 1 && parsed <= 5) {
@@ -356,14 +354,19 @@ export const feedbackController = {
         }
       }
 
-      const updated = feedbackService.updateComplaint(id, input);
+      const updated = await feedbackService.updateComplaint(id, input);
       return res.json({ data: updated });
     } catch (e) {
       return next(e);
     }
   },
 
-  analytics(_req: Request, res: Response) {
-    res.json(feedbackService.analytics());
+  async analytics(_req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await feedbackService.analytics();
+      return res.json(data);
+    } catch (e) {
+      return next(e);
+    }
   },
 };
