@@ -25,14 +25,8 @@ jobs:
           node-version: '22'
           cache: 'pnpm'
           
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2.2.0
-        with:
-          bun-version: 'latest'
-          
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Run Jest tests
-        run: bun run test
+        run: pnpm run test
