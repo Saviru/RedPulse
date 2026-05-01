@@ -90,7 +90,6 @@ export const Select = ({
         visible={isOpen && options.length > 0}
         transparent={true}
         animationType="fade"
-        statusBarTranslucent={true}
         onRequestClose={() => setIsOpen(false)}
       >
         <Pressable 
@@ -112,41 +111,41 @@ export const Select = ({
                 <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
-            
-              <ScrollView 
-                style={styles.optionsList}
-                showsVerticalScrollIndicator={true}
-                nestedScrollEnabled={true}
-              >
-                {options.map((option, index) => {
-                  const isSelected = value === option;
-                  return (
-                    <TouchableOpacity
-                      key={index}
+
+            <ScrollView 
+              style={styles.optionsList}
+              showsVerticalScrollIndicator={true}
+              nestedScrollEnabled={true}
+            >
+              {options.map((option, index) => {
+                const isSelected = value === option;
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.optionItem,
+                      { borderBottomColor: colors.border },
+                    ]}
+                    onPress={() => handleSelect(option)}
+                  >
+                    <Text
                       style={[
-                        styles.optionItem,
-                        { borderBottomColor: colors.border },
+                        styles.optionText,
+                        { color: colors.text },
+                        isSelected && [
+                          styles.optionTextSelected,
+                          { color: colors.tint },
+                        ],
                       ]}
-                      onPress={() => handleSelect(option)}
                     >
-                      <Text
-                        style={[
-                          styles.optionText,
-                          { color: colors.text },
-                          isSelected && [
-                            styles.optionTextSelected,
-                            { color: colors.tint },
-                          ],
-                        ]}
-                      >
-                        {option}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </View>
-          </Pressable>
+                      {option}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </Pressable>
       </Modal>
 
       {error && !disabled && (

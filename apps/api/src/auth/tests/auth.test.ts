@@ -1,11 +1,11 @@
+process.env.JWT_SECRET = 'test-secret-key-12345';
+process.env.SUPPRESS_JEST_WARNINGS = 'true';
+
 /** @jest-environment node */
 import request from 'supertest';
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import app from '../../app';
-
-process.env.JWT_SECRET = 'test-secret-key-12345';
-process.env.SUPPRESS_JEST_WARNINGS = 'true';
 
 let mongoServer: MongoMemoryServer;
 

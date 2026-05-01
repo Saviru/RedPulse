@@ -1,7 +1,6 @@
 /** @jest-environment node */
 import request from 'supertest';
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import app from '../../app';
 
 import { UserModel } from '../../models/User';
@@ -10,28 +9,6 @@ import { FundraisingModel } from '../../models/Fundraising';
 import { PointTransactionModel } from '../../models/PointTransaction';
 
 process.env.JWT_SECRET = 'test-secret-key-12345';
-process.env.SUPPRESS_JEST_WARNINGS = 'true';
-
-let mongoServer: MongoMemoryServer;
-
-beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
-    const uri = mongoServer.getUri();
-    await mongoose.connect(uri);
-});
-
-afterAll(async () => {
-    await mongoose.disconnect();
-    await mongoServer.stop();
-});
-
-afterEach(async () => {
-    // Clean DB between tests to prevent collisions
-    const collections = mongoose.connection.collections;
-    for (const key in collections) {
-        await collections[key].deleteMany({});
-    }
-});
 
 describe('RedPulse Backend Integration Tests', () => {
     jest.setTimeout(30000);
@@ -161,8 +138,10 @@ describe('RedPulse Backend Integration Tests', () => {
         });
         expect(userRes.status).toBe(201);
         const userToken = userRes.body.accessToken;
+        const userId = userRes.body.user._id;
+
         // 3. Award points (Simulation)
-        const user = await UserModel.findOne({ username: userRes.body.user.username });
+        const user = await UserModel.findById(userId);
         if (user) {
             user.points += 50;
             await user.save();

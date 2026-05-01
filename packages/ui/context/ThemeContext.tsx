@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { useColorScheme, ColorSchemeName } from "react-native";
 import { Colors } from "../constants/colors";
 
@@ -22,12 +22,12 @@ export function UIThemeProvider({ children }: { children: React.ReactNode }) {
     ? (systemColorScheme ?? "light") 
     : themeMode;
 
-  const value = useMemo(() => ({
+  const value = {
     themeMode,
     theme,
     colors: Colors[theme],
     setThemeMode,
-  }), [themeMode, theme, setThemeMode]);
+  };
 
   return (
     <ThemeContext.Provider value={value}>

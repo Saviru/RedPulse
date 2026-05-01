@@ -12,7 +12,6 @@ export const Colors = {
     border: "#E5E5EA",
     error: "#FF3B30",
     success: "#34C759",
-    info: "#007AFF",
   },
   dark: {
     text: "#ECEDEE",
@@ -24,6 +23,5 @@ export const Colors = {
     border: "#383838",
     error: "#FF453A",
     success: "#30D158",
-    info: "#0A84FF",
   },
 };

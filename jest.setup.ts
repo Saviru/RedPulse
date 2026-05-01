@@ -1,3 +1,6 @@
+process.env.SUPPRESS_JEST_WARNINGS = 'true';
+process.env.JWT_SECRET = 'test-secret-key-12345';
+
 import React from 'react';
 import { Text } from 'react-native';
 
