@@ -1,5 +1,4 @@
 import { Response } from 'express';
-import mongoose from 'mongoose';
 import { UserModel } from '../../models/User';
 import { OfferModel } from '../../models/Offer';
 import { FundraisingModel } from '../../models/Fundraising';
@@ -22,7 +21,7 @@ export const redeemOffer = async (req: AuthRequest, res: Response): Promise<void
 
     // Check for existing redemption
     const existingRedemption = await PointTransactionModel.findOne({
-      userId: req.user.id,
+      username: req.user.username,
       targetId: offerId,
       type: 'REDEMPTION'
     });
@@ -32,7 +31,7 @@ export const redeemOffer = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    const user = await UserModel.findById(req.user.id);
+    const user = await UserModel.findOne({ username: req.user.username });
     if (!user) {
       res.status(404).json({ message: 'User not found' });
       return;
@@ -51,7 +50,7 @@ export const redeemOffer = async (req: AuthRequest, res: Response): Promise<void
 
     // Record transaction
     await PointTransactionModel.create({
-      userId: user.id,
+      username: user.username,
       amount: offer.pointsCost,
       type: 'REDEMPTION',
       targetId: offer.id
@@ -83,7 +82,7 @@ export const donatePoints = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    const user = await UserModel.findById(req.user.id);
+    const user = await UserModel.findOne({ username: req.user.username });
     if (!user) {
       res.status(404).json({ message: 'User not found' });
       return;
@@ -106,7 +105,7 @@ export const donatePoints = async (req: AuthRequest, res: Response): Promise<voi
 
     // Record transaction
     await PointTransactionModel.create({
-      userId: user.id,
+      username: user.username,
       amount: pointsAmount,
       type: 'DONATION',
       targetId: fundraiser.id
@@ -125,7 +124,7 @@ export const getTransactions = async (req: AuthRequest, res: Response): Promise<
       res.status(401).json({ message: 'Unauthorized' });
       return;
     }
-    const transactions = await PointTransactionModel.find({ userId: req.user.id }).sort('-timestamp');
+    const transactions = await PointTransactionModel.find({ username: req.user.username }).sort('-timestamp');
     res.json(transactions);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -139,15 +138,20 @@ export const getHospitalRedemptions = async (req: AuthRequest, res: Response): P
       return;
     }
 
-    const myOffers = await OfferModel.find({ hospitalId: req.user.id });
+    const myOffers = await OfferModel.find({ hospitalId: req.user.username });
     const myOfferIds = myOffers.map(o => o._id);
 
     const redemptions = await PointTransactionModel.find({
       targetId: { $in: myOfferIds },
       type: 'REDEMPTION'
-    }).populate('userId', 'fullName username email bloodGroup location phone nic dob weight');
+    }).lean();
 
-    res.json(redemptions);
+    const results = await Promise.all(redemptions.map(async (r) => {
+      const user = await UserModel.findOne({ username: r.username }).select('fullName username email bloodGroup location phone nic dob weight').lean();
+      return { ...r, userId: user }; // Keep 'userId' property name for frontend compatibility
+    }));
+
+    res.json(results);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -160,15 +164,20 @@ export const getOrganizationDonations = async (req: AuthRequest, res: Response):
       return;
     }
 
-    const myFundraisers = await FundraisingModel.find({ organizationId: req.user.id });
+    const myFundraisers = await FundraisingModel.find({ organizationId: req.user.username });
     const myFundraiserIds = myFundraisers.map(f => f._id);
 
     const donations = await PointTransactionModel.find({
       targetId: { $in: myFundraiserIds },
       type: 'DONATION'
-    }).populate('userId', 'fullName username email bloodGroup location phone nic dob weight');
+    }).lean();
 
-    res.json(donations);
+    const results = await Promise.all(donations.map(async (d) => {
+      const user = await UserModel.findOne({ username: d.username }).select('fullName username email bloodGroup location phone nic dob weight').lean();
+      return { ...d, userId: user }; // Keep 'userId' property name for frontend compatibility
+    }));
+
+    res.json(results);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

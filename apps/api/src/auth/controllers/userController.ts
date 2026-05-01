@@ -4,12 +4,12 @@ import { AuthRequest } from '../../shared/middleware/auth.middleware';
 
 export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user) {
+    if (!req.user || !req.user.username) {
       res.status(401).json({ message: 'Not authorized' });
       return;
     }
 
-    const user = await UserModel.findById(req.user.id);
+    const user = await UserModel.findOne({ username: req.user.username });
     if (!user) {
       res.status(404).json({ message: 'User not found' });
       return;
@@ -19,10 +19,17 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
       req.body.avatar = `/uploads/avatars/${req.file.filename}`;
     }
 
-    Object.assign(user, req.body);
+    // Protection against unwanted field updates
+    const updates = { ...req.body };
+    delete updates.passwordHash;
+    delete updates.role;
+    delete updates.username;
+    delete updates.email;
+
+    Object.assign(user, updates);
     await user.save();
 
-    const updatedUser = await UserModel.findById(user.id).select('-passwordHash');
+    const updatedUser = await UserModel.findOne({ username: user.username }).select('-passwordHash');
 
     res.json(updatedUser);
   } catch (error: any) {

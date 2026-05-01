@@ -3,7 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IAuthCode extends Document {
   authorizationCode: string;
   codeChallenge: string;
-  userId: string;
+  username: string;
   expiresAt: Date;
 }
 
@@ -11,7 +11,7 @@ const authCodeSchema = new Schema<IAuthCode>(
   {
     authorizationCode: { type: String, required: true, unique: true },
     codeChallenge: { type: String, required: true },
-    userId: { type: String, required: true },
+    username: { type: String, required: true },
     expiresAt: { type: Date, required: true }
   },
   { timestamps: true }

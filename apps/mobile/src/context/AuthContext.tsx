@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import * as SecureStore from '../utils/storage';
 import { authService, LoginCredentials, RegisterData } from '../services/authService';
+import { setSession, clearSession, getAccessToken } from '../lib/session';
 
 interface User {
-  id: string;
   email: string;
   username: string;
   role: 'USER' | 'ORGANIZATION' | 'HOSPITAL';
@@ -26,6 +26,8 @@ interface User {
   emergencyContact?: string;
   createdAt?: string;
   points?: number;
+  lastDonationDate?: string;
+  totalDonations?: number;
 }
 
 interface AuthContextType {
@@ -55,42 +57,70 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const loadStoredToken = async () => {
     try {
-      const token = await SecureStore.getItemAsync('userToken');
+      console.log('Auth: loadStoredToken start');
+      const token = await getAccessToken();
+      console.log(`Auth: Token check complete (found: ${!!token})`);
+
       if (token) {
-        // fetch user profile with the token
+        console.log('Auth: Fetching profile with token...');
         const response = await authService.getMe();
+        console.log(`Auth: Profile fetch success (username: ${response?.username})`);
         if (response && response.email) {
+          await setSession(token, {
+            username: response.username,
+            role: response.role.toLowerCase() as any
+          });
           setUser(response);
         } else {
-          // Token is invalid/expired
-          await SecureStore.deleteItemAsync('userToken');
+          console.warn('Auth: Invalid profile response, clearing session');
+          await clearSession();
         }
+      } else {
+        console.log('Auth: No token found in storage');
       }
     } catch (error) {
-      console.log('Error loading token', error);
-      await SecureStore.deleteItemAsync('userToken');
+      console.error('Auth: Error loading token or profile', error);
+      await clearSession();
     } finally {
       setIsLoading(false);
+      console.log('Auth: loadStoredToken finished, isLoading=false');
     }
   };
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     try {
+      console.log('Auth: refreshUser start');
+      const token = await getAccessToken();
+      if (!token) {
+        console.log('Auth: Skip refreshUser, no token found');
+        return;
+      }
+      
       const response = await authService.getMe();
       if (response) {
         setUser(response);
+        console.log('Auth: refreshUser success');
       }
     } catch (error) {
-      console.error('Error refreshing user', error);
+      console.error('Auth: Error refreshing user', error);
+      // If we get a 401, we should probably clear the session
+      if ((error as any)?.response?.status === 401) {
+        console.warn('Auth: 401 on refresh, clearing session');
+        await clearSession();
+        setUser(null);
+      }
     }
-  };
+  }, []);
 
-  const login = async (credentials: LoginCredentials) => {
+  const login = useCallback(async (credentials: LoginCredentials) => {
     setIsLoading(true);
     try {
       const response = await authService.login(credentials);
       if (response && response.accessToken) {
-        await SecureStore.setItemAsync('userToken', response.accessToken);
+        await setSession(response.accessToken, {
+          username: response.user.username,
+          role: response.user.role.toLowerCase() as any
+        });
         setUser(response.user);
       } else {
         throw new Error('Login failed: Invalid response format');
@@ -100,9 +130,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw error;
     }
     setIsLoading(false);
-  };
+  }, []);
 
-  const register = async (data: RegisterData) => {
+  const register = useCallback(async (data: RegisterData) => {
     setIsLoading(true);
     try {
       const response = await authService.register(data);
@@ -114,14 +144,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const verifyRegistration = async (email: string, otp: string) => {
+  const verifyRegistration = useCallback(async (email: string, otp: string) => {
     setIsLoading(true);
     try {
       const response = await authService.verifyRegistration(email, otp);
       if (response && response.accessToken) {
-        await SecureStore.setItemAsync('userToken', response.accessToken);
+        await setSession(response.accessToken, {
+          username: response.user.username,
+          role: response.user.role.toLowerCase() as any
+        });
         setUser(response.user);
       } else {
         throw new Error('Verification failed: Invalid response format');
@@ -132,29 +165,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const resendOtp = async (email: string, purpose: 'REGISTER' | 'DELETE') => {
+  const resendOtp = useCallback(async (email: string, purpose: 'REGISTER' | 'DELETE') => {
     try {
       await authService.resendOtp(email, purpose);
     } catch (error) {
       throw error;
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     setIsLoading(true);
     try {
-      await SecureStore.deleteItemAsync('userToken');
+      await clearSession();
       setUser(null);
     } catch (error) {
       console.error('Logout failed', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const updateProfile = async (data: Partial<User>) => {
+  const updateProfile = useCallback(async (data: Partial<User>) => {
     try {
       const updatedUser = await authService.updateProfile(data);
       setUser(updatedUser);
@@ -162,18 +195,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error updating profile:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const requestDeleteAccount = async () => {
+  const requestDeleteAccount = useCallback(async () => {
     try {
       await authService.requestDelete();
     } catch (error) {
       console.error('Error requesting account deletion:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const confirmDeleteAccount = async (otp: string) => {
+  const confirmDeleteAccount = useCallback(async (otp: string) => {
     try {
       await authService.confirmDelete(otp);
       await SecureStore.deleteItemAsync('userToken');
@@ -182,13 +215,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error confirming account deletion:', error);
       throw error;
     }
-  };
+  }, []);
+
+  const contextValue = React.useMemo(() => ({
+    user, 
+    isLoading, 
+    login, 
+    register, 
+    logout, 
+    updateProfile,
+    requestDeleteAccount, 
+    confirmDeleteAccount, 
+    refreshUser, 
+    verifyRegistration, 
+    resendOtp
+  }), [
+    user, 
+    isLoading, 
+    login, 
+    register, 
+    logout, 
+    updateProfile,
+    requestDeleteAccount, 
+    confirmDeleteAccount, 
+    refreshUser, 
+    verifyRegistration, 
+    resendOtp
+  ]);
 
   return (
-    <AuthContext.Provider value={{
-      user, isLoading, login, register, logout, updateProfile,
-      requestDeleteAccount, confirmDeleteAccount, refreshUser, verifyRegistration, resendOtp
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

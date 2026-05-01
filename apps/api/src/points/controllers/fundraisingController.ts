@@ -14,7 +14,7 @@ export const createFundraising = async (req: AuthRequest, res: Response): Promis
       title,
       description,
       goalLKR,
-      organizationId: req.user.id
+      organizationId: req.user.username
     });
     res.status(201).json(fundraiser);
   } catch (error: any) {
@@ -39,7 +39,7 @@ export const updateFundraising = async (req: AuthRequest, res: Response): Promis
     }
     const { id } = req.params;
     const fundraiser = await FundraisingModel.findOneAndUpdate(
-       { _id: id, organizationId: req.user.id },
+       { _id: id, organizationId: req.user.username },
        req.body,
        { new: true }
     );
@@ -61,7 +61,7 @@ export const deleteFundraising = async (req: AuthRequest, res: Response): Promis
      }
      const { id } = req.params;
      const fundraiser = await FundraisingModel.findOneAndUpdate(
-        { _id: id, organizationId: req.user.id },
+        { _id: id, organizationId: req.user.username },
         { isActive: false },
         { new: true }
      );

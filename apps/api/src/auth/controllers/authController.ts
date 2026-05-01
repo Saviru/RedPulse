@@ -4,6 +4,7 @@ import { UserModel } from '../../models/User';
 import { RegularUserModel, OrganizationUserModel, HospitalUserModel } from '../../models/Discriminators';
 import { AuthCodeModel } from '../../models/AuthCode';
 import { OtpModel } from '../../models/Otp';
+import { DonorProfileModel } from '../../models/DonorProfile';
 import { generateAuthorizationCode, generateToken, verifyCodeChallenge } from '../../shared/utils/jwt';
 import { AuthRequest } from '../../shared/middleware/auth.middleware';
 import { emailService } from '../../shared/services/EmailService';
@@ -107,7 +108,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
         await AuthCodeModel.create({
           authorizationCode: code,
           codeChallenge,
-          userId: user.id,
+          username: user.username,
           expiresAt: new Date(Date.now() + 10 * 60 * 1000)
         });
         res.json({ authorizationCode: code, expiresIn: 600 });
@@ -115,7 +116,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       }
 
       // fallback standard JWT
-      const token = generateToken(user.id, user.role);
+      const token = generateToken(user.username, user.role);
       res.json({ accessToken: token, user });
     } else {
       const pendingReg = await OtpModel.findOne({ email: loginIdentifier.toLowerCase(), purpose: 'REGISTER' });
@@ -145,13 +146,13 @@ export const exchangeToken = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const user = await UserModel.findById(authCodeEntry.userId);
+    const user = await UserModel.findOne({ username: authCodeEntry.username });
     if (!user) {
       res.status(404).json({ message: 'User not found' });
       return;
     }
 
-    const accessToken = generateToken(user.id, user.role);
+    const accessToken = generateToken(user.username, user.role);
 
     // consume code
     await AuthCodeModel.deleteOne({ _id: authCodeEntry._id });
@@ -168,12 +169,23 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
       res.status(401).json({ message: 'Not authorized' });
       return;
     }
-    const user = await UserModel.findById(req.user.id).select('-passwordHash');
+    const user = await UserModel.findOne({ username: req.user.username }).select('-passwordHash');
     if (!user) {
       res.status(404).json({ message: 'User not found' });
       return;
     }
-    res.json(user);
+
+    const userData = user.toObject();
+
+    // Include lastDonationDate for users
+    if (user.role === 'USER') {
+      const donorProfile = await DonorProfileModel.findOne({ donorId: user.username });
+      if (donorProfile) {
+        userData.lastDonationDate = donorProfile.lastDonationDate;
+      }
+    }
+
+    res.json(userData);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -189,7 +201,7 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
     const updates = req.body;
 
     // Looks for the user before update details
-    const user = await UserModel.findById(req.user.id);
+    const user = await UserModel.findOne({ username: req.user.username });
     if (!user) {
       res.status(404).json({ message: 'User not found' });
       return;
@@ -215,7 +227,7 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
     await user.save();
 
     // Re-fetch data
-    const updatedUser = await UserModel.findById(user.id).select('-passwordHash');
+    const updatedUser = await UserModel.findOne({ username: user.username }).select('-passwordHash');
     res.json(updatedUser);
   } catch (error: any) {
     if (error.code === 11000) {
@@ -280,14 +292,14 @@ export const verifyRegistration = async (req: Request, res: Response): Promise<v
       await AuthCodeModel.create({
         authorizationCode: code,
         codeChallenge,
-        userId: user.id,
+        username: user.username,
         expiresAt: new Date(Date.now() + 10 * 60 * 1000)
       });
       res.status(200).json({ authorizationCode: code, expiresIn: 600 });
       return;
     }
 
-    const token = generateToken(user.id, user.role);
+    const token = generateToken(user.username, user.role);
     res.status(200).json({ accessToken: token, user });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -352,7 +364,7 @@ export const requestDelete = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    const user = await UserModel.findById(req.user.id);
+    const user = await UserModel.findOne({ username: req.user.username });
     if (!user) {
       res.status(404).json({ message: 'User not found' });
       return;
@@ -381,7 +393,7 @@ export const confirmDelete = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    const user = await UserModel.findById(req.user.id);
+    const user = await UserModel.findOne({ username: req.user.username });
     if (!user) {
       res.status(404).json({ message: 'User not found' });
       return;
@@ -395,7 +407,7 @@ export const confirmDelete = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    await UserModel.findByIdAndDelete(req.user.id);
+    await UserModel.findOneAndDelete({ username: req.user.username });
     await OtpModel.deleteOne({ _id: otpRecord._id });
 
     res.json({ message: 'Account deleted successfully' });

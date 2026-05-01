@@ -15,7 +15,7 @@ export const createOffer = async (req: AuthRequest, res: Response): Promise<void
       description,
       pointsCost,
       type,
-      hospitalId: req.user.id
+      hospitalId: req.user.username
     });
     res.status(201).json(offer);
   } catch (error: any) {
@@ -40,7 +40,7 @@ export const updateOffer = async (req: AuthRequest, res: Response): Promise<void
     }
     const { id } = req.params;
     const offer = await OfferModel.findOneAndUpdate(
-      { _id: id, hospitalId: req.user.id },
+      { _id: id, hospitalId: req.user.username },
       req.body,
       { new: true }
     );
@@ -62,7 +62,7 @@ export const deleteOffer = async (req: AuthRequest, res: Response): Promise<void
     }
     const { id } = req.params;
     const offer = await OfferModel.findOneAndUpdate(
-       { _id: id, hospitalId: req.user.id },
+       { _id: id, hospitalId: req.user.username },
        { isActive: false },
        { new: true }
     );
