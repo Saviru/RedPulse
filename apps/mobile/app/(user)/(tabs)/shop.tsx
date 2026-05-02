@@ -8,7 +8,7 @@ import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Card, Button, AnimatedHeader, Divider, ProgressBar, Badge, Input } from "@/packages/ui/components/ui";
 import { useScroll } from "@/packages/ui/context/ScrollContext";
 import { pointsService, Offer, Fundraising } from "@/apps/mobile/src/services/pointsService";
-import { useAuth } from "@/apps/mobile/src/context/AuthContext";
+import { useAuth } from "../../../src/context/AuthContext";
 import { Alert, Modal } from "react-native";
 
 export default function UserShopScreen() {

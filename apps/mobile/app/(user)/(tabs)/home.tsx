@@ -3,7 +3,7 @@ import { View, StyleSheet, Animated, TouchableOpacity, ScrollView, Image } from 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
-import { useAuth } from "@/apps/mobile/src/context/AuthContext";
+import { useAuth } from "../../../src/context/AuthContext";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Card, Button, AnimatedHeader, Divider, Badge } from "@/packages/ui/components/ui";
