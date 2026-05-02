@@ -138,10 +138,8 @@ describe('RedPulse Backend Integration Tests', () => {
         });
         expect(userRes.status).toBe(201);
         const userToken = userRes.body.accessToken;
-        const userId = userRes.body.user._id;
-
         // 3. Award points (Simulation)
-        const user = await UserModel.findById(userId);
+        const user = await UserModel.findOne({ username: userRes.body.user.username });
         if (user) {
             user.points += 50;
             await user.save();

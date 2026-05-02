@@ -20,6 +20,20 @@ export default function HospitalTabsLayout() {
           } as any}
         />
         <Tabs.Screen
+          name="alerts"
+          options={{
+            title: "Alerts",
+            tabBarIconName: "notifications",
+          } as any}
+        />
+        <Tabs.Screen
+          name="request"
+          options={{
+            title: "Request",
+            tabBarIconName: "bloodtype",
+          } as any}
+        />
+        <Tabs.Screen
           name="manage-shop"
           options={{
             title: "Rewards",
@@ -32,13 +46,6 @@ export default function HospitalTabsLayout() {
             title: "Redemptions",
             tabBarIconName: "history",
             href: null,
-          } as any}
-        />
-        <Tabs.Screen
-          name="requests"
-          options={{
-            title: "Requests",
-            tabBarIconName: "bloodtype",
           } as any}
         />
         <Tabs.Screen

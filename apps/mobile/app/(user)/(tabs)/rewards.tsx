@@ -7,7 +7,7 @@ import { useRouter } from "expo-router";
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Card, ProgressBar, AnimatedHeader } from "@/packages/ui/components/ui";
 import { useScroll } from "@/packages/ui/context/ScrollContext";
-import { useAuth } from "@/apps/mobile/src/context/AuthContext";
+import { useAuth } from "../../../src/context/AuthContext";
 import { pointsService } from "@/apps/mobile/src/services/pointsService";
 
 export default function DonorRewardsScreen() {

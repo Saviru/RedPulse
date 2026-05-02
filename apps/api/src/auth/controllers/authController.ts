@@ -4,7 +4,6 @@ import { UserModel } from '../../models/User';
 import { RegularUserModel, OrganizationUserModel, HospitalUserModel } from '../../models/Discriminators';
 import { AuthCodeModel } from '../../models/AuthCode';
 import { OtpModel } from '../../models/Otp';
-import { DonorProfileModel } from '../../models/DonorProfile';
 import { generateAuthorizationCode, generateToken, verifyCodeChallenge } from '../../shared/utils/jwt';
 import { AuthRequest } from '../../shared/middleware/auth.middleware';
 import { emailService } from '../../shared/services/EmailService';
@@ -174,18 +173,7 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
       res.status(404).json({ message: 'User not found' });
       return;
     }
-
-    const userData = user.toObject();
-
-    // Include lastDonationDate for users
-    if (user.role === 'USER') {
-      const donorProfile = await DonorProfileModel.findOne({ donorId: user.username });
-      if (donorProfile) {
-        userData.lastDonationDate = donorProfile.lastDonationDate;
-      }
-    }
-
-    res.json(userData);
+    res.json(user);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
