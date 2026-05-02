@@ -1,8 +1,9 @@
 packages:
-  - "packages/*"
-  - "apps/*"
+  - packages/*
+  - apps/*
 
 nodeLinker: hoisted
 
 onlyBuiltDependencies:
+  - mongodb-memory-server
   - unrs-resolver
