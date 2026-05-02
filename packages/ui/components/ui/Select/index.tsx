@@ -1,7 +1,8 @@
 import { useThemeColor } from "@/packages/ui/hooks";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View, Modal, Pressable, Platform } from "react-native";
+import { Typo } from "../Typo";
 import { styles } from "./Select.styles";
 import { SelectProps } from "./Select.types";
 
@@ -28,12 +29,17 @@ export const Select = ({
 
   return (
     // zIndex to ensure dropdown overlaps other elements
-    <View style={[styles.container, style, { zIndex: isOpen ? 1000 : 1 }]}>
+    <View 
+      style={[
+        styles.container, 
+        style, 
+        { zIndex: isOpen ? 9999 : 1, elevation: isOpen ? 100 : 0 }
+      ]}
+    >
       {label && (
         <Text style={[styles.label, { color: colors.textMuted }]}>{label}</Text>
       )}
 
-      <View style={{ position: "relative", zIndex: isOpen ? 1000 : 1 }}>
         <TouchableOpacity
           style={[
             styles.selectBox,
@@ -79,18 +85,38 @@ export const Select = ({
           </View>
         </TouchableOpacity>
 
-        {/* The Floating Dropdown Menu */}
-        {isOpen && options.length > 0 && (
-          <View
+      {/* The Modal-based Dropdown Menu */}
+      <Modal
+        visible={isOpen && options.length > 0}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsOpen(false)}
+      >
+        <Pressable 
+          style={styles.modalOverlay} 
+          onPress={() => setIsOpen(false)}
+        >
+          <View 
             style={[
-              styles.dropdownMenu,
+              styles.modalContent,
               {
                 backgroundColor: colors.background,
                 borderColor: colors.border,
               },
             ]}
           >
-            <ScrollView nestedScrollEnabled={true}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <Typo variant="body" style={{ fontWeight: "bold" }}>{label || placeholder}</Typo>
+              <TouchableOpacity onPress={() => setIsOpen(false)}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView 
+              style={styles.optionsList}
+              showsVerticalScrollIndicator={true}
+              nestedScrollEnabled={true}
+            >
               {options.map((option, index) => {
                 const isSelected = value === option;
                 return (
@@ -119,8 +145,8 @@ export const Select = ({
               })}
             </ScrollView>
           </View>
-        )}
-      </View>
+        </Pressable>
+      </Modal>
 
       {error && !disabled && (
         <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
