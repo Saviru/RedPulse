@@ -285,7 +285,7 @@ export default function HospitalRequestScreen() {
         ) : viewMode === "list" ? (
           <View style={{ flex: 1 }}>
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 activeOpacity={0.8}
                 style={[styles.createBtn, { backgroundColor: colors.tint }]}
                 onPress={() => { setViewMode("form"); resetForm(); router.setParams({ id: undefined }); }}
@@ -297,7 +297,7 @@ export default function HospitalRequestScreen() {
               {myRequests.length === 0 ? (
                 <View style={styles.emptyState}>
                   <MaterialIcons name="info-outline" size={64} color={colors.textMuted} />
-                  <Typo variant="h3" style={{ marginTop: 16, color: colors.textMuted }}>No requests yet</Typo>
+                  <Typo variant="body" style={{ marginTop: 16, color: colors.textMuted }}>No requests yet</Typo>
                   <Typo variant="body" style={{ marginTop: 8, color: colors.textMuted, textAlign: "center" }}>
                     Your hospital blood requests will appear here.
                   </Typo>
@@ -309,16 +309,16 @@ export default function HospitalRequestScreen() {
                     <Card key={req._id} variant="elevated" style={styles.requestCard}>
                       <View style={styles.requestCardHeader}>
                         <View style={[styles.bloodBadge, { backgroundColor: colors.tint }]}>
-                          <Typo variant="h3" style={{ color: "#FFF", fontWeight: "bold" }}>{req.bloodGroup}</Typo>
+                          <Typo variant="body" style={{ color: "#FFF", fontWeight: "bold" }}>{req.bloodGroup}</Typo>
                         </View>
                         <View style={{ flex: 1, marginLeft: 12 }}>
                           <Typo variant="body" style={{ fontWeight: "bold" }}>Hospital Request</Typo>
                           <Typo variant="caption" color={colors.textMuted}>{req.hospitalName || req.locationText}</Typo>
                         </View>
-                        <View style={[styles.statusBadge, { 
-                          backgroundColor: req.status === "open" ? "#E3F2FD" : "#F5F5F5" 
+                        <View style={[styles.statusBadge, {
+                          backgroundColor: req.status === "open" ? "#E3F2FD" : "#F5F5F5"
                         }]}>
-                          <Typo variant="caption" style={{ 
+                          <Typo variant="caption" style={{
                             color: req.status === "open" ? "#1976D2" : "#757575",
                             textTransform: "capitalize",
                             fontWeight: "bold"
@@ -353,7 +353,7 @@ export default function HospitalRequestScreen() {
 
                       {req.status === "open" && (
                         <View style={styles.requestCardFooter}>
-                          <TouchableOpacity 
+                          <TouchableOpacity
                             style={[styles.actionBtn, { borderColor: colors.border }]}
                             onPress={() => {
                               router.setParams({ id: req._id });
@@ -362,7 +362,7 @@ export default function HospitalRequestScreen() {
                             <MaterialIcons name="edit" size={18} color={colors.tint} />
                             <Typo variant="caption" style={{ marginLeft: 4, color: colors.tint, fontWeight: "bold" }}>Edit</Typo>
                           </TouchableOpacity>
-                          <TouchableOpacity 
+                          <TouchableOpacity
                             style={[styles.actionBtn, { borderColor: colors.border }]}
                             onPress={() => handleCancelRequest(req._id)}
                           >
@@ -380,284 +380,284 @@ export default function HospitalRequestScreen() {
         ) : (
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-          {/* Info Box */}
-          <View style={[styles.infoBox, { backgroundColor: `${colors.tint}12`, borderColor: `${colors.tint}30` }]}>
-            <MaterialIcons name="local-hospital" size={22} color={colors.tint} />
-            <View style={{ flex: 1, marginLeft: 10 }}>
-              <Typo variant="body" style={{ fontWeight: "bold", color: colors.tint }}>Hospital-to-Hospital Network</Typo>
-              <Typo variant="caption" style={{ color: colors.tint, opacity: 0.85, marginTop: 2 }}>
-                Request blood directly from hospitals' blood banks. Faster for urgent cases.
-              </Typo>
-            </View>
-          </View>
-
-          <View style={styles.formContainer}>
-            {/* Blood Group */}
-            <View style={[
-              styles.cardGroup, 
-              { borderColor: errors.bloodGroup ? colors.error : colors.border, backgroundColor: colors.surface }
-            ]}>
-              <Typo variant="body" style={[styles.inputLabel, errors.bloodGroup && { color: colors.error }]}>
-                Blood Group Needed
-              </Typo>
-              <View style={styles.gridContainer}>
-                {BLOOD_GROUPS.map((group) => {
-                   const isSelected = bloodType === group;
-                   return (
-                     <TouchableOpacity
-                       key={group}
-                       activeOpacity={0.7}
-                       style={[
-                         styles.gridItem,
-                         { borderColor: isSelected ? colors.tint : colors.border },
-                         isSelected && { backgroundColor: `${colors.tint}10` },
-                         isEditing && { opacity: 0.6 },
-                       ]}
-                       onPress={() => {
-                         if (!isEditing) {
-                           setBloodType(group);
-                           if (errors.bloodGroup) setErrors(prev => ({ ...prev, bloodGroup: "" }));
-                         }
-                       }}
-                       disabled={isEditing}
-                     >
-                       <FontAwesome5 name="tint" size={18} color={isSelected ? colors.tint : colors.icon} />
-                       <Typo variant="h2" style={{ fontWeight: "bold", marginTop: 6, color: isSelected ? colors.tint : colors.text }}>
-                         {group}
-                       </Typo>
-                     </TouchableOpacity>
-                   );
-                })}
-              </View>
-              {errors.bloodGroup && (
-                <Typo variant="caption" style={{ color: colors.error, marginTop: 8 }}>{errors.bloodGroup}</Typo>
-              )}
-            </View>
-
-            {/* Required Before Date & Time */}
-            <View style={[styles.cardGroup, { borderColor: errors.neededBefore ? colors.error : colors.border, backgroundColor: colors.surface }]}>
-              <Typo variant="body" style={[styles.inputLabel, errors.neededBefore && { color: colors.error }]}>Required Before</Typo>
-              <View style={{ flexDirection: "row", gap: 8 }}>
-                <TouchableOpacity
-                  style={[styles.datePickerBtn, errors.neededBefore && { borderColor: colors.error }]}
-                  onPress={() => { setShowDatePicker(true); setErrors(p => ({...p, neededBefore: ""})); }}
-                >
-                  <MaterialIcons name="event" size={18} color={errors.neededBefore ? colors.error : colors.text} />
-                  <Typo variant="caption" style={{ flex: 1, marginLeft: 6 }}>{neededBefore.toLocaleDateString()}</Typo>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.datePickerBtn, errors.neededBefore && { borderColor: colors.error }]}
-                  onPress={() => { setShowTimePicker(true); setErrors(p => ({...p, neededBefore: ""})); }}
-                >
-                  <MaterialIcons name="schedule" size={18} color={errors.neededBefore ? colors.error : colors.text} />
-                  <Typo variant="caption" style={{ flex: 1, marginLeft: 6 }}>{neededBefore.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Typo>
-                </TouchableOpacity>
-              </View>
-              {errors.neededBefore && <Typo variant="caption" style={{ color: colors.error, marginTop: 6 }}>{errors.neededBefore}</Typo>}
-              {showDatePicker && (
-                <DateTimePicker
-                  value={neededBefore}
-                  mode="date"
-                  display="default"
-                  minimumDate={new Date()}
-                  onChange={(event, date) => {
-                    setShowDatePicker(false);
-                    if (date) setNeededBefore(date);
-                  }}
-                />
-              )}
-              {showTimePicker && (
-                <DateTimePicker
-                  value={neededBefore}
-                  mode="time"
-                  display="default"
-                  onChange={(event, date) => {
-                    setShowTimePicker(false);
-                    if (date) setNeededBefore(date);
-                  }}
-                />
-              )}
-            </View>
-
-            {/* Units, Location, Radius */}
-            <View style={[styles.cardGroup, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-
-            <Typo variant="body" style={{ fontWeight: "bold", fontSize: 16, marginBottom: 12, color: colors.text }}>Patient Current Location:</Typo>
-
-            <View style={styles.inputGroup}>
-              <Typo variant="body" style={styles.inputLabel}>District</Typo>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={[styles.dropdownBtn, errors.selectedDistrict && { borderColor: colors.error }]}
-                onPress={() => { setActiveLocationDropdown("district"); setLocationSearchQuery(""); }}
-              >
-                <Typo variant="body" style={{ color: selectedDistrict ? colors.text : colors.textMuted }}>
-                  {selectedDistrict || "Select District..."}
+            {/* Info Box */}
+            <View style={[styles.infoBox, { backgroundColor: `${colors.tint}12`, borderColor: `${colors.tint}30` }]}>
+              <MaterialIcons name="local-hospital" size={22} color={colors.tint} />
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <Typo variant="body" style={{ fontWeight: "bold", color: colors.tint }}>Hospital-to-Hospital Network</Typo>
+                <Typo variant="caption" style={{ color: colors.tint, opacity: 0.85, marginTop: 2 }}>
+                  Request blood directly from hospitals' blood banks. Faster for urgent cases.
                 </Typo>
-                <MaterialIcons name="arrow-drop-down" size={24} color={colors.icon} />
-              </TouchableOpacity>
-              {errors.selectedDistrict && <Typo variant="caption" style={{ color: colors.error, marginTop: 4 }}>{errors.selectedDistrict}</Typo>}
+              </View>
             </View>
 
-            <View style={styles.inputGroup}>
-              <Typo variant="body" style={styles.inputLabel}>City / Town</Typo>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={[styles.dropdownBtn, (!selectedDistrict || errors.selectedCity) && { borderColor: errors.selectedCity ? colors.error : colors.border }]}
-                onPress={() => {
-                  if (!selectedDistrict) {
-                    Alert.alert("Notice", "Please select a district first.");
-                    return;
-                  }
-                  setActiveLocationDropdown("city");
-                  setLocationSearchQuery("");
-                }}
-              >
-                <Typo variant="body" style={{ color: selectedCity ? colors.text : colors.textMuted }}>
-                  {selectedCity || "Select City / Town..."}
+            <View style={styles.formContainer}>
+              {/* Blood Group */}
+              <View style={[
+                styles.cardGroup,
+                { borderColor: errors.bloodGroup ? colors.error : colors.border, backgroundColor: colors.surface }
+              ]}>
+                <Typo variant="body" style={[styles.inputLabel, errors.bloodGroup && { color: colors.error }]}>
+                  Blood Group Needed
                 </Typo>
-                <MaterialIcons name="arrow-drop-down" size={24} color={colors.icon} />
-              </TouchableOpacity>
-              {errors.selectedCity && <Typo variant="caption" style={{ color: colors.error, marginTop: 4 }}>{errors.selectedCity}</Typo>}
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Typo variant="body" style={styles.inputLabel}>Patient Current Location Details (Optional)</Typo>
-              <Typo variant="caption" color={colors.textMuted} style={{ marginBottom: 6 }}>
-                You can add patient hospital name or patient current location address for more info.
-              </Typo>
-              <Input
-                value={hospitalName}
-                  onChangeText={setHospitalName}
-                  containerStyle={styles.input}
-                />
-              </View>
-
-              <View style={[styles.inputGroup, { zIndex: 10 }]}>
-                <Typo variant="body" style={styles.inputLabel}>
-                  Reason for Request
-                </Typo>
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  style={[styles.dropdownBtn, errors.reason && { borderColor: colors.error }]}
-                  onPress={() => setIsReasonDropdownOpen(!isReasonDropdownOpen)}
-                >
-                  <Typo variant="body" style={{ color: reason ? colors.text : colors.textMuted }}>
-                    {reason || "Select a Reason..."}
-                  </Typo>
-                  <MaterialIcons name={isReasonDropdownOpen ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={22} color={colors.icon} />
-                </TouchableOpacity>
-                
-                {isReasonDropdownOpen && (
-                  <View style={[styles.dropdownMenu, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                    <ScrollView nestedScrollEnabled style={{ maxHeight: 180 }}>
-                      {REASONS.map((r, i) => (
-                        <TouchableOpacity
-                          key={r}
-                          style={[styles.dropdownItem, i < REASONS.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}
-                          onPress={() => {
-                            setReason(r);
-                            setErrors(p => ({...p, reason: ""}));
-                            setIsReasonDropdownOpen(false);
-                          }}
-                        >
-                          <Typo variant="body">{r}</Typo>
-                          {reason === r && <MaterialIcons name="check" size={18} color={colors.tint} />}
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
-                  </View>
-                )}
-                {errors.reason && <Typo variant="caption" style={{ color: colors.error, marginTop: 4 }}>{errors.reason}</Typo>}
-              </View>
-            </View>
-
-            {/* Urgency Level & Emergency */}
-            <View style={[styles.cardGroup, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-
-              <View style={[styles.inputGroup, { zIndex: 10 }]}>
-                <Typo variant="body" style={styles.inputLabel}>Urgency Level</Typo>
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  style={styles.dropdownBtn}
-                  onPress={() => setIsUrgencyDropdownOpen(!isUrgencyDropdownOpen)}
-                  disabled={isEditing}
-                >
-                  <Typo variant="body" style={{ color: colors.text, textTransform: "capitalize", opacity: isEditing ? 0.6 : 1 }}>
-                    {urgencyLevel}
-                  </Typo>
-                  <MaterialIcons name={isUrgencyDropdownOpen ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={22} color={colors.icon} />
-                </TouchableOpacity>
-                {isUrgencyDropdownOpen && (
-                  <View style={[styles.dropdownMenu, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                    <ScrollView nestedScrollEnabled style={{ maxHeight: 180 }}>
-                      {URGENCY_LEVELS.map((level, i) => (
-                        <TouchableOpacity
-                          key={level}
-                          style={[styles.dropdownItem, i < URGENCY_LEVELS.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}
-                          onPress={() => {
-                            setUrgencyLevel(level);
-                            setIsUrgencyDropdownOpen(false);
-                          }}
-                        >
-                          <Typo variant="body" style={{ textTransform: "capitalize" }}>{level}</Typo>
-                          {urgencyLevel === level && <MaterialIcons name="check" size={18} color={level === "critical" ? colors.error : colors.tint} />}
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
-                  </View>
-                )}
-              </View>
-
-
-              <View 
-                style={[
-                  styles.emergencyContainer, 
-                  { 
-                    backgroundColor: isEmergency ? `${colors.error}15` : colors.background, 
-                    borderColor: isEmergency ? colors.error : colors.border,
-                    opacity: urgencyLevel === "critical" ? 1 : 0.5
-                  }
-                ]}
-                pointerEvents={urgencyLevel === "critical" ? "auto" : "none"}
-              >
-                <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
-                  <Ionicons name="warning" size={24} color={isEmergency ? colors.error : colors.icon} />
-                  <View style={{ marginLeft: 12 }}>
-                    <Typo variant="body" style={{ fontWeight: "bold", color: isEmergency ? colors.error : colors.text }}>Is this an Emergency?</Typo>
-                    <Typo variant="caption" color={colors.textMuted}>Sends instant push alerts to hospitals</Typo>
-                  </View>
+                <View style={styles.gridContainer}>
+                  {BLOOD_GROUPS.map((group) => {
+                    const isSelected = bloodType === group;
+                    return (
+                      <TouchableOpacity
+                        key={group}
+                        activeOpacity={0.7}
+                        style={[
+                          styles.gridItem,
+                          { borderColor: isSelected ? colors.tint : colors.border },
+                          isSelected && { backgroundColor: `${colors.tint}10` },
+                          isEditing && { opacity: 0.6 },
+                        ]}
+                        onPress={() => {
+                          if (!isEditing) {
+                            setBloodType(group);
+                            if (errors.bloodGroup) setErrors(prev => ({ ...prev, bloodGroup: "" }));
+                          }
+                        }}
+                        disabled={isEditing}
+                      >
+                        <FontAwesome5 name="tint" size={18} color={isSelected ? colors.tint : colors.icon} />
+                        <Typo variant="h2" style={{ fontWeight: "bold", marginTop: 6, color: isSelected ? colors.tint : colors.text }}>
+                          {group}
+                        </Typo>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
-                <Toggle value={isEmergency} onToggle={setIsEmergency} activeColor={colors.error} />
+                {errors.bloodGroup && (
+                  <Typo variant="caption" style={{ color: colors.error, marginTop: 8 }}>{errors.bloodGroup}</Typo>
+                )}
               </View>
 
-            </View>
+              {/* Required Before Date & Time */}
+              <View style={[styles.cardGroup, { borderColor: errors.neededBefore ? colors.error : colors.border, backgroundColor: colors.surface }]}>
+                <Typo variant="body" style={[styles.inputLabel, errors.neededBefore && { color: colors.error }]}>Required Before</Typo>
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  <TouchableOpacity
+                    style={[styles.datePickerBtn, errors.neededBefore && { borderColor: colors.error }]}
+                    onPress={() => { setShowDatePicker(true); setErrors(p => ({ ...p, neededBefore: "" })); }}
+                  >
+                    <MaterialIcons name="event" size={18} color={errors.neededBefore ? colors.error : colors.text} />
+                    <Typo variant="caption" style={{ flex: 1, marginLeft: 6 }}>{neededBefore.toLocaleDateString()}</Typo>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.datePickerBtn, errors.neededBefore && { borderColor: colors.error }]}
+                    onPress={() => { setShowTimePicker(true); setErrors(p => ({ ...p, neededBefore: "" })); }}
+                  >
+                    <MaterialIcons name="schedule" size={18} color={errors.neededBefore ? colors.error : colors.text} />
+                    <Typo variant="caption" style={{ flex: 1, marginLeft: 6 }}>{neededBefore.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Typo>
+                  </TouchableOpacity>
+                </View>
+                {errors.neededBefore && <Typo variant="caption" style={{ color: colors.error, marginTop: 6 }}>{errors.neededBefore}</Typo>}
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={neededBefore}
+                    mode="date"
+                    display="default"
+                    minimumDate={new Date()}
+                    onChange={(event, date) => {
+                      setShowDatePicker(false);
+                      if (date) setNeededBefore(date);
+                    }}
+                  />
+                )}
+                {showTimePicker && (
+                  <DateTimePicker
+                    value={neededBefore}
+                    mode="time"
+                    display="default"
+                    onChange={(event, date) => {
+                      setShowTimePicker(false);
+                      if (date) setNeededBefore(date);
+                    }}
+                  />
+                )}
+              </View>
 
-            {/* Submit */}
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={[
-                styles.submitButton,
-                {
-                  backgroundColor: colors.tint,
-                  opacity: (isSubmitting) ? 0.6 : 1,
-                },
-              ]}
-              disabled={isSubmitting}
-              onPress={handleSubmit}
-            >
-              {isSubmitting ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <>
-                  <MaterialIcons name={isEditing ? "edit" : "local-hospital"} size={20} color="#FFF" style={{ marginRight: 8 }} />
-                  <Typo variant="body" style={{ color: "#FFF", fontWeight: "bold" }}>
-                    {isEditing ? "Update Request" : "Create Request & Notify Hospitals"}
+              {/* Units, Location, Radius */}
+              <View style={[styles.cardGroup, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+
+                <Typo variant="body" style={{ fontWeight: "bold", fontSize: 16, marginBottom: 12, color: colors.text }}>Patient Current Location:</Typo>
+
+                <View style={styles.inputGroup}>
+                  <Typo variant="body" style={styles.inputLabel}>District</Typo>
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={[styles.dropdownBtn, errors.selectedDistrict && { borderColor: colors.error }]}
+                    onPress={() => { setActiveLocationDropdown("district"); setLocationSearchQuery(""); }}
+                  >
+                    <Typo variant="body" style={{ color: selectedDistrict ? colors.text : colors.textMuted }}>
+                      {selectedDistrict || "Select District..."}
+                    </Typo>
+                    <MaterialIcons name="arrow-drop-down" size={24} color={colors.icon} />
+                  </TouchableOpacity>
+                  {errors.selectedDistrict && <Typo variant="caption" style={{ color: colors.error, marginTop: 4 }}>{errors.selectedDistrict}</Typo>}
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Typo variant="body" style={styles.inputLabel}>City / Town</Typo>
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={[styles.dropdownBtn, (!selectedDistrict || errors.selectedCity) && { borderColor: errors.selectedCity ? colors.error : colors.border }]}
+                    onPress={() => {
+                      if (!selectedDistrict) {
+                        Alert.alert("Notice", "Please select a district first.");
+                        return;
+                      }
+                      setActiveLocationDropdown("city");
+                      setLocationSearchQuery("");
+                    }}
+                  >
+                    <Typo variant="body" style={{ color: selectedCity ? colors.text : colors.textMuted }}>
+                      {selectedCity || "Select City / Town..."}
+                    </Typo>
+                    <MaterialIcons name="arrow-drop-down" size={24} color={colors.icon} />
+                  </TouchableOpacity>
+                  {errors.selectedCity && <Typo variant="caption" style={{ color: colors.error, marginTop: 4 }}>{errors.selectedCity}</Typo>}
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Typo variant="body" style={styles.inputLabel}>Patient Current Location Details (Optional)</Typo>
+                  <Typo variant="caption" color={colors.textMuted} style={{ marginBottom: 6 }}>
+                    You can add patient hospital name or patient current location address for more info.
                   </Typo>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
+                  <Input
+                    value={hospitalName}
+                    onChangeText={setHospitalName}
+                    containerStyle={styles.input}
+                  />
+                </View>
+
+                <View style={[styles.inputGroup, { zIndex: 10 }]}>
+                  <Typo variant="body" style={styles.inputLabel}>
+                    Reason for Request
+                  </Typo>
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={[styles.dropdownBtn, errors.reason && { borderColor: colors.error }]}
+                    onPress={() => setIsReasonDropdownOpen(!isReasonDropdownOpen)}
+                  >
+                    <Typo variant="body" style={{ color: reason ? colors.text : colors.textMuted }}>
+                      {reason || "Select a Reason..."}
+                    </Typo>
+                    <MaterialIcons name={isReasonDropdownOpen ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={22} color={colors.icon} />
+                  </TouchableOpacity>
+
+                  {isReasonDropdownOpen && (
+                    <View style={[styles.dropdownMenu, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                      <ScrollView nestedScrollEnabled style={{ maxHeight: 180 }}>
+                        {REASONS.map((r, i) => (
+                          <TouchableOpacity
+                            key={r}
+                            style={[styles.dropdownItem, i < REASONS.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}
+                            onPress={() => {
+                              setReason(r);
+                              setErrors(p => ({ ...p, reason: "" }));
+                              setIsReasonDropdownOpen(false);
+                            }}
+                          >
+                            <Typo variant="body">{r}</Typo>
+                            {reason === r && <MaterialIcons name="check" size={18} color={colors.tint} />}
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  )}
+                  {errors.reason && <Typo variant="caption" style={{ color: colors.error, marginTop: 4 }}>{errors.reason}</Typo>}
+                </View>
+              </View>
+
+              {/* Urgency Level & Emergency */}
+              <View style={[styles.cardGroup, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+
+                <View style={[styles.inputGroup, { zIndex: 10 }]}>
+                  <Typo variant="body" style={styles.inputLabel}>Urgency Level</Typo>
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={styles.dropdownBtn}
+                    onPress={() => setIsUrgencyDropdownOpen(!isUrgencyDropdownOpen)}
+                    disabled={isEditing}
+                  >
+                    <Typo variant="body" style={{ color: colors.text, textTransform: "capitalize", opacity: isEditing ? 0.6 : 1 }}>
+                      {urgencyLevel}
+                    </Typo>
+                    <MaterialIcons name={isUrgencyDropdownOpen ? "keyboard-arrow-up" : "keyboard-arrow-down"} size={22} color={colors.icon} />
+                  </TouchableOpacity>
+                  {isUrgencyDropdownOpen && (
+                    <View style={[styles.dropdownMenu, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                      <ScrollView nestedScrollEnabled style={{ maxHeight: 180 }}>
+                        {URGENCY_LEVELS.map((level, i) => (
+                          <TouchableOpacity
+                            key={level}
+                            style={[styles.dropdownItem, i < URGENCY_LEVELS.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}
+                            onPress={() => {
+                              setUrgencyLevel(level);
+                              setIsUrgencyDropdownOpen(false);
+                            }}
+                          >
+                            <Typo variant="body" style={{ textTransform: "capitalize" }}>{level}</Typo>
+                            {urgencyLevel === level && <MaterialIcons name="check" size={18} color={level === "critical" ? colors.error : colors.tint} />}
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  )}
+                </View>
+
+
+                <View
+                  style={[
+                    styles.emergencyContainer,
+                    {
+                      backgroundColor: isEmergency ? `${colors.error}15` : colors.background,
+                      borderColor: isEmergency ? colors.error : colors.border,
+                      opacity: urgencyLevel === "critical" ? 1 : 0.5
+                    }
+                  ]}
+                  pointerEvents={urgencyLevel === "critical" ? "auto" : "none"}
+                >
+                  <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
+                    <Ionicons name="warning" size={24} color={isEmergency ? colors.error : colors.icon} />
+                    <View style={{ marginLeft: 12 }}>
+                      <Typo variant="body" style={{ fontWeight: "bold", color: isEmergency ? colors.error : colors.text }}>Is this an Emergency?</Typo>
+                      <Typo variant="caption" color={colors.textMuted}>Sends instant push alerts to hospitals</Typo>
+                    </View>
+                  </View>
+                  <Toggle value={isEmergency} onToggle={setIsEmergency} activeColor={colors.error} />
+                </View>
+
+              </View>
+
+              {/* Submit */}
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={[
+                  styles.submitButton,
+                  {
+                    backgroundColor: colors.tint,
+                    opacity: (isSubmitting) ? 0.6 : 1,
+                  },
+                ]}
+                disabled={isSubmitting}
+                onPress={handleSubmit}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <>
+                    <MaterialIcons name={isEditing ? "edit" : "local-hospital"} size={20} color="#FFF" style={{ marginRight: 8 }} />
+                    <Typo variant="body" style={{ color: "#FFF", fontWeight: "bold" }}>
+                      {isEditing ? "Update Request" : "Create Request & Notify Hospitals"}
+                    </Typo>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
           </ScrollView>
         )}
       </KeyboardAvoidingView>
@@ -679,40 +679,40 @@ export default function HospitalRequestScreen() {
             />
             <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps="handled">
               {activeLocationDropdown === "district" && (
-                 SRI_LANKA_DISTRICTS
-                   .filter(d => d.toLowerCase().includes(locationSearchQuery.toLowerCase()))
-                   .map((dist, idx) => (
-                      <TouchableOpacity
-                        key={`dist-${idx}`}
-                        style={[styles.dropdownItem, { borderBottomColor: colors.border, borderBottomWidth: 1 }]}
-                        onPress={() => {
-                           setSelectedDistrict(dist);
-                           setSelectedCity(""); // Reset city when district changes
-                           setErrors(p => ({...p, selectedDistrict: ""}));
-                           setActiveLocationDropdown(null);
-                        }}
-                      >
-                         <Typo variant="body">{dist}</Typo>
-                      </TouchableOpacity>
-                   ))
+                SRI_LANKA_DISTRICTS
+                  .filter(d => d.toLowerCase().includes(locationSearchQuery.toLowerCase()))
+                  .map((dist, idx) => (
+                    <TouchableOpacity
+                      key={`dist-${idx}`}
+                      style={[styles.dropdownItem, { borderBottomColor: colors.border, borderBottomWidth: 1 }]}
+                      onPress={() => {
+                        setSelectedDistrict(dist);
+                        setSelectedCity(""); // Reset city when district changes
+                        setErrors(p => ({ ...p, selectedDistrict: "" }));
+                        setActiveLocationDropdown(null);
+                      }}
+                    >
+                      <Typo variant="body">{dist}</Typo>
+                    </TouchableOpacity>
+                  ))
               )}
 
               {activeLocationDropdown === "city" && selectedDistrict && (
-                 (SRI_LANKA_CITIES[selectedDistrict] || [])
-                   .filter(c => c.toLowerCase().includes(locationSearchQuery.toLowerCase()))
-                   .map((city, idx) => (
-                      <TouchableOpacity
-                        key={`city-${idx}`}
-                        style={[styles.dropdownItem, { borderBottomColor: colors.border, borderBottomWidth: 1 }]}
-                        onPress={() => {
-                           setSelectedCity(city);
-                           setErrors(p => ({...p, selectedCity: ""}));
-                           setActiveLocationDropdown(null);
-                        }}
-                      >
-                         <Typo variant="body">{city}</Typo>
-                      </TouchableOpacity>
-                   ))
+                (SRI_LANKA_CITIES[selectedDistrict] || [])
+                  .filter(c => c.toLowerCase().includes(locationSearchQuery.toLowerCase()))
+                  .map((city, idx) => (
+                    <TouchableOpacity
+                      key={`city-${idx}`}
+                      style={[styles.dropdownItem, { borderBottomColor: colors.border, borderBottomWidth: 1 }]}
+                      onPress={() => {
+                        setSelectedCity(city);
+                        setErrors(p => ({ ...p, selectedCity: "" }));
+                        setActiveLocationDropdown(null);
+                      }}
+                    >
+                      <Typo variant="body">{city}</Typo>
+                    </TouchableOpacity>
+                  ))
               )}
             </ScrollView>
           </KeyboardAvoidingView>
@@ -736,12 +736,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   refreshBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
-  createBtn: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    justifyContent: "center", 
-    paddingVertical: 16, 
-    borderRadius: 14, 
+  createBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    borderRadius: 14,
     marginBottom: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },

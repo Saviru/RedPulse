@@ -17,11 +17,11 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Input, Card, Toggle } from "@/packages/ui/components/ui";
-import { 
-  createBloodRequest, 
-  getBloodRequest, 
-  updateBloodRequest, 
-  getMyBloodRequests, 
+import {
+  createBloodRequest,
+  getBloodRequest,
+  updateBloodRequest,
+  getMyBloodRequests,
   cancelBloodRequest,
   getAcceptedBloodRequests
 } from "@/apps/mobile/app/lib/bloodRequestApi";
@@ -88,7 +88,7 @@ export default function UserRequestBloodScreen() {
 
   // 2. Blood Requirement Details
   const [bloodType, setBloodType] = useState<BloodGroup | "">("");
-  
+
   const [neededBefore, setNeededBefore] = useState<Date>(new Date(Date.now() + 24 * 60 * 60 * 1000));
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -97,7 +97,7 @@ export default function UserRequestBloodScreen() {
   const [hospitalLocation, setHospitalLocation] = useState("");
   const [requesterLocation, setRequesterLocation] = useState("");
   const [hospitalName, setHospitalName] = useState(""); // Exact Location
-  
+
   // Location Search State
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
@@ -151,7 +151,7 @@ export default function UserRequestBloodScreen() {
           setPatientAge(req.patientAge?.toString() || "");
           setPatientGender((req.patientGender as any) || "");
           setPatientDetails(req.patientDetails || "");
-          
+
           setBloodType(req.bloodGroup);
           if ((req as any).neededBefore) {
             setNeededBefore(new Date((req as any).neededBefore));
@@ -167,7 +167,7 @@ export default function UserRequestBloodScreen() {
           }
           setHospitalLocation(loadedLocation);
           setHospitalName(req.hospitalName || "");
-          
+
           setSelectedReason(req.reason || "");
           setRelationshipToPatient((req as any).relationshipToPatient || "");
           setDoctorName((req as any).doctorName || "");
@@ -206,7 +206,7 @@ export default function UserRequestBloodScreen() {
         newErrors.patientAge = "Invalid Age";
       }
     }
-    
+
     // Blood
     if (!bloodType) newErrors.bloodGroup = "Blood group is required";
 
@@ -257,8 +257,8 @@ export default function UserRequestBloodScreen() {
       "Are you sure you want to cancel this blood request?",
       [
         { text: "No", style: "cancel" },
-        { 
-          text: "Yes, Cancel", 
+        {
+          text: "Yes, Cancel",
           style: "destructive",
           onPress: async () => {
             try {
@@ -291,21 +291,21 @@ export default function UserRequestBloodScreen() {
       const requestData = {
         bloodGroup: bloodType as BloodGroup,
         neededBefore: neededBefore.toISOString(),
-        
+
         hospitalLocation: combinedLocation,
         hospitalName: hospitalName.trim(),
         requesterLocation: requesterLocation.trim() || undefined,
         coordinatorPhone: user?.phone || "",
-        
+
         patientName: patientName.trim(),
         patientAge: patientAge ? Number(patientAge) : undefined,
         patientGender: patientGender ? patientGender as any : undefined,
         patientDetails: patientDetails.trim(),
-        
+
         reason: selectedReason.trim(),
         relationshipToPatient: relationshipToPatient.trim(),
         doctorName: doctorName.trim(),
-        
+
         urgencyLevel: isEmergency ? "critical" : urgencyLevel,
         isEmergency,
         role: "user",
@@ -368,7 +368,7 @@ export default function UserRequestBloodScreen() {
         ) : viewMode === "list" ? (
           <View style={{ flex: 1 }}>
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 activeOpacity={0.8}
                 style={[styles.createBtn, { backgroundColor: colors.tint }]}
                 onPress={() => { setViewMode("form"); resetForm(); router.setParams({ id: undefined }); }}
@@ -380,7 +380,7 @@ export default function UserRequestBloodScreen() {
               {myRequests.length === 0 ? (
                 <View style={styles.emptyState}>
                   <MaterialIcons name="info-outline" size={64} color={colors.textMuted} />
-                  <Typo variant="h3" style={{ marginTop: 16, color: colors.textMuted }}>No requests yet</Typo>
+                  <Typo variant="body" style={{ marginTop: 16, color: colors.textMuted }}>No requests yet</Typo>
                   <Typo variant="body" style={{ marginTop: 8, color: colors.textMuted, textAlign: "center" }}>
                     Your blood requests will appear here.
                   </Typo>
@@ -392,16 +392,16 @@ export default function UserRequestBloodScreen() {
                     <Card key={req._id} variant="elevated" style={styles.requestCard}>
                       <View style={styles.requestCardHeader}>
                         <View style={[styles.bloodBadge, { backgroundColor: colors.tint }]}>
-                          <Typo variant="h3" style={{ color: "#FFF", fontWeight: "bold" }}>{req.bloodGroup}</Typo>
+                          <Typo variant="body" style={{ color: "#FFF", fontWeight: "bold" }}>{req.bloodGroup}</Typo>
                         </View>
                         <View style={{ flex: 1, marginLeft: 12 }}>
                           <Typo variant="body" style={{ fontWeight: "bold" }}>{req.patientName}</Typo>
                           <Typo variant="caption" color={colors.textMuted}>{req.hospitalName || req.hospitalLocation}</Typo>
                         </View>
-                        <View style={[styles.statusBadge, { 
-                          backgroundColor: req.status === "open" ? "#E3F2FD" : "#F5F5F5" 
+                        <View style={[styles.statusBadge, {
+                          backgroundColor: req.status === "open" ? "#E3F2FD" : "#F5F5F5"
                         }]}>
-                          <Typo variant="caption" style={{ 
+                          <Typo variant="caption" style={{
                             color: req.status === "open" ? "#1976D2" : "#757575",
                             textTransform: "capitalize",
                             fontWeight: "bold"
@@ -436,7 +436,7 @@ export default function UserRequestBloodScreen() {
 
                       {req.status === "open" && (
                         <View style={styles.requestCardFooter}>
-                          <TouchableOpacity 
+                          <TouchableOpacity
                             style={[styles.actionBtn, { borderColor: colors.border }]}
                             onPress={() => {
                               // Pre-fill form (some fields are already handled by loadRequest if we had an id, 
@@ -447,7 +447,7 @@ export default function UserRequestBloodScreen() {
                               setPatientDetails(req.patientDetails || "");
                               setBloodType(req.bloodGroup);
                               setNeededBefore(new Date(req.neededBefore));
-                              
+
                               const loc = req.hospitalLocation || "";
                               if (loc.includes(", ")) {
                                 const parts = loc.split(", ");
@@ -460,7 +460,7 @@ export default function UserRequestBloodScreen() {
                               setDoctorName(req.doctorName || "");
                               setUrgencyLevel(req.urgencyLevel || "medium");
                               setIsEmergency(req.isEmergency || false);
-                              
+
                               // We don't have an ID in the URL, so we need to track it manually if we want to "Update"
                               // For simplicity, let's just use router.push with ID if the user wants a full edit flow
                               router.push({ pathname: "/(user)/(tabs)/request", params: { id: req._id } } as any);
@@ -469,7 +469,7 @@ export default function UserRequestBloodScreen() {
                             <MaterialIcons name="edit" size={18} color={colors.tint} />
                             <Typo variant="caption" style={{ marginLeft: 4, color: colors.tint }}>Update</Typo>
                           </TouchableOpacity>
-                          <TouchableOpacity 
+                          <TouchableOpacity
                             style={[styles.actionBtn, { borderColor: colors.border }]}
                             onPress={() => handleCancelRequest(req._id)}
                           >
@@ -490,14 +490,14 @@ export default function UserRequestBloodScreen() {
             {/* 1. Patient Information */}
             <Card variant="elevated" style={styles.cardGroup}>
               <SectionTitle title="1. Patient Information" icon="person" />
-              
+
               <View style={styles.inputGroup}>
                 <Typo variant="body" style={styles.inputLabel}>Patient Full Name</Typo>
                 <Input
                   placeholder="Kasun Senevirathna"
                   value={patientName}
                   error={errors.patientName}
-                  onChangeText={(val) => { setPatientName(val); setErrors(p => ({...p, patientName: ""})) }}
+                  onChangeText={(val) => { setPatientName(val); setErrors(p => ({ ...p, patientName: "" })) }}
                   containerStyle={styles.input}
                 />
               </View>
@@ -552,7 +552,7 @@ export default function UserRequestBloodScreen() {
             {/* 2. Blood Requirement Details */}
             <Card variant="elevated" style={styles.cardGroup}>
               <SectionTitle title="2. Blood Requirement" icon="water-drop" />
-              
+
               <View style={styles.inputGroup}>
                 <Typo variant="body" style={[styles.inputLabel, errors.bloodGroup && { color: colors.error }]}>Blood Group *</Typo>
                 <View style={styles.gridContainer}>
@@ -578,56 +578,56 @@ export default function UserRequestBloodScreen() {
               <View style={styles.inputGroup}>
                 <Typo variant="body" style={styles.inputLabel}>Required Before</Typo>
                 <View style={{ flexDirection: "row", gap: 8 }}>
-                    <TouchableOpacity 
-                      style={styles.datePickerBtn} 
-                      onPress={() => setShowDatePicker(true)}
-                    >
-                      <MaterialIcons name="event" size={18} color={colors.text} />
-                      <Typo variant="caption" style={{ flex: 1, marginLeft: 6 }}>{neededBefore.toLocaleDateString()}</Typo>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      style={styles.datePickerBtn} 
-                      onPress={() => setShowTimePicker(true)}
-                    >
-                      <MaterialIcons name="schedule" size={18} color={colors.text} />
-                      <Typo variant="caption" style={{ flex: 1, marginLeft: 6 }}>{neededBefore.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</Typo>
-                    </TouchableOpacity>
-                  </View>
-                  
-                  {showDatePicker && (
-                    <DateTimePicker
-                      value={neededBefore}
-                      mode="date"
-                      display="default"
-                      minimumDate={new Date()}
-                      onChange={(event, date) => {
-                        setShowDatePicker(false);
-                        if (date) {
-                          setNeededBefore(date);
-                          if (errors.neededBefore) setErrors(prev => ({ ...prev, neededBefore: "" }));
-                        }
-                      }}
-                    />
-                  )}
-                  {errors.neededBefore && (
-                    <Typo variant="caption" style={{ color: colors.error, marginTop: 4 }}>
-                      {errors.neededBefore}
-                    </Typo>
-                  )}
-                  {showTimePicker && (
-                    <DateTimePicker
-                      value={neededBefore}
-                      mode="time"
-                      display="default"
-                      onChange={(event, date) => {
-                        setShowTimePicker(false);
-                        if (date) {
-                          setNeededBefore(date);
-                          if (errors.neededBefore) setErrors(prev => ({ ...prev, neededBefore: "" }));
-                        }
-                      }}
-                    />
-                  )}
+                  <TouchableOpacity
+                    style={styles.datePickerBtn}
+                    onPress={() => setShowDatePicker(true)}
+                  >
+                    <MaterialIcons name="event" size={18} color={colors.text} />
+                    <Typo variant="caption" style={{ flex: 1, marginLeft: 6 }}>{neededBefore.toLocaleDateString()}</Typo>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.datePickerBtn}
+                    onPress={() => setShowTimePicker(true)}
+                  >
+                    <MaterialIcons name="schedule" size={18} color={colors.text} />
+                    <Typo variant="caption" style={{ flex: 1, marginLeft: 6 }}>{neededBefore.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Typo>
+                  </TouchableOpacity>
+                </View>
+
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={neededBefore}
+                    mode="date"
+                    display="default"
+                    minimumDate={new Date()}
+                    onChange={(event, date) => {
+                      setShowDatePicker(false);
+                      if (date) {
+                        setNeededBefore(date);
+                        if (errors.neededBefore) setErrors(prev => ({ ...prev, neededBefore: "" }));
+                      }
+                    }}
+                  />
+                )}
+                {errors.neededBefore && (
+                  <Typo variant="caption" style={{ color: colors.error, marginTop: 4 }}>
+                    {errors.neededBefore}
+                  </Typo>
+                )}
+                {showTimePicker && (
+                  <DateTimePicker
+                    value={neededBefore}
+                    mode="time"
+                    display="default"
+                    onChange={(event, date) => {
+                      setShowTimePicker(false);
+                      if (date) {
+                        setNeededBefore(date);
+                        if (errors.neededBefore) setErrors(prev => ({ ...prev, neededBefore: "" }));
+                      }
+                    }}
+                  />
+                )}
               </View>
             </Card>
 
@@ -714,7 +714,7 @@ export default function UserRequestBloodScreen() {
                           style={[styles.dropdownItem, i < REASONS.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}
                           onPress={() => {
                             setSelectedReason(r);
-                            setErrors(p => ({...p, reason: ""}));
+                            setErrors(p => ({ ...p, reason: "" }));
                             setIsReasonDropdownOpen(false);
                           }}
                         >
@@ -761,11 +761,11 @@ export default function UserRequestBloodScreen() {
                 )}
               </View>
 
-              <View 
+              <View
                 style={[
-                  styles.emergencyContainer, 
-                  { 
-                    backgroundColor: isEmergency ? `${colors.error}15` : colors.background, 
+                  styles.emergencyContainer,
+                  {
+                    backgroundColor: isEmergency ? `${colors.error}15` : colors.background,
                     borderColor: isEmergency ? colors.error : colors.border,
                     opacity: urgencyLevel === "critical" ? 1 : 0.5
                   }
@@ -862,40 +862,40 @@ export default function UserRequestBloodScreen() {
             />
             <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps="handled">
               {activeLocationDropdown === "district" && (
-                 SRI_LANKA_DISTRICTS
-                   .filter(d => d.toLowerCase().includes(locationSearchQuery.toLowerCase()))
-                   .map((dist, idx) => (
-                      <TouchableOpacity
-                        key={`dist-${idx}`}
-                        style={[styles.dropdownItem, { borderBottomColor: colors.border, borderBottomWidth: 1 }]}
-                        onPress={() => {
-                           setSelectedDistrict(dist);
-                           setSelectedCity(""); // Reset city when district changes
-                           setErrors(p => ({...p, selectedDistrict: ""}));
-                           setActiveLocationDropdown(null);
-                        }}
-                      >
-                         <Typo variant="body">{dist}</Typo>
-                      </TouchableOpacity>
-                   ))
+                SRI_LANKA_DISTRICTS
+                  .filter(d => d.toLowerCase().includes(locationSearchQuery.toLowerCase()))
+                  .map((dist, idx) => (
+                    <TouchableOpacity
+                      key={`dist-${idx}`}
+                      style={[styles.dropdownItem, { borderBottomColor: colors.border, borderBottomWidth: 1 }]}
+                      onPress={() => {
+                        setSelectedDistrict(dist);
+                        setSelectedCity(""); // Reset city when district changes
+                        setErrors(p => ({ ...p, selectedDistrict: "" }));
+                        setActiveLocationDropdown(null);
+                      }}
+                    >
+                      <Typo variant="body">{dist}</Typo>
+                    </TouchableOpacity>
+                  ))
               )}
 
               {activeLocationDropdown === "city" && selectedDistrict && (
-                 (SRI_LANKA_CITIES[selectedDistrict] || [])
-                   .filter(c => c.toLowerCase().includes(locationSearchQuery.toLowerCase()))
-                   .map((city, idx) => (
-                      <TouchableOpacity
-                        key={`city-${idx}`}
-                        style={[styles.dropdownItem, { borderBottomColor: colors.border, borderBottomWidth: 1 }]}
-                        onPress={() => {
-                           setSelectedCity(city);
-                           setErrors(p => ({...p, selectedCity: ""}));
-                           setActiveLocationDropdown(null);
-                        }}
-                      >
-                         <Typo variant="body">{city}</Typo>
-                      </TouchableOpacity>
-                   ))
+                (SRI_LANKA_CITIES[selectedDistrict] || [])
+                  .filter(c => c.toLowerCase().includes(locationSearchQuery.toLowerCase()))
+                  .map((city, idx) => (
+                    <TouchableOpacity
+                      key={`city-${idx}`}
+                      style={[styles.dropdownItem, { borderBottomColor: colors.border, borderBottomWidth: 1 }]}
+                      onPress={() => {
+                        setSelectedCity(city);
+                        setErrors(p => ({ ...p, selectedCity: "" }));
+                        setActiveLocationDropdown(null);
+                      }}
+                    >
+                      <Typo variant="body">{city}</Typo>
+                    </TouchableOpacity>
+                  ))
               )}
             </ScrollView>
           </KeyboardAvoidingView>
@@ -910,13 +910,13 @@ const styles = StyleSheet.create({
   backBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
   refreshBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
   scrollContent: { padding: 16, paddingBottom: 100 },
-  
-  createBtn: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    justifyContent: "center", 
-    paddingVertical: 16, 
-    borderRadius: 14, 
+
+  createBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    borderRadius: 14,
     marginBottom: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -931,7 +931,7 @@ const styles = StyleSheet.create({
     padding: 0,
     overflow: "hidden"
   },
-  
+
   requestCardHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -999,135 +999,135 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "transparent",
   },
-  sectionHeader: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    marginBottom: 16, 
-    paddingBottom: 10, 
-    borderBottomWidth: 1, 
-    borderBottomColor: "#eee" 
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee"
   },
 
-  inputGroup: { 
-    marginBottom: 16 
+  inputGroup: {
+    marginBottom: 16
   },
 
-  inputLabel: { 
-    marginBottom: 6, 
-    fontWeight: "600" 
+  inputLabel: {
+    marginBottom: 6,
+    fontWeight: "600"
   },
 
-  input: { 
-    height: 48, 
-    borderRadius: 10 
+  input: {
+    height: 48,
+    borderRadius: 10
   },
 
-  gridContainer: { 
-    flexDirection: "row", 
-    flexWrap: "wrap", 
-    gap: 8 
+  gridContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
   },
 
-  gridItem: { 
-    width: "23%", 
-    aspectRatio: 1, 
-    borderRadius: 12, 
-    borderWidth: 1, 
-    alignItems: "center", 
-    justifyContent: "center" 
+  gridItem: {
+    width: "23%",
+    aspectRatio: 1,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center"
   },
 
-  chip: { 
-    paddingHorizontal: 14, 
-    paddingVertical: 8, 
-    borderRadius: 20, 
-    borderWidth: 1, 
-    borderColor: "#ccc", 
-    alignItems: "center", 
-    justifyContent: "center" 
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    alignItems: "center",
+    justifyContent: "center"
   },
 
-  datePickerBtn: { 
-    flex: 1, 
-    height: 48, 
-    borderRadius: 10, 
-    borderWidth: 1, 
-    borderColor: "#ccc", 
-    flexDirection: "row", 
-    alignItems: "center", 
-    paddingHorizontal: 12 
-  },
-  
-  emergencyContainer: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    justifyContent: "space-between", 
-    padding: 16, 
-    borderRadius: 12, 
-    borderWidth: 1, 
-    marginBottom: 16 
+  datePickerBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12
   },
 
-  dropdownBtn: { 
-    flexDirection: "row", 
-    height: 48, 
-    borderRadius: 10, 
-    borderWidth: 1, 
-    borderColor: "#ccc", 
-    alignItems: "center", 
-    justifyContent: "space-between", 
-    paddingHorizontal: 12 
+  emergencyContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 16
   },
 
-  dropdownMenu: { 
-    marginTop: 4, 
-    borderRadius: 10, 
-    borderWidth: 1, 
-    elevation: 5, 
-    shadowColor: "#000", 
-    shadowOffset: { width: 0, height: 4 }, 
-    shadowOpacity: 0.15, 
-    shadowRadius: 6 
+  dropdownBtn: {
+    flexDirection: "row",
+    height: 48,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 12
   },
 
-  dropdownItem: { 
-    flexDirection: "row", 
-    justifyContent: "space-between", 
-    alignItems: "center", 
-    padding: 14 
+  dropdownMenu: {
+    marginTop: 4,
+    borderRadius: 10,
+    borderWidth: 1,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6
   },
 
-  submitButton: { 
-    flexDirection: "row", 
-    height: 56, 
-    borderRadius: 14, 
-    alignItems: "center", 
-    justifyContent: "center", 
-    marginTop: 10, 
-    shadowColor: "#000", 
-    shadowOffset: {width: 0, height: 4}, 
-    shadowOpacity: 0.2, 
-    shadowRadius: 5, 
-    zIndex: 1 
+  dropdownItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 14
   },
 
-  locationModal: { 
-    height: "70%", 
-    borderTopLeftRadius: 24, 
-    borderTopRightRadius: 24, 
-    padding: 20, 
-    paddingTop: 24, 
-    elevation: 10, 
-    shadowColor: "#000", 
-    shadowOffset: {width:0, height:-2}, 
-    shadowOpacity: 0.1 
+  submitButton: {
+    flexDirection: "row",
+    height: 56,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    zIndex: 1
   },
 
-  modalHeader: { 
-    flexDirection: "row", 
-    justifyContent: "space-between", 
-    alignItems: "center", 
-    marginBottom: 16 
+  locationModal: {
+    height: "70%",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    paddingTop: 24,
+    elevation: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1
+  },
+
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16
   },
 
   suggestionBanner: {

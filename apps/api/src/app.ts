@@ -7,6 +7,7 @@ import userRoutes from './auth/routes/userRoutes';
 import pointRoutes from './points/routes/pointRoutes';
 import { emergencyRouter } from './emergency-alerts/routes/emergency.routes';
 import { bloodRequestRouter } from './emergency-alerts/routes/blood-request.routes';
+import bloodRoutes from './blood-inventory/routes/bloodRoutes';
 
 import path from 'path';
 
@@ -33,6 +34,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/points', pointRoutes);
 app.use('/api', emergencyRouter);
 app.use('/api', bloodRequestRouter);
+app.use('/api/blood', bloodRoutes);
 
 app.use(errorHandler);
 
