@@ -94,11 +94,27 @@ export default function HospitalHomeScreen() {
         {/* Dashboard Grid */}
         <View style={styles.dashboardGrid}>
           
-          {/* Action 1: Request Blood */}
+          {/* Action 1: Inventory */}
+          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push("/(hospital)/(tabs)/inventory" as any)}>
+            <Card variant="elevated" style={[styles.actionCard, { borderColor: colors.border }]}>
+              <View style={[styles.iconWrapper, { backgroundColor: `${colors.tint}15` }]}>
+                <MaterialIcons name="inventory" size={32} color={colors.tint} />
+              </View>
+              <View style={styles.cardText}>
+                <Typo variant="h2" style={{ fontWeight: "bold" }}>Manage Inventory</Typo>
+                <Typo variant="caption" color={colors.textMuted} style={{ marginTop: 4 }}>
+                  Track blood stock levels, expiring units, and wastage.
+                </Typo>
+              </View>
+              <MaterialIcons name="chevron-right" size={24} color={colors.icon} />
+            </Card>
+          </TouchableOpacity>
+
+          {/* Action 2: Request Blood */}
           <TouchableOpacity activeOpacity={0.8} onPress={() => router.push("/(hospital)/(tabs)/request" as any)}>
             <Card variant="elevated" style={[styles.actionCard, { borderColor: colors.border }]}>
-              <View style={[styles.iconWrapper, { backgroundColor: "#8B5CF615" }]}>
-                <MaterialIcons name="bloodtype" size={32} color="#8B5CF6" />
+              <View style={[styles.iconWrapper, { backgroundColor: `${colors.error}15` }]}>
+                <MaterialIcons name="bloodtype" size={32} color={colors.error} />
               </View>
               <View style={styles.cardText}>
                 <Typo variant="h2" style={{ fontWeight: "bold" }}>Request Blood</Typo>

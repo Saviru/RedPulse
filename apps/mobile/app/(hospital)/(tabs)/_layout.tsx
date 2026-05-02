@@ -49,6 +49,13 @@ export default function HospitalTabsLayout() {
           } as any}
         />
         <Tabs.Screen
+          name="inventory"
+          options={{
+            title: "Inventory",
+            tabBarIconName: "inventory",
+          } as any}
+        />
+        <Tabs.Screen
           name="profile"
           options={{
             title: "Profile",
