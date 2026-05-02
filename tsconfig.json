@@ -4,7 +4,9 @@
     "strict": true,
     "module": "esnext",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@apps/*": ["./apps/*"],
+      "@packages/*": ["./packages/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
