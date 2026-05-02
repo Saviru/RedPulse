@@ -1,5 +1,5 @@
 import React from "react";
-import { TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View, Platform } from "react-native";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { styles, variantStyles } from "./Card.styles";
@@ -35,8 +35,17 @@ export const Card = ({
           variantStyles.elevated,
           {
             backgroundColor: theme === "dark" ? colors.surface : "#FFFFFF",
-            shadowColor: theme === "dark" ? "transparent" : "#000",
-            elevation: theme === "dark" ? 0 : 3,
+            ...Platform.select({
+              ios: {
+                shadowColor: theme === "dark" ? "transparent" : "#000",
+              },
+              android: {
+                elevation: theme === "dark" ? 0 : 3,
+              },
+              web: {
+                boxShadow: theme === "dark" ? "none" : "0px 2px 8px rgba(0, 0, 0, 0.08)",
+              },
+            }),
           },
         ];
     }
