@@ -3,8 +3,8 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "node apps/api/dist/server.js",
-    "build": "tsc && npm run bundle",
+    "start": "node dist/server.js",
+    "build": "tsc",
     "bundle": "esbuild src/server.ts --bundle --platform=node --target=node20 --outfile=dist/server.js",
     "andr": "pnpm exec expo run:android",
     "api": "pnpm --filter redpulse-api dev"
