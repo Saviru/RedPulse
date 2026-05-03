@@ -7,9 +7,10 @@
     "build": "tsc",
     "bundle": "esbuild src/server.ts --bundle --platform=node --target=node20 --outfile=dist/server.js",
     "andr": "pnpm exec expo run:android",
-    "api": "pnpm --filter redpulse-api dev"
+    "api": "pnpm --filter redpulse-api dev",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
-
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
     "@nishansanjuka/srilanka_geographics": "^0.0.1",
