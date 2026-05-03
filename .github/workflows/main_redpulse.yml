@@ -28,16 +28,21 @@ jobs:
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
         run: |
-          # 1. Install all monorepo dependencies (pnpm handles fsevents automatically!)
+          # 1. Use pnpm to safely build the monorepo (bypasses all React/fsevents errors)
           pnpm install
-          
-          # 2. Build shared types and the API
           pnpm --filter redpulse-types run build
           pnpm --filter redpulse-api run build
           
-          # 3. Deploy the isolated workspace. 
-          # Because you added "files": ["dist"] to package.json, this will now work!
-          pnpm --filter redpulse-api deploy --prod ./deploy_artifact
+          # 2. Isolate the compiled backend
+          mkdir -p deploy_artifact
+          cp -r apps/api/dist deploy_artifact/
+          cp apps/api/package.json deploy_artifact/
+          
+          # 3. THE GOLDEN FIX: Use standard npm inside the isolated folder
+          # This creates a completely flat, symlink-free node_modules folder 
+          # that survives GitHub Actions and Azure.
+          cd deploy_artifact
+          npm install --omit=dev --no-package-lock
           
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
