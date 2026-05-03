@@ -9,7 +9,8 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
-  Image
+  Image,
+  Linking
 } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,6 +20,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Input, Card, Toggle } from "@/packages/ui/components/ui";
+import api from "@/apps/mobile/src/services/api";
 import {
   createBloodRequest,
   getBloodRequest,
@@ -123,6 +125,7 @@ export default function UserRequestBloodScreen() {
   const [isLoading, setIsLoading] = useState(true); // Always loading initially to fetch list
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [receiptUri, setReceiptUri] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const pickReceipt = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -263,6 +266,7 @@ export default function UserRequestBloodScreen() {
     setDoctorName("");
     setIsEmergency(false);
     setUrgencyLevel("medium");
+    setReceiptUri(null);
     setErrors({});
   };
 
@@ -432,6 +436,16 @@ export default function UserRequestBloodScreen() {
                             Needed by: {new Date(req.neededBefore).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
                           </Typo>
                         </View>
+                        {req.hospitalReceipt && (
+                          <TouchableOpacity onPress={() => setSelectedImage(`${api.defaults.baseURL}${req.hospitalReceipt}`)}>
+                            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}>
+                              <MaterialIcons name="receipt" size={16} color={colors.tint} />
+                              <Typo variant="caption" style={{ color: colors.tint, textDecorationLine: "underline", marginLeft: 6, fontWeight: "bold" }}>
+                                View Hospital Receipt
+                              </Typo>
+                            </View>
+                          </TouchableOpacity>
+                        )}
                         {isAccepted && (
                           <View style={{ marginTop: 12, backgroundColor: "#E8F5E9", padding: 10, borderRadius: 10, borderLeftWidth: 4, borderLeftColor: "#43A047" }}>
                             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
@@ -939,6 +953,18 @@ export default function UserRequestBloodScreen() {
           </KeyboardAvoidingView>
         </View>
       </Modal>
+
+      {/* Image Modal */}
+      <Modal visible={!!selectedImage} transparent={true} animationType="fade" onRequestClose={() => setSelectedImage(null)}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setSelectedImage(null)}>
+          <TouchableOpacity style={styles.closeModalBtn} onPress={() => setSelectedImage(null)}>
+            <MaterialIcons name="close" size={30} color="#FFF" />
+          </TouchableOpacity>
+          {selectedImage && (
+            <Image source={{ uri: selectedImage }} style={styles.fullImage} resizeMode="contain" />
+          )}
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -1027,6 +1053,26 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 60,
     paddingHorizontal: 40
+  },
+
+  uploadBtn: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderStyle: "dashed",
+    borderRadius: 12,
+    overflow: "hidden",
+    height: 150,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  uploadPlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  previewImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
   },
 
   cardGroup: {
@@ -1183,5 +1229,22 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 8,
     marginLeft: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeModalBtn: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 10,
+    padding: 10,
+  },
+  fullImage: {
+    width: '90%',
+    height: '80%',
   },
 });

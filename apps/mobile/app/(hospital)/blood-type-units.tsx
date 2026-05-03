@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View, Modal, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -7,7 +7,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { Typo } from "@/packages/ui/components/ui";
 import { useThemeColor } from "@/packages/ui/hooks";
-import { BloodUnitResponse, fetchBloodUnits } from "@/apps/mobile/src/lib/bloodApi";
+import { BloodUnitResponse, fetchBloodUnits, API_BASE_URL } from "@/apps/mobile/src/lib/bloodApi";
 import { BloodUnitCard } from "./components/BloodUnitCard";
 
 export default function BloodTypeUnitsScreen() {
@@ -19,6 +19,7 @@ export default function BloodTypeUnitsScreen() {
   const [units, setUnits] = useState<BloodUnitResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -90,11 +91,22 @@ export default function BloodTypeUnitsScreen() {
         ) : (
           <View style={styles.listContainer}>
             {filteredUnits.map((unit) => (
-              <BloodUnitCard key={unit.id} unit={unit} />
+              <BloodUnitCard key={unit.id} unit={unit} onViewImage={() => setSelectedImage(`${API_BASE_URL}${unit.packetImageUri}`)} />
             ))}
           </View>
         )}
       </ScrollView>
+
+      <Modal visible={!!selectedImage} transparent={true} animationType="fade" onRequestClose={() => setSelectedImage(null)}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setSelectedImage(null)}>
+          <TouchableOpacity style={styles.closeModalBtn} onPress={() => setSelectedImage(null)}>
+            <MaterialIcons name="close" size={30} color="#FFF" />
+          </TouchableOpacity>
+          {selectedImage && (
+            <Image source={{ uri: selectedImage }} style={styles.fullImage} resizeMode="contain" />
+          )}
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -124,5 +136,22 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     marginBottom: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeModalBtn: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 10,
+    padding: 10,
+  },
+  fullImage: {
+    width: '90%',
+    height: '80%',
   },
 });

@@ -47,7 +47,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     console.log(`API [Success]: ${response.config.method?.toUpperCase()} ${response.config.url} - Status ${response.status}`);
-    
+
     // Automatically unwrap the standard backend envelope { success: true, data: T, message: string }
     if (response.data && typeof response.data === 'object' && response.data.success === true && 'data' in response.data) {
       return {
@@ -55,7 +55,7 @@ api.interceptors.response.use(
         data: response.data.data
       };
     }
-    
+
     return response;
   },
   (error) => {

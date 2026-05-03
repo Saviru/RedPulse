@@ -171,7 +171,7 @@ export default function MedicalRecordsScreen() {
           "Content-Type": "multipart/form-data",
         }
       });
- 
+
       const response = res.data;
       if (!response.success) {
         throw new Error(response.message);

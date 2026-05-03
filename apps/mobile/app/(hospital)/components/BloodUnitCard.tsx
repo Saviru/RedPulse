@@ -10,6 +10,7 @@ type BloodUnitCardProps = {
   unit: BloodUnitResponse;
   onPress?: () => void;
   onDeletePress?: () => void;
+  onViewImage?: () => void;
 };
 
 function getStatusMeta(unit: BloodUnitResponse, successColor: string, errorColor: string, mutedColor: string): {
@@ -52,7 +53,7 @@ function getStatusMeta(unit: BloodUnitResponse, successColor: string, errorColor
   return { title: null, titleColor: mutedColor, daysLeftLine: null };
 }
 
-export function BloodUnitCard({ unit, onPress, onDeletePress }: BloodUnitCardProps) {
+export function BloodUnitCard({ unit, onPress, onDeletePress, onViewImage }: BloodUnitCardProps) {
   const { colors } = useThemeColor();
   const { title, titleColor, daysLeftLine } = getStatusMeta(
     unit,
@@ -136,6 +137,15 @@ export function BloodUnitCard({ unit, onPress, onDeletePress }: BloodUnitCardPro
             </Typo>
           </View>
         </View>
+
+        {unit.packetImageUri && onViewImage && (
+          <TouchableOpacity onPress={onViewImage} style={[styles.imageBtn, { backgroundColor: `${colors.tint}10` }]}>
+            <MaterialIcons name="image" size={16} color={colors.tint} />
+            <Typo variant="caption" style={{ color: colors.tint, marginLeft: 6, fontWeight: "600" }}>
+              View Packet Image
+            </Typo>
+          </TouchableOpacity>
+        )}
       </Container>
     </View>
   );
@@ -227,5 +237,13 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 11,
+  },
+  imageBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
 });

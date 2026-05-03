@@ -61,6 +61,7 @@ export interface BloodRequestResponse {
   urgencyLevel: UrgencyLevel;
   isEmergency: boolean;
   status: RequestStatus;
+  hospitalReceipt?: string;
   responses: BloodRequestResponseItem[];
   notifiedTargets: NotifiedTarget[];
   createdAt: string;

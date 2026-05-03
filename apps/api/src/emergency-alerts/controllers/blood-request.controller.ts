@@ -25,8 +25,8 @@ export const createBloodRequestSchema = z.object({
   hospitalLocation: z.string().max(200).optional(),
   requesterLocation: z.string().max(200).optional(),
   coordinatorPhone: z.string().max(50).optional(),
-  lat: z.number().optional(),
-  lng: z.number().optional(),
+  lat: z.coerce.number().optional(),
+  lng: z.coerce.number().optional(),
   reason: z.string().min(2).max(200).optional(),
   patientName: z.string().max(200).optional(),
   patientAge: z.coerce.number().min(0).max(150).optional(),
@@ -35,7 +35,7 @@ export const createBloodRequestSchema = z.object({
   relationshipToPatient: z.string().max(100).optional(),
   doctorName: z.string().max(200).optional(),
   urgencyLevel: z.enum(["critical", "high", "medium", "low"]).default("medium"),
-  isEmergency: z.boolean().default(false),
+  isEmergency: z.preprocess((val) => val === "true" || val === true, z.boolean()).default(false),
 });
 
 // Helper to get compatible blood types

@@ -23,6 +23,7 @@ export type BloodUnitResponse = {
   /** e.g. "10d left" when status is Expiring Soon */
   daysLeftLabel: string | null;
   lowStockAlert: boolean;
+  packetImageUri?: string;
 };
 
 export type DashboardResponse = {
