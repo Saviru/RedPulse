@@ -8,7 +8,6 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Card, Button, AnimatedHeader, Badge } from "@/packages/ui/components/ui";
-import { useScroll } from "@/packages/ui/context/ScrollContext";
 import { getPublishedCampaigns, PublicCampaign } from "@/apps/mobile/src/lib/campaignService";
 import { getLatestEligibility } from "@/apps/mobile/src/lib/eligibilityService";
 
@@ -18,7 +17,6 @@ export default function AvailableCampsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const scrollY = useRef(new Animated.Value(0)).current;
-  const { handleScroll } = useScroll();
   const [camps, setCamps] = useState<PublicCampaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [eligibilityModal, setEligibilityModal] = useState<{
@@ -31,10 +29,13 @@ export default function AvailableCampsScreen() {
   useEffect(() => {
     const loadCampaigns = async () => {
       try {
+        console.log('DEBUG: Starting to load campaigns');
         setLoading(true);
         const data = await getPublishedCampaigns();
+        console.log('DEBUG: Campaigns loaded:', data);
         setCamps(data);
       } catch (error) {
+        console.log('DEBUG: Error loading campaigns:', error);
         alert(`Failed to load campaigns: ${error instanceof Error ? error.message : String(error)}`);
       } finally {
         setLoading(false);
@@ -59,8 +60,7 @@ export default function AvailableCampsScreen() {
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { 
-            useNativeDriver: true,
-            listener: handleScroll 
+            useNativeDriver: true
           }
         )}
         scrollEventThrottle={16}

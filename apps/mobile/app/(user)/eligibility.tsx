@@ -256,7 +256,8 @@ const CheckEligibilityView = ({
   ineligibilityReasons,
   onCompleteQuiz,
   tipLabel,
-  onTipPress
+  onTipPress,
+  router
 }: any) => {
   //store yes/no answers
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -550,7 +551,15 @@ const CheckEligibilityView = ({
                 <Button
                   label="Schedule an Appointment"
                   variant="secondary"
-                  onPress={() => {}} // TODO: Navigate to appointment scheduling (camp management)
+                  onPress={() => {
+  console.log('DEBUG: Navigating to available camps');
+  try {
+    router.push("/(user)/available-camps");
+  } catch (error) {
+    console.log('DEBUG: Navigation error:', error);
+    alert('Navigation error: ' + error);
+  }
+}}
                   style={{ backgroundColor: "#FFFFFF" }}
                 />
               ) : (
@@ -1022,6 +1031,7 @@ export default function EligibilityScreen() {
               onCompleteQuiz={handleCompleteQuiz}
               tipLabel={tipLabel}
               onTipPress={handleTipPress}
+              router={router}
             />
           )}
           {tabIndex === 2 && <GuidanceTipsView colors={colors} router={router} />}
@@ -1067,7 +1077,15 @@ export default function EligibilityScreen() {
                 <Button
                   label="Schedule Appointment"
                   variant="primary"
-                  onPress={() => {}} // TODO: Navigate to appointment scheduling (camp management)
+                  onPress={() => {
+  console.log('DEBUG: Navigating to available camps');
+  try {
+    router.push("/(user)/available-camps");
+  } catch (error) {
+    console.log('DEBUG: Navigation error:', error);
+    alert('Navigation error: ' + error);
+  }
+}}
                   style={{ backgroundColor: "#10B981", marginBottom: 12 }}
                 />
                 <Button
