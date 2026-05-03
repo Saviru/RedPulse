@@ -5,10 +5,9 @@
   "scripts": {
     "start": "node apps/api/dist/server.js",
     "andr": "pnpm exec expo run:android",
-    "api": "pnpm --filter redpulse-api dev",
-
-
+    "api": "pnpm --filter redpulse-api dev"
   },
+  
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
     "@nishansanjuka/srilanka_geographics": "^0.0.1",
