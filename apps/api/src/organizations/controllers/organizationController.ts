@@ -78,7 +78,7 @@ async function buildCampaignOverview(campaign: any) {
     return {
       id: r._id.toString(),
       userId: r.userId.toString(),
-      name: volunteerProfile?.fullName ?? user?.name ?? "Volunteer",
+      name: volunteerProfile?.fullName ?? user?.username ?? "Volunteer",
       role: "Volunteer",
       points: 0,
       volunteerPublicId: volReg?.volunteerPublicId ?? "",
@@ -625,7 +625,7 @@ export async function getHospitalDonorDonationDetails(
         campaignId: campaign._id.toString(),
         campaignName: campaign.name,
         donor: {
-          name: donorProfile.fullName ?? user?.name ?? "Donor",
+          name: donorProfile.fullName ?? user?.username ?? "Donor",
           email: user?.email ?? "",
           phoneNumber: donorProfile.phoneNumber ?? "",
           bloodType: donorProfile.bloodType ?? "Unknown",
