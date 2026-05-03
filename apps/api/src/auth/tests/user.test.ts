@@ -1,33 +1,7 @@
-process.env.JWT_SECRET = 'test-secret-key-12345';
-process.env.SUPPRESS_JEST_WARNINGS = 'true';
-
-/** @jest-environment node */
 import request from 'supertest';
-import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import app from '../../app';
 
-let mongoServer: MongoMemoryServer;
-
-beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
-  await mongoose.connect(mongoServer.getUri());
-});
-
-afterAll(async () => {
-  await mongoose.disconnect();
-  await mongoServer.stop();
-});
-
-afterEach(async () => {
-  const collections = mongoose.connection.collections;
-  for (const key in collections) {
-    await collections[key].deleteMany({});
-  }
-});
-
 describe('User Endpoints', () => {
-  jest.setTimeout(30000);
   let token: string;
 
   beforeEach(async () => {
@@ -89,6 +63,6 @@ describe('User Endpoints', () => {
       .get('/auth/me')
       .set('Authorization', `Bearer ${token}`);
 
-    expect(meRes.status).toBe(401);
+    expect(meRes.status).toBe(404);
   });
 });

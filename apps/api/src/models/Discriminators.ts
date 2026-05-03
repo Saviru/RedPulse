@@ -10,7 +10,6 @@ export interface IRegularUser extends IUserDocument {
   nic?: string;
   dob?: string;
   location?: string;
-  sex?: 'Male' | 'Female' | 'Other';
 }
 
 export const RegularUserModel = UserModel.discriminator<IRegularUser>(
@@ -23,7 +22,6 @@ export const RegularUserModel = UserModel.discriminator<IRegularUser>(
     nic: { type: String, unique: true, sparse: true },
     dob: { type: String },
     location: { type: String },
-    sex: { type: String, enum: ['Male', 'Female', 'Other'] },
     phone: { type: String, required: false }
   })
 );
