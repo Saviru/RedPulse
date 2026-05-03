@@ -8,7 +8,7 @@ export interface IMedicalCategory extends Document {
 
 const medicalCategorySchema = new Schema({
   name: { type: String, required: true },
-  donorId: { type: Schema.Types.ObjectId, ref: 'Donor', required: true },
+  donorId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   createdAt: { type: Date, default: Date.now }
 });
 

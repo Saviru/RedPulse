@@ -10,17 +10,23 @@ import { UserModel as User } from '../../models/User';
 export const createCategory = async (req: AuthRequest, res: Response) => {
   try {
     const { name } = req.body;
+    console.log('DEBUG: Creating category with name:', name);
     const username = req.user?.username;
+    console.log('DEBUG: Username from request:', username);
     if (!username) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
     const user = await User.findOne({ username });
+    console.log('DEBUG: Found user:', user ? user._id : 'null');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
     const category = new MedicalCategory({ name, donorId: user._id });
+    console.log('DEBUG: Category object before save:', category);
     await category.save();
+    console.log('DEBUG: Category saved successfully:', category);
 
     res.status(201).json({ success: true, data: category });
   } catch (error) {
+    console.log('DEBUG: Error creating category:', error);
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
@@ -28,14 +34,18 @@ export const createCategory = async (req: AuthRequest, res: Response) => {
 export const getCategories = async (req: AuthRequest, res: Response) => {
   try {
     const username = req.user?.username;
+    console.log('DEBUG: Username from request:', username);
     if (!username) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
     const user = await User.findOne({ username });
+    console.log('DEBUG: Found user:', user ? user._id : 'null');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
     const categories = await MedicalCategory.find({ donorId: user._id }).sort({ createdAt: -1 });
+    console.log('DEBUG: Found categories:', categories.length, categories);
     res.status(200).json({ success: true, data: categories });
   } catch (error) {
+    console.log('DEBUG: Error in getCategories:', error);
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
@@ -89,16 +99,23 @@ export const getRecordsByCategory = async (req: AuthRequest, res: Response) => {
 
 export const uploadRecord = async (req: AuthRequest, res: Response) => {
   try {
+    console.log('DEBUG Backend: Upload request received');
+    console.log('DEBUG Backend: Request body:', req.body);
+    console.log('DEBUG Backend: Request file:', req.file);
+    
     const { categoryId } = req.body;
     let fileName = req.body.fileName;
     
     const username = req.user?.username;
+    console.log('DEBUG Backend: Username:', username);
     if (!username) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
     const user = await User.findOne({ username });
+    console.log('DEBUG Backend: Found user:', user ? user._id : 'null');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
     if (!req.file) {
+      console.log('DEBUG Backend: No file in request');
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
@@ -107,13 +124,15 @@ export const uploadRecord = async (req: AuthRequest, res: Response) => {
     }
 
     const fileUrl = `/uploads/medical/${req.file.filename}`;
+    console.log('DEBUG Backend: File URL:', fileUrl);
 
     const record = new MedicalRecord({ fileName, fileUrl, categoryId, donorId: user._id });
     await record.save();
+    console.log('DEBUG Backend: Record saved successfully:', record);
 
     res.status(201).json({ success: true, data: record });
   } catch (error) {
-    console.log(error);
+    console.log('DEBUG Backend: Upload error:', error);
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
