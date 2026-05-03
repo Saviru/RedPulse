@@ -28,21 +28,32 @@ jobs:
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
         run: |
-          # 1. Use pnpm to safely build the monorepo (bypasses all React/fsevents errors)
+          # 1. Build everything with pnpm to resolve internal dependencies
           pnpm install
           pnpm --filter redpulse-types run build
           pnpm --filter redpulse-api run build
           
-          # 2. Isolate the compiled backend
+          # 2. Prepare the artifact folder
           mkdir -p deploy_artifact
           cp -r apps/api/dist deploy_artifact/
           cp apps/api/package.json deploy_artifact/
           
-          # 3. THE GOLDEN FIX: Use standard npm inside the isolated folder
-          # This creates a completely flat, symlink-free node_modules folder 
-          # that survives GitHub Actions and Azure.
+          # 3. THE FIX: Remove all "workspace:" dependencies so npm can run
+          # This small node script safely cleans package.json without breaking it
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('deploy_artifact/package.json', 'utf8'));
+            if (pkg.dependencies) {
+              Object.keys(pkg.dependencies).forEach(dep => {
+                if (pkg.dependencies[dep].startsWith('workspace:')) delete pkg.dependencies[dep];
+              });
+            }
+            fs.writeFileSync('deploy_artifact/package.json', JSON.stringify(pkg, null, 2));
+          "
+          
+          # 4. Install production dependencies (Flat node_modules for Azure)
           cd deploy_artifact
-          npm install --omit=dev --no-package-lock
+          npm install --omit=dev --no-package-lock --legacy-peer-deps
           
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
