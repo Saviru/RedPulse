@@ -22,6 +22,7 @@ export interface IBlood {
   collectionDate?: Date;
   expiryDate?: Date;
   expiringSoonAlertSent: boolean;
+  packetImage?: string;
   createdAt: Date;
 }
 
@@ -78,6 +79,10 @@ const bloodSchema = new Schema<IBloodDocument>(
       type: Boolean,
       required: true,
       default: false,
+    },
+    packetImage: {
+      type: String,
+      required: false,
     },
   },
   {

@@ -13,9 +13,12 @@ import {
 } from "../controllers/bloodController";
 import { asyncHandler } from "../utils/asyncHandler";
 
-const router = Router();
+import { createUploadMiddleware } from "../../shared/middleware/upload.middleware";
 
-router.post("/", asyncHandler(createBlood));
+const router = Router();
+const uploadPacket = createUploadMiddleware("blood-packets");
+
+router.post("/", uploadPacket.single("packetImage"), asyncHandler(createBlood));
 router.get("/hospital-usernames", asyncHandler(getHospitalUsernames));
 router.get("/next-unit-id", asyncHandler(getNextUnitId));
 router.get("/alerts", asyncHandler(getAlerts));
