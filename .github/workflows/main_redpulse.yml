@@ -23,7 +23,7 @@ jobs:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
         run: |
           # 1. Install all monorepo dependencies
-          npm install
+          npm install --legacy-peer-deps
           
           # 2. Build the types and API using npm workspace flags
           npm run build --workspace=redpulse-types
