@@ -1,7 +1,5 @@
 import dotenv from 'dotenv';
-import path from 'path';
-
-dotenv.config({ path: path.join(__dirname, '../.env') });
+dotenv.config();
 
 import dns from 'dns';
 // use Google DNS
@@ -10,8 +8,13 @@ dns.setServers(['8.8.8.8']);
 import mongoose from 'mongoose';
 import app from './app';
 
-const PORT = process.env.PORT || 5001;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/redpulse';
+// FIX: Convert 'require' to standard 'import' to match the rest of the file
+import { runExpiringSoonAlertJob, startExpiringSoonAlertScheduler } from './jobs/expiringSoonAlertJob';
+import { runLowInventoryAlertJob, startLowInventoryAlertScheduler } from './jobs/lowInventoryAlertJob';
+
+// FIX: Default to 8080, which is the Azure App Service default for Node Linux containers
+const PORT = process.env.PORT || 8080;
+const MONGODB_URI = process.env.MONGODB_URI;
 
 async function startServer() {
   try {
@@ -30,13 +33,18 @@ async function startServer() {
 
     // Only connect if not run in testing
     if (process.env.NODE_ENV !== 'test') {
+
+      // Safety check for Azure
+      if (!MONGODB_URI) {
+        console.error('DB [Fatal]: MONGODB_URI environment variable is missing! Check Azure Configuration.');
+        process.exit(1);
+      }
+
       console.log('DB [Request]: Attempting to connect to MongoDB...');
       // force IPv4 and bypass IPv6 DNS timeouts
       await mongoose.connect(MONGODB_URI, { family: 4 });
 
-      const { runExpiringSoonAlertJob, startExpiringSoonAlertScheduler } = require('./jobs/expiringSoonAlertJob');
-      const { runLowInventoryAlertJob, startLowInventoryAlertScheduler } = require('./jobs/lowInventoryAlertJob');
-
+      // Initialize background jobs
       await runExpiringSoonAlertJob();
       startExpiringSoonAlertScheduler();
 
