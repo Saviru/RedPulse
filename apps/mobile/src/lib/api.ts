@@ -23,27 +23,8 @@ const getDevMachineHost = (): string | null => {
 
 const getDefaultBaseUrl = (): string => {
   const explicit = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
-  if (explicit) return explicit.replace(/\/$/, "");
-
   const hostOverride = process.env.EXPO_PUBLIC_API_HOST?.trim();
-  if (hostOverride) {
-    return `http://${hostOverride}:${API_PORT}/api`;
-  }
-
-  const lan = getDevMachineHost();
-  if (lan) {
-    return `http://${lan}:${API_PORT}/api`;
-  }
-
-  if (Platform.OS === "android") {
-    return `http://10.0.2.2:${API_PORT}/api`;
-  }
-
-  if (Platform.OS === "web") {
-    return `http://localhost:${API_PORT}/api`;
-  }
-
-  return `http://localhost:${API_PORT}/api`;
+  return (explicit || (hostOverride ? `http://${hostOverride}` : `http://localhost:5000`)).replace(/\/$/, "");
 };
 
 export const API_BASE_URL = getDefaultBaseUrl();
@@ -63,7 +44,12 @@ export class ApiError extends Error {
 export type RequestJsonInit = RequestInit & { auth?: boolean };
 
 export const requestJson = async <T>(path: string, init?: RequestJsonInit): Promise<T> => {
-  const url = `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+  // Smart routing: Prefix /api if not a root-level route (like health or uploads)
+  const isRootLevel = path.startsWith("/health") || path.startsWith("/uploads");
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const finalPath = isRootLevel ? normalizedPath : `/api${normalizedPath}`;
+  
+  const url = `${API_BASE_URL}${finalPath}`;
   const method = init?.method || "GET";
 
   const headers = new Headers();
@@ -72,7 +58,7 @@ export const requestJson = async <T>(path: string, init?: RequestJsonInit): Prom
   if (!isFormData) {
     headers.set("Content-Type", "application/json");
   }
-  
+
   if (init?.headers) {
     Object.entries(init.headers).forEach(([k, v]) => headers.set(k, String(v)));
   }
@@ -103,9 +89,9 @@ export const requestJson = async <T>(path: string, init?: RequestJsonInit): Prom
         : " On a real phone, ensure EXPO_PUBLIC_API_HOST or EXPO_PUBLIC_API_BASE_URL points to your PC IP and the phone is on the same Wi‑Fi.";
     const msg =
       cause instanceof Error ? cause.message : "Network request failed";
-    
+
     console.warn(`API [Connection Error]: ${method} ${url} - ${msg}`);
-    
+
     throw new ApiError(
       `${msg} (${url}).${hint} Current base: ${API_BASE_URL}`,
       0,
@@ -121,24 +107,24 @@ export const requestJson = async <T>(path: string, init?: RequestJsonInit): Prom
   if (!response.ok) {
     const message =
       (typeof payload === "object" &&
-      payload !== null &&
-      "message" in (payload as Record<string, unknown>)
+        payload !== null &&
+        "message" in (payload as Record<string, unknown>)
         ? String((payload as Record<string, unknown>).message)
         : null) || `Request failed with status ${response.status}`;
-    
+
     console.warn(`API [Error]: ${method} ${url} - Status ${response.status}`);
     if (payload) console.warn(`API [Error Data]:`, JSON.stringify(payload));
-    
+
     throw new ApiError(message, response.status, payload);
   }
 
   console.log(`API [Success]: ${method} ${url} - Status ${response.status}`);
-  
+
   // Automatically unwrap the standard backend envelope { success: true, data: T, message: string }
   if (payload && typeof payload === 'object' && 'data' in payload && (payload as any).success === true) {
     return (payload as any).data as T;
   }
-  
+
   return payload as T;
 };
 
