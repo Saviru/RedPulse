@@ -11,9 +11,7 @@ export default function OrganizationLayout() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="edit-profile" />
       <Stack.Screen name="campaign-create" />
-      <Stack.Screen name="campaign-change-hospital" />
       <Stack.Screen name="campaign-management" />
-      <Stack.Screen name="campaign-volunteers" />
       <Stack.Screen name="campaign-assign-task" />
     </Stack>
   );

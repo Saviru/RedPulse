@@ -10,8 +10,7 @@ export default function HospitalLayout() {
     >
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="edit-profile" />
-      <Stack.Screen name="collaborate-campaigns" />
-      <Stack.Screen name="donor-donation-details" />
+      <Stack.Screen name="campaign-invitations" />
     </Stack>
   );
 }

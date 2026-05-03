@@ -1,29 +1,49 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 
-import { AuthenticatedRequest, Role } from "../types/request.types";
-import { ApiError } from "../utils/errors";
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-export function requireAuth(req: Request, _res: Response, next: NextFunction): void {
-  const userId = req.header("x-user-id");
-  const role = req.header("x-role") as Role | undefined;
-
-  if (!userId || !role) {
-    return next(new ApiError(401, "Missing auth headers: x-user-id and x-role"));
-  }
-
-  (req as AuthenticatedRequest).user = { id: userId, role };
-  next();
+export interface AuthRequest extends Request {
+  user?: {
+    username: string;
+    role: string;
+  };
 }
 
-export function requireRole(...allowed: Role[]) {
-  return (req: Request, _res: Response, next: NextFunction): void => {
-    const authReq = req as AuthenticatedRequest;
-    if (!authReq.user) {
-      return next(new ApiError(401, "Unauthenticated"));
+export const requireAuth = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ message: 'Not authorized, no token' });
+    return;
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { username: string; role: string };
+    
+    // Safety check: ensure username exists in decoded token
+    if (!decoded.username) {
+      res.status(401).json({ message: 'Not authorized, invalid token data' });
+      return;
     }
-    if (!allowed.includes(authReq.user.role)) {
-      return next(new ApiError(403, "Forbidden"));
+
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(401).json({ message: 'Not authorized, token failed' });
+    return;
+  }
+};
+
+export const requireRoles = (...rolesArgs: any[]) => {
+  const roles = rolesArgs.flat().map((r: string) => r.toUpperCase());
+  return (req: AuthRequest, res: Response, next: NextFunction): void => {
+    if (!req.user || !roles.includes(req.user.role.toUpperCase())) {
+      res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+      return;
     }
     next();
   };
-}
+};

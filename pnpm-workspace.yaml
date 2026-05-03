@@ -1,8 +1,12 @@
 packages:
-  - "packages/*"
-  - "apps/*"
+  - packages/*
+  - apps/*
 
 nodeLinker: hoisted
 
 onlyBuiltDependencies:
+  - '@firebase/util'
+  - esbuild
+  - mongodb-memory-server
+  - protobufjs
   - unrs-resolver

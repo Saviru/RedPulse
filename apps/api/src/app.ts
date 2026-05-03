@@ -1,23 +1,41 @@
-import cors from "cors";
-import express from "express";
-import morgan from "morgan";
+import express from 'express';
+import cors from 'cors';
+import mongoose from 'mongoose';
+import { errorHandler } from './shared/middleware/errorHandler.middleware';
+import authRoutes from './auth/routes/authRoutes';
+import userRoutes from './auth/routes/userRoutes';
+import pointRoutes from './points/routes/pointRoutes';
+import { emergencyRouter } from './emergency-alerts/routes/emergency.routes';
+import { bloodRequestRouter } from './emergency-alerts/routes/blood-request.routes';
+import bloodRoutes from './blood-inventory/routes/bloodRoutes';
 
-import { campaignRouter } from "./campaigns/routes/campaignRoutes";
-import { organizationRouter } from "./organizations/routes/organizationRoutes";
-import { errorHandler, notFoundHandler } from "./shared/middleware/errorHandler.middleware";
+import path from 'path';
 
-export const app = express();
+const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(morgan("dev"));
+app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
 
-app.get("/health", (_req, res) => {
-  res.status(200).json({ success: true, message: "API healthy" });
+// Health Check for App Pre-launch
+app.get('/health', (req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+  res.status(200).json({ status: 'ok', db: dbStatus });
 });
 
-app.use("/api/campaigns", campaignRouter);
-app.use("/api/organizations", organizationRouter);
+// Routes
+app.use('/auth', authRoutes);
+app.use('/users', userRoutes);
+app.use('/points', pointRoutes);
 
-app.use(notFoundHandler);
+// Duplicate under /api for secondary mobile client compatibility
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/points', pointRoutes);
+app.use('/api', emergencyRouter);
+app.use('/api', bloodRequestRouter);
+app.use('/api/blood', bloodRoutes);
+
 app.use(errorHandler);
+
+export default app;

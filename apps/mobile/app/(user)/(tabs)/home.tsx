@@ -1,14 +1,13 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef } from "react";
 import { View, StyleSheet, Animated, TouchableOpacity, ScrollView, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
+import { useAuth } from "../../../src/context/AuthContext";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Card, Button, AnimatedHeader, Divider, Badge } from "@/packages/ui/components/ui";
 import { useScroll } from "@/packages/ui/context/ScrollContext";
-import { getApiErrorMessage } from "@/apps/mobile/src/services/apiClient";
-import { AppNotification, getMyNotifications } from "@/apps/mobile/src/services/organizationService";
 
 export default function UserHomeScreen() {
   const { colors, theme } = useThemeColor();
@@ -16,26 +15,15 @@ export default function UserHomeScreen() {
   const insets = useSafeAreaInsets();
   const scrollY = useRef(new Animated.Value(0)).current;
   const { handleScroll } = useScroll();
-  const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
+  const { user } = useAuth();
+  
   // Mock Data
   const stats = [
     { label: "Donations", value: "12", icon: "bloodtype" },
     { label: "Lives Saved", value: "36", icon: "favorite" },
-    { label: "Points", value: "1,250", icon: "stars" },
+    { label: "Points", value: (user?.points || 0).toLocaleString(), icon: "stars" },
   ];
-
-  useEffect(() => {
-    const loadNotifications = async () => {
-      try {
-        const data = await getMyNotifications();
-        setNotifications(data.slice(0, 3));
-      } catch (error) {
-        console.warn(`Failed to load notifications: ${getApiErrorMessage(error)}`);
-      }
-    };
-    loadNotifications();
-  }, []);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -79,7 +67,7 @@ export default function UserHomeScreen() {
             label="Find Local Campaigns" 
             variant="secondary" 
             style={styles.heroBtn}
-            onPress={() => router.push("/(user)/local-collaboration-camps" as any)}
+            onPress={() => router.push("/(user)/campaign-volunteer" as any)}
           />
         </Card>
 
@@ -126,34 +114,12 @@ export default function UserHomeScreen() {
                 <MaterialIcons name="stars" size={20} color={colors.tint} />
               </View>
               <View style={{ flex: 1, marginLeft: 12 }}>
-                <Typo variant="body" style={{ fontWeight: "600" }}>Earned 500 Points</Typo>
-                <Typo variant="caption" color={colors.textMuted}>Donation at Saint Mary's</Typo>
+                <Typo variant="body" style={{ fontWeight: "600" }}>Welcome Bonus</Typo>
+                <Typo variant="caption" color={colors.textMuted}>Received 10 Points for joining</Typo>
               </View>
-              <Typo variant="caption" color={colors.textMuted}>2d ago</Typo>
+              <Typo variant="caption" color={colors.textMuted}>Today</Typo>
             </View>
           </Card>
-        </View>
-
-        <View style={styles.section}>
-          <Typo variant="h2" style={{ marginBottom: 16 }}>Notifications</Typo>
-          {notifications.length === 0 ? (
-            <Card style={styles.activityCard}>
-              <Typo variant="body" color={colors.textMuted}>
-                No notifications yet.
-              </Typo>
-            </Card>
-          ) : (
-            notifications.map((notification) => (
-              <Card key={notification._id} style={styles.activityCard}>
-                <Typo variant="body" style={{ fontWeight: "700" }}>
-                  {notification.title}
-                </Typo>
-                <Typo variant="caption" color={colors.textMuted} style={{ marginTop: 6 }}>
-                  {notification.message}
-                </Typo>
-              </Card>
-            ))
-          )}
         </View>
       </Animated.ScrollView>
     </View>

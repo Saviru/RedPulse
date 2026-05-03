@@ -59,7 +59,7 @@ export const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     borderRadius: theme.borderRadius,
     marginTop: 4,
-    maxHeight: 200, // Prevents the list from going off screen
+    maxHeight: 300, // Prevents the list from going off screen
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -88,5 +88,43 @@ export const styles = StyleSheet.create({
   optionTextSelected: {
     fontWeight: "700",
     color: "#FF3B30",
+  },
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    width: "100%",
+    maxWidth: 400,
+    maxHeight: "80%",
+    borderRadius: 20,
+    borderWidth: 1,
+    overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.25,
+        shadowRadius: 20,
+      },
+      android: {
+        elevation: 10,
+      },
+    }),
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 20,
+    borderBottomWidth: 1,
+  },
+  optionsList: {
+    paddingHorizontal: 4,
   },
 });
