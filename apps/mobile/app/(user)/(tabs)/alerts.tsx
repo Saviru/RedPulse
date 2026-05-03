@@ -8,6 +8,9 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  Linking,
+  Modal,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
@@ -15,6 +18,7 @@ import { useRouter, useFocusEffect } from "expo-router";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Card, Badge, Button } from "@/packages/ui/components/ui";
+import api from "@/apps/mobile/src/services/api";
 import {
   getPriorityBloodRequests,
   getAcceptedBloodRequests,
@@ -35,6 +39,7 @@ export default function DonorAlertsScreen() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [responding, setResponding] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const loadRequests = useCallback(async () => {
     if (!user) return;
@@ -218,6 +223,16 @@ export default function DonorAlertsScreen() {
                   <DetailRow icon="location-on" label="Location" value={request.hospitalLocation || request.address} />
                   <DetailRow icon="phone" label="Contact" value={request.coordinatorPhone} />
                   <DetailRow icon="schedule" label="Needed By" value={formatDate(request.neededBefore)} />
+                  {request.hospitalReceipt && (
+                    <TouchableOpacity onPress={() => setSelectedImage(`${api.defaults.baseURL}${request.hospitalReceipt}`)}>
+                      <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}>
+                        <MaterialIcons name="receipt" size={16} color={colors.tint} />
+                        <Typo variant="caption" style={{ color: colors.tint, textDecorationLine: "underline", marginLeft: 6, fontWeight: "bold" }}>
+                          View Hospital Receipt
+                        </Typo>
+                      </View>
+                    </TouchableOpacity>
+                  )}
                 </View>
 
                 {viewTab === "available" && (
@@ -253,6 +268,18 @@ export default function DonorAlertsScreen() {
         )}
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Image Modal */}
+      <Modal visible={!!selectedImage} transparent={true} animationType="fade" onRequestClose={() => setSelectedImage(null)}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setSelectedImage(null)}>
+          <TouchableOpacity style={styles.closeModalBtn} onPress={() => setSelectedImage(null)}>
+            <MaterialIcons name="close" size={30} color="#FFF" />
+          </TouchableOpacity>
+          {selectedImage && (
+            <Image source={{ uri: selectedImage }} style={styles.fullImage} resizeMode="contain" />
+          )}
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -346,5 +373,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginTop: 8,
     alignItems: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeModalBtn: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 10,
+    padding: 10,
+  },
+  fullImage: {
+    width: '90%',
+    height: '80%',
   },
 });

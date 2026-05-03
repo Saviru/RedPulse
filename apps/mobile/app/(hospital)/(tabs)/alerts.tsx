@@ -8,6 +8,9 @@ import {
   ActivityIndicator,
   Platform,
   TouchableOpacity,
+  Linking,
+  Modal,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -15,6 +18,7 @@ import { useFocusEffect } from "expo-router";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Card, Badge, Button } from "@/packages/ui/components/ui";
+import api from "@/apps/mobile/src/services/api";
 import {
   getPriorityBloodRequests,
   getAcceptedBloodRequests,
@@ -32,6 +36,7 @@ export default function HospitalAlertsScreen() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [responding, setResponding] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -198,6 +203,16 @@ export default function HospitalAlertsScreen() {
           <DetailRow icon="healing"            label="Reason"            value={request.reason} />
           <DetailRow icon="event"              label="Required Before"   value={(request as any).neededBefore ? new Date((request as any).neededBefore).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : null} />
           <DetailRow icon="schedule"           label="Submitted"         value={request.createdAt ? new Date(request.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : null} />
+          {request.hospitalReceipt && (
+            <TouchableOpacity onPress={() => setSelectedImage(`${api.defaults.baseURL}${request.hospitalReceipt}`)}>
+              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}>
+                <MaterialIcons name="receipt" size={16} color={mainColor} />
+                <Typo variant="caption" style={{ color: mainColor, textDecorationLine: "underline", marginLeft: 6, fontWeight: "bold" }}>
+                  View Hospital Receipt
+                </Typo>
+              </View>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* === RESPONSES SUMMARY === */}
@@ -313,6 +328,17 @@ export default function HospitalAlertsScreen() {
           </>
         )}
       </ScrollView>
+      {/* Image Modal */}
+      <Modal visible={!!selectedImage} transparent={true} animationType="fade" onRequestClose={() => setSelectedImage(null)}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setSelectedImage(null)}>
+          <TouchableOpacity style={styles.closeModalBtn} onPress={() => setSelectedImage(null)}>
+            <MaterialIcons name="close" size={30} color="#FFF" />
+          </TouchableOpacity>
+          {selectedImage && (
+            <Image source={{ uri: selectedImage }} style={styles.fullImage} resizeMode="contain" />
+          )}
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -424,5 +450,22 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     alignItems: "center",
     borderRadius: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeModalBtn: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 10,
+    padding: 10,
+  },
+  fullImage: {
+    width: '90%',
+    height: '80%',
   },
 });

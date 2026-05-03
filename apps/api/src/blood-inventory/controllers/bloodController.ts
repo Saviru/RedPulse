@@ -91,6 +91,7 @@ function serializeBlood(
     expiryAlert,
     daysLeftLabel,
     lowStockAlert: lowStockAlertForCount(bloodTypeCount),
+    packetImageUri: doc.packetImage,
   };
 }
 

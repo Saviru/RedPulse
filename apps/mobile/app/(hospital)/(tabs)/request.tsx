@@ -8,7 +8,8 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
-  Modal
+  Modal,
+  Linking
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons, FontAwesome5, Ionicons } from "@expo/vector-icons";
@@ -17,6 +18,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Input, Toggle, Card } from "@/packages/ui/components/ui";
+import api from "@/apps/mobile/src/services/api";
 import { createBloodRequest, getBloodRequest, updateBloodRequest, getMyBloodRequests, cancelBloodRequest } from "@/apps/mobile/src/lib/bloodRequestApi";
 import type { BloodGroup, BloodRequestResponse } from "@/apps/mobile/src/lib/bloodRequestApi";
 import { useUserStore } from "@/apps/mobile/src/store/UserContext";
@@ -67,6 +69,7 @@ export default function HospitalRequestScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(isEditing);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // Location Search State
   const [selectedDistrict, setSelectedDistrict] = useState("");
@@ -333,6 +336,16 @@ export default function HospitalRequestScreen() {
                             Needed by: {(req as any).neededBefore ? new Date((req as any).neededBefore).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : "Unknown"}
                           </Typo>
                         </View>
+                        {req.hospitalReceipt && (
+                          <TouchableOpacity onPress={() => setSelectedImage(`${api.defaults.baseURL}${req.hospitalReceipt}`)}>
+                            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}>
+                              <MaterialIcons name="receipt" size={16} color={colors.tint} />
+                              <Typo variant="caption" style={{ color: colors.tint, textDecorationLine: "underline", marginLeft: 6, fontWeight: "bold" }}>
+                                View Hospital Receipt
+                              </Typo>
+                            </View>
+                          </TouchableOpacity>
+                        )}
                         {isAccepted && (
                           <View style={{ marginTop: 12, backgroundColor: "#E8F5E9", padding: 10, borderRadius: 10, borderLeftWidth: 4, borderLeftColor: "#43A047" }}>
                             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
@@ -718,6 +731,18 @@ export default function HospitalRequestScreen() {
           </KeyboardAvoidingView>
         </View>
       </Modal>
+
+      {/* Image Modal */}
+      <Modal visible={!!selectedImage} transparent={true} animationType="fade" onRequestClose={() => setSelectedImage(null)}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setSelectedImage(null)}>
+          <TouchableOpacity style={styles.closeModalBtn} onPress={() => setSelectedImage(null)}>
+            <MaterialIcons name="close" size={30} color="#FFF" />
+          </TouchableOpacity>
+          {selectedImage && (
+            <Image source={{ uri: selectedImage }} style={styles.fullImage} resizeMode="contain" />
+          )}
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -822,6 +847,25 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
   },
+  uploadBtn: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderStyle: "dashed",
+    borderRadius: 12,
+    overflow: "hidden",
+    height: 150,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  uploadPlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  previewImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
   inputGroup: { marginBottom: 20 },
   inputLabel: { marginBottom: 10, fontWeight: "bold" },
   input: { height: 52, borderRadius: 8 },
@@ -921,5 +965,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     borderColor: "#ccc",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeModalBtn: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 10,
+    padding: 10,
+  },
+  fullImage: {
+    width: '90%',
+    height: '80%',
   },
 });

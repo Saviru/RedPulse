@@ -194,7 +194,7 @@ export default function MedicalRecordsScreen() {
           "Content-Type": "multipart/form-data",
         }
       });
- 
+
       const response = res.data;
       console.log('DEBUG Frontend: Upload response:', response);
       
