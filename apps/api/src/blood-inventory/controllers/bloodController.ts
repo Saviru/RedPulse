@@ -319,6 +319,7 @@ export async function createBlood(req: Request, res: Response): Promise<void> {
       // Legacy fields for backward compatibility.
       collectionDate: collectionDateTime,
       expiryDate: expiryDateTime,
+      packetImage: req.file ? `/uploads/blood-packets/${req.file.filename}` : undefined,
     });
     const counts = await getCountsByBloodType();
     res.status(201).json(serializeBlood(doc, counts, "total"));
