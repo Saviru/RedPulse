@@ -98,6 +98,9 @@ const bloodRequestSchema = new Schema(
     
     // For emergency requests, track the emergency request ID
     emergencyRequestId: { type: Schema.Types.ObjectId, ref: "EmergencyRequest" },
+    
+    // Receipt photo from hospital
+    hospitalReceipt: { type: String },
   },
   { timestamps: true }
 );

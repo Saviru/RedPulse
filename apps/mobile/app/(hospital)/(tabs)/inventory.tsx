@@ -12,7 +12,7 @@ import {
   bloodTypeDisplayName,
   fetchBloodUnits,
   fetchDashboard,
-} from "@/apps/mobile/app/lib/bloodApi";
+} from "@/apps/mobile/src/lib/bloodApi";
 
 export default function HospitalInventoryScreen() {
   const { colors } = useThemeColor();

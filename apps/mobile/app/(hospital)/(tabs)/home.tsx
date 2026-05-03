@@ -6,8 +6,8 @@ import { MaterialIcons } from "@expo/vector-icons";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Card, Badge } from "@/packages/ui/components/ui";
-import { useUserStore } from "@/apps/mobile/app/store/UserContext";
-import { getMyBloodRequests, getVisibleBloodRequests, BloodRequestResponse } from "@/apps/mobile/app/lib/bloodRequestApi";
+import { useUserStore } from "@/apps/mobile/src/store/UserContext";
+import { getMyBloodRequests, getVisibleBloodRequests, BloodRequestResponse } from "@/apps/mobile/src/lib/bloodRequestApi";
 
 export default function HospitalHomeScreen() {
   const { colors } = useThemeColor();
@@ -136,6 +136,22 @@ export default function HospitalHomeScreen() {
                 <Typo variant="h2" style={{ fontWeight: "bold" }}>Alerts</Typo>
                 <Typo variant="caption" color={colors.textMuted} style={{ marginTop: 4 }}>
                   Review incoming blood requests from other hospitals.
+                </Typo>
+              </View>
+              <MaterialIcons name="chevron-right" size={24} color={colors.icon} />
+            </Card>
+          </TouchableOpacity>
+
+          {/* Action 4: Campaign Collaboration */}
+          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push("/(hospital)/collaborate-campaigns" as any)}>
+            <Card variant="elevated" style={[styles.actionCard, { borderColor: colors.border }]}>
+              <View style={[styles.iconWrapper, { backgroundColor: `${colors.success}15` }]}>
+                <MaterialIcons name="handshake" size={32} color={colors.success} />
+              </View>
+              <View style={styles.cardText}>
+                <Typo variant="h2" style={{ fontWeight: "bold" }}>Campaign Requests</Typo>
+                <Typo variant="caption" color={colors.textMuted} style={{ marginTop: 4 }}>
+                  Accept collaboration requests for donation camps.
                 </Typo>
               </View>
               <MaterialIcons name="chevron-right" size={24} color={colors.icon} />

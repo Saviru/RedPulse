@@ -33,8 +33,13 @@ async function startServer() {
       await mongoose.connect(MONGODB_URI, { family: 4 });
       
       const { runExpiringSoonAlertJob, startExpiringSoonAlertScheduler } = require('./jobs/expiringSoonAlertJob');
+      const { runLowInventoryAlertJob, startLowInventoryAlertScheduler } = require('./jobs/lowInventoryAlertJob');
+      
       await runExpiringSoonAlertJob();
       startExpiringSoonAlertScheduler();
+      
+      await runLowInventoryAlertJob();
+      startLowInventoryAlertScheduler();
     }
 
     app.listen(PORT, () => {

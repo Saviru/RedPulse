@@ -7,7 +7,7 @@ import { useFocusEffect } from "@react-navigation/native";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Card, Badge } from "@/packages/ui/components/ui";
-import { aggregateStockByBloodType, bloodTypeDisplayName, fetchBloodUnits } from "@/apps/mobile/app/lib/bloodApi";
+import { aggregateStockByBloodType, bloodTypeDisplayName, fetchBloodUnits } from "@/apps/mobile/src/lib/bloodApi";
 
 export default function StockListScreen() {
   const { colors } = useThemeColor();

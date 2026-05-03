@@ -90,24 +90,35 @@ export const createBloodRequest = async (req: Request, res: Response, next: Next
       : null;
 
     
+    const requesterName = 
+      (user as any).fullName || 
+      (user as any).hospitalName || 
+      (user as any).organizationName || 
+      (user as any).displayName || 
+      hospitalProfile?.name || 
+      "Unknown";
+
+    const requesterPhone = user.phone || (user as any).contactNumber || (user as any).phoneNumber || hospitalProfile?.hospitalId || donorProfile?.donorId;
+    const requesterEmail = user.email;
+
     const requesterType = user.role === 'HOSPITAL' ? 'HOSPITAL' : 'USER';
     const targetType = user.role === 'HOSPITAL' ? 'HOSPITAL' : 'USER';
 
     const bloodRequest = await BloodRequestModel.create({
       requesterId: currentUsername,
       requesterType,
-      requesterName: (user as any).displayName || hospitalProfile?.name || "Unknown",
-      requesterPhone: user.phone,
-      requesterEmail: user.email,
+      requesterName,
+      requesterPhone,
+      requesterEmail,
       targetType,
       bloodGroup: body.bloodGroup,
       bloodComponent: body.bloodComponent,
       neededBefore: body.neededBefore ? new Date(body.neededBefore) : undefined,
-      locationText: body.locationText || donorProfile?.locationText || (user as any).address || (user as any).city,
-      address: body.address || hospitalProfile?.address || (user as any).address,
-      city: body.city || hospitalProfile?.city || (user as any).city,
+      locationText: body.locationText || (user as any).location || (user as any).address || hospitalProfile?.address || donorProfile?.locationText || "Unknown Location",
+      address: body.address || (user as any).address || hospitalProfile?.address,
+      city: body.city || (user as any).city || hospitalProfile?.city,
       hospitalWard: body.hospitalWard,
-      hospitalName: body.hospitalName,
+      hospitalName: body.hospitalName || (user.role === 'HOSPITAL' ? ((user as any).hospitalName || hospitalProfile?.name) : undefined),
       hospitalLocation: body.hospitalLocation,
       requesterLocation: body.requesterLocation,
       coordinatorPhone: body.coordinatorPhone,
@@ -125,6 +136,7 @@ export const createBloodRequest = async (req: Request, res: Response, next: Next
       patientDetails: body.patientDetails,
       urgencyLevel: body.urgencyLevel,
       isEmergency: body.isEmergency,
+      hospitalReceipt: req.file ? `/uploads/hospital-receipts/${req.file.filename}` : undefined,
     });
 
     

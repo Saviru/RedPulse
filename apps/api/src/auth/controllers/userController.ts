@@ -1,6 +1,8 @@
 import { Response } from 'express';
 import { UserModel } from '../../models/User';
 import { AuthRequest } from '../../shared/middleware/auth.middleware';
+import { CampaignRegistrationModel } from '../../models/CampaignRegistration';
+
 
 export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -50,3 +52,28 @@ export const getDonors = async (req: AuthRequest, res: Response): Promise<void> 
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getPublicStats = async (_req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const totalDonors = await UserModel.countDocuments({ role: 'USER' });
+    const totalDonations = await CampaignRegistrationModel.countDocuments({
+      role: 'DONOR',
+      donationStatus: 'DONATION_COMPLETED'
+    });
+    const totalLivesSaved = totalDonations * 3;
+    const totalVolunteers = await CampaignRegistrationModel.countDocuments({
+      role: 'VOLUNTEER',
+      status: 'REGISTERED'
+    });
+
+    res.json({
+      totalDonors,
+      totalDonations,
+      totalLivesSaved,
+      totalVolunteers
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+

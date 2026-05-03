@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { updateProfile, getDonors } from '../controllers/userController';
+import { updateProfile, getDonors, getPublicStats } from '../controllers/userController';
 import { requestDelete, confirmDelete } from '../controllers/authController';
 import { updateProfileValidator, confirmDeleteValidator } from '../validators/authValidator';
 import { validateRequest } from '../../shared/middleware/validation.middleware';
@@ -12,5 +12,7 @@ router.put('/profile', requireAuth, upload.single('avatar'), updateProfileValida
 router.post('/request-delete', requireAuth, requestDelete);
 router.post('/confirm-delete', requireAuth, confirmDeleteValidator, validateRequest, confirmDelete);
 router.get('/donors', requireAuth, getDonors);
+router.get('/stats', requireAuth, getPublicStats);
+
 
 export default router;

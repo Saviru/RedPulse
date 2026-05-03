@@ -7,8 +7,8 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { Button, Input, Typo, Card } from "@/packages/ui/components/ui";
 import { useThemeColor } from "@/packages/ui/hooks";
-import { useAuth } from "../../src/context/AuthContext";
-import { useToast } from "../../src/context/ToastContext";
+import { useAuth } from "@/apps/mobile/src/context/AuthContext";
+import { useToast } from "@/apps/mobile/src/context/ToastContext";
 
 export default function LoginScreen() {
   const router = useRouter();

@@ -12,13 +12,17 @@ import {
   getAcceptedBloodRequests,
 } from "../controllers/blood-request.controller";
 
+import { createUploadMiddleware } from "../../shared/middleware/upload.middleware";
+
 const bloodRequestRouter = Router();
+const uploadReceipt = createUploadMiddleware("hospital-receipts");
 
 // Create a blood request (individual or hospital)
 bloodRequestRouter.post(
   "/blood-requests",
   requireAuth,
   requireRoles("HOSPITAL", "USER"),
+  uploadReceipt.single("receipt"),
   createBloodRequest
 );
 

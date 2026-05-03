@@ -70,9 +70,9 @@ export default function OrganizationActivityScreen() {
             <Typo variant="body" style={{ fontWeight: "bold" }}>{user.fullName || user.username}</Typo>
             <Typo variant="caption" color={colors.textMuted}>{user.location || "No location set"}</Typo>
           </View>
-          <Badge 
-            label={user.bloodGroup || "N/A"} 
-            variant="info" 
+          <Badge
+            label={user.bloodGroup || "N/A"}
+            variant="info"
           />
         </View>
 
@@ -92,9 +92,9 @@ export default function OrganizationActivityScreen() {
         </View>
 
         <View style={styles.actionRow}>
-          <Button 
-            label="Verify Information" 
-            variant="primary" 
+          <Button
+            label="Verify Information"
+            variant="primary"
             style={{ flex: 1 }}
             onPress={() => handleVerify(user)}
           />
@@ -111,19 +111,21 @@ export default function OrganizationActivityScreen() {
       />
 
       <Animated.View style={[
-        styles.searchContainer, 
-        { 
+        styles.searchContainer,
+        {
           paddingTop: 80 + insets.top,
           backgroundColor: colors.background,
-          transform: [{ translateY: scrollY.interpolate({
-            inputRange: [0, 50],
-            outputRange: [0, -20],
-            extrapolate: 'clamp'
-          }) }]
+          transform: [{
+            translateY: scrollY.interpolate({
+              inputRange: [0, 50],
+              outputRange: [0, -20],
+              extrapolate: 'clamp'
+            })
+          }]
         }
       ]}>
-        <Input 
-          placeholder="Search for donors..." 
+        <Input
+          placeholder="Search for donors..."
           value={search}
           onChangeText={setSearch}
           leftIcon={<MaterialIcons name="search" size={20} color={colors.textMuted} />}
@@ -140,9 +142,9 @@ export default function OrganizationActivityScreen() {
         ]}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { 
+          {
             useNativeDriver: false,
-            listener: handleScroll 
+            listener: handleScroll
           }
         )}
         ListEmptyComponent={
@@ -176,7 +178,7 @@ export default function OrganizationActivityScreen() {
                 <Typo variant="caption" color={colors.textMuted}>FULL NAME</Typo>
                 <Typo variant="body" style={styles.infoValue}>{selectedUser?.fullName}</Typo>
               </View>
-              
+
               <View style={styles.infoRow}>
                 <Typo variant="caption" color={colors.textMuted}>NIC / ID NUMBER</Typo>
                 <Typo variant="body" style={styles.infoValue}>{selectedUser?.nic || "Not Provided"}</Typo>
@@ -209,9 +211,9 @@ export default function OrganizationActivityScreen() {
                 <Typo variant="body" style={styles.infoValue}>{selectedUser?.phone || "N/A"}</Typo>
               </View>
 
-              <Button 
-                label="Close" 
-                variant="secondary" 
+              <Button
+                label="Close"
+                variant="secondary"
                 onPress={() => setIsModalVisible(false)}
                 style={{ marginTop: 24 }}
               />

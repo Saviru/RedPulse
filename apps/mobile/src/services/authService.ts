@@ -72,9 +72,32 @@ export const authService = {
   },
 
   updateProfile: async (data: any) => {
-    const response = await api.patch('/auth/profile', data);
+    let requestData = data;
+    let headers: any = {};
+
+    if (data.avatarUrl) {
+      requestData = new FormData();
+      Object.keys(data).forEach((key) => {
+        if (key === 'avatarUrl') {
+          const uri = data.avatarUrl;
+          const fileName = uri.split('/').pop() || 'avatar.jpg';
+          const fileType = fileName.split('.').pop() || 'jpeg';
+          requestData.append('avatar', {
+            uri,
+            name: fileName,
+            type: `image/${fileType}`,
+          } as any);
+        } else if (data[key] !== undefined) {
+          requestData.append(key, data[key]);
+        }
+      });
+      headers['Content-Type'] = 'multipart/form-data';
+    }
+
+    const response = await api.patch('/auth/profile', requestData, { headers });
     return response.data;
   },
+
 
   deleteProfile: async () => {
     // just ping the request-delete

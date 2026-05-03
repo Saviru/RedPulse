@@ -15,7 +15,8 @@ router.post('/token', tokenExchangeValidator, validateRequest, exchangeToken);
 
 // loading initial setup / getMe
 router.get('/me', requireAuth, getMe);
-router.patch('/profile', requireAuth, updateProfile);
+router.patch('/profile', requireAuth, upload.single('avatar'), updateProfile);
+
 router.post('/request-delete', requireAuth, requestDelete);
 router.post('/confirm-delete', requireAuth, confirmDeleteValidator, validateRequest, confirmDelete);
 

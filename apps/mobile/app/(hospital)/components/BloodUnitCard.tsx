@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
 
 import { Typo } from "@/packages/ui/components/ui";
 import { useThemeColor } from "@/packages/ui/hooks";
-import { BloodUnitResponse, isoDateToLocalYmd } from "@/apps/mobile/app/lib/bloodApi";
+import { BloodUnitResponse, isoDateToLocalYmd } from "@/apps/mobile/src/lib/bloodApi";
 
 type BloodUnitCardProps = {
   unit: BloodUnitResponse;

@@ -7,8 +7,8 @@ import { useFocusEffect } from "@react-navigation/native";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Card, Button } from "@/packages/ui/components/ui";
-import { BloodUnitResponse, fetchAllBloodRecords, isoDateToLocalYmd } from "@/apps/mobile/app/lib/bloodApi";
-import { hideExpiredUnitFromView, useRemovedExpiredUnitIds } from "@/apps/mobile/app/lib/state/expiredUnitsView";
+import { BloodUnitResponse, fetchAllBloodRecords, isoDateToLocalYmd } from "@/apps/mobile/src/lib/bloodApi";
+import { hideExpiredUnitFromView, useRemovedExpiredUnitIds } from "@/apps/mobile/src/lib/state/expiredUnitsView";
 
 export default function ExpiredUnitsScreen() {
   const { colors } = useThemeColor();

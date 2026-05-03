@@ -20,8 +20,8 @@ import {
   getAcceptedBloodRequests,
   respondToBloodRequest,
   BloodRequestResponse,
-} from "@/apps/mobile/app/lib/bloodRequestApi";
-import { useUserStore } from "../../store/UserContext";
+} from "@/apps/mobile/src/lib/bloodRequestApi";
+import { useUserStore } from "@/apps/mobile/src/store/UserContext";
 
 export default function DonorAlertsScreen() {
   const { colors } = useThemeColor();

@@ -7,8 +7,8 @@ import { useFocusEffect } from "@react-navigation/native";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Card } from "@/packages/ui/components/ui";
-import { fetchAllBloodRecords } from "@/apps/mobile/app/lib/bloodApi";
-import { useRemovedExpiredUnitIds } from "@/apps/mobile/app/lib/state/expiredUnitsView";
+import { fetchAllBloodRecords } from "@/apps/mobile/src/lib/bloodApi";
+import { useRemovedExpiredUnitIds } from "@/apps/mobile/src/lib/state/expiredUnitsView";
 
 export default function WastageScreen() {
   const { colors } = useThemeColor();

@@ -27,6 +27,13 @@ export default function UserTabsLayout() {
           } as any}
         />
         <Tabs.Screen
+          name="shop"
+          options={{
+            title: "Shop",
+            tabBarIconName: "shopping-bag",
+          } as any}
+        />
+        <Tabs.Screen
           name="alerts"
           options={{
             title: "Alerts",
@@ -37,14 +44,7 @@ export default function UserTabsLayout() {
           name="request"
           options={{
             title: "Request",
-            tabBarIconName: "bloodtype",
-          } as any}
-        />
-        <Tabs.Screen
-          name="shop"
-          options={{
-            title: "Shop",
-            tabBarIconName: "shopping-bag",
+            tabBarIconName: "add-circle",
           } as any}
         />
         <Tabs.Screen

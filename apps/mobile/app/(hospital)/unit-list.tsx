@@ -7,7 +7,7 @@ import { useFocusEffect } from "@react-navigation/native";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Button } from "@/packages/ui/components/ui";
-import { BloodUnitResponse, deleteBloodUnit, fetchBloodUnits } from "@/apps/mobile/app/lib/bloodApi";
+import { BloodUnitResponse, deleteBloodUnit, fetchBloodUnits } from "@/apps/mobile/src/lib/bloodApi";
 import { BloodUnitCard } from "./components/BloodUnitCard";
 
 export default function UnitListScreen() {

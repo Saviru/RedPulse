@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Modal, ActivityIndicator } from "react-native";
+import { View, StyleSheet, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Modal, ActivityIndicator, Image } from "react-native";
+import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -7,8 +8,8 @@ import { useFocusEffect } from "@react-navigation/native";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Input, Button } from "@/packages/ui/components/ui";
-import { createBloodUnit, fetchNextBloodUnitId } from "@/apps/mobile/app/lib/bloodApi";
-import { useUserStore } from "@/apps/mobile/app/store/UserContext";
+import { createBloodUnit, fetchNextBloodUnitId } from "@/apps/mobile/src/lib/bloodApi";
+import { useUserStore } from "@/apps/mobile/src/store/UserContext";
 import {
   ALLOWED_BLOOD_TYPES,
   ALLOWED_COMPONENTS,
@@ -19,8 +20,8 @@ import {
   isValidYmd,
   isVolumeValid,
   parseVolume,
-} from "@/apps/mobile/app/lib/bloodValidation";
-import { BLOOD_MSG } from "@/apps/mobile/app/lib/bloodMessages";
+} from "@/apps/mobile/src/lib/bloodValidation";
+import { BLOOD_MSG } from "@/apps/mobile/src/lib/bloodMessages";
 import ExpiryDatePickerField from "./components/ExpiryDatePickerField";
 
 type FieldErrors = {
@@ -50,6 +51,19 @@ export default function HospitalAddUnitScreen() {
   const [volume, setVolume] = useState("");
   const [collectionDate, setCollectionDate] = useState(todayYmd);
   const [expiryDate, setExpiryDate] = useState("");
+  const [packetImageUri, setPacketImageUri] = useState<string | null>(null);
+
+  const pickPacketImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setPacketImageUri(result.assets[0].uri);
+    }
+  };
 
   const [showComponentModal, setShowComponentModal] = useState(false);
   const [showBloodTypeModal, setShowBloodTypeModal] = useState(false);
@@ -182,9 +196,10 @@ export default function HospitalAddUnitScreen() {
         bloodType,
         component: componentType,
         volume: vol,
-        collectionDate: collectionDate.trim(),
-        expiryDate: expiryDate.trim(),
-      });
+         collectionDate: collectionDate.trim(),
+         expiryDate: expiryDate.trim(),
+         packetImageUri: packetImageUri || undefined,
+       });
       router.replace("/(hospital)/(tabs)/inventory");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Could not save.";
@@ -369,6 +384,27 @@ export default function HospitalAddUnitScreen() {
                 </Typo>
               ) : null}
             </View>
+
+            <View style={styles.inputGroup}>
+              <Typo variant="caption" style={styles.inputLabel}>
+                BLOOD PACKET IMAGE (OPTIONAL)
+              </Typo>
+              <TouchableOpacity onPress={pickPacketImage} style={styles.uploadBtn}>
+                {packetImageUri ? (
+                  <Image source={{ uri: packetImageUri }} style={styles.previewImage} />
+                ) : (
+                  <View style={styles.uploadPlaceholder}>
+                    <MaterialIcons name="add-a-photo" size={32} color={colors.icon} />
+                    <Typo variant="caption" style={{ marginTop: 8 }}>Upload Packet Photo</Typo>
+                  </View>
+                )}
+              </TouchableOpacity>
+              {packetImageUri && (
+                <TouchableOpacity onPress={() => setPacketImageUri(null)} style={{ alignSelf: 'center', marginTop: 10 }}>
+                  <Typo variant="caption" style={{ color: colors.error }}>Remove Image</Typo>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
 
           <Button
@@ -504,6 +540,26 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: 6,
     marginLeft: 4,
+  },
+  uploadBtn: {
+    height: 160,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderStyle: "dashed",
+    backgroundColor: "#F9FAFB",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 4,
+    overflow: "hidden",
+  },
+  uploadPlaceholder: {
+    alignItems: "center",
+  },
+  previewImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
   },
 });
 

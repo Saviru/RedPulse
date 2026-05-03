@@ -6,8 +6,8 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Button, Input, Typo, AnimatedHeader } from "@/packages/ui/components/ui";
-import { useAuth } from "../../src/context/AuthContext";
-import { useToast } from "../../src/context/ToastContext";
+import { useAuth } from "@/apps/mobile/src/context/AuthContext";
+import { useToast } from "@/apps/mobile/src/context/ToastContext";
 
 export default function VerifyOtpScreen() {
   const router = useRouter();
