@@ -7,7 +7,7 @@ import { useFocusEffect } from "@react-navigation/native";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Card } from "@/packages/ui/components/ui";
-import { BloodUnitResponse, fetchBloodAlerts, isoDateToLocalYmd } from "@/apps/mobile/app/lib/bloodApi";
+import { BloodUnitResponse, fetchBloodAlerts, isoDateToLocalYmd } from "@/apps/mobile/src/lib/bloodApi";
 
 export default function ExpiryAlertsScreen() {
   const { colors } = useThemeColor();

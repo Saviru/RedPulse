@@ -1,6 +1,10 @@
+process.env.JWT_SECRET = 'test-secret-key-12345';
+process.env.SUPPRESS_JEST_WARNINGS = 'true';
+
 /** @jest-environment node */
 import request from 'supertest';
 import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 import app from '../../app';
 
 import { UserModel } from '../../models/User';
@@ -8,7 +12,26 @@ import { OfferModel } from '../../models/Offer';
 import { FundraisingModel } from '../../models/Fundraising';
 import { PointTransactionModel } from '../../models/PointTransaction';
 
-process.env.JWT_SECRET = 'test-secret-key-12345';
+let mongoServer: MongoMemoryServer;
+
+beforeAll(async () => {
+    mongoServer = await MongoMemoryServer.create();
+    const uri = mongoServer.getUri();
+    await mongoose.connect(uri);
+});
+
+afterAll(async () => {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+});
+
+afterEach(async () => {
+    // Clean DB between tests to prevent collisions
+    const collections = mongoose.connection.collections;
+    for (const key in collections) {
+        await collections[key].deleteMany({});
+    }
+});
 
 describe('RedPulse Backend Integration Tests', () => {
     jest.setTimeout(30000);
@@ -23,18 +46,18 @@ describe('RedPulse Backend Integration Tests', () => {
         }
 
         const email = data.email.toLowerCase();
+        // Wait a bit for Mongoose to persist if needed
         const otpRecord = await mongoose.connection.collection('otps').findOne({ email, purpose: 'REGISTER' });
         
         if (otpRecord) {
            const verifyRes = await request(app).post('/auth/verify-registration').send({ email, otp: otpRecord.otp });
            if (verifyRes.status !== 200) {
                console.error(`Verify failed [${data.role}]:`, verifyRes.status, JSON.stringify(verifyRes.body));
+               return verifyRes;
            }
-           // The tests expect status 201 for register success.
-           verifyRes.status = 201; 
            return verifyRes;
         }
-
+        console.error(`OTP record not found for [${email}]`);
         return res;
     };
 
@@ -48,7 +71,7 @@ describe('RedPulse Backend Integration Tests', () => {
             fullName: 'Donor User SC1',
             dob: '1995-01-01'
         });
-        expect(res.status).toBe(201);
+        expect(res.status).toBe(200);
         expect(res.body.user.points).toBe(10);
     });
 
@@ -65,7 +88,7 @@ describe('RedPulse Backend Integration Tests', () => {
             contactNumber: '0112223334'
         });
 
-        expect(orgRes.status).toBe(201);
+        expect(orgRes.status).toBe(200);
         const orgToken = orgRes.body.accessToken;
 
         const userRes = await register({
@@ -77,7 +100,7 @@ describe('RedPulse Backend Integration Tests', () => {
             fullName: 'Donor SC2',
             dob: '1995-01-01'
         });
-        expect(userRes.status).toBe(201);
+        expect(userRes.status).toBe(200);
         const userToken = userRes.body.accessToken;
 
         // 2. Org creates campaign (TC-03)
@@ -123,7 +146,7 @@ describe('RedPulse Backend Integration Tests', () => {
             emergencyContact: '0119999999'
         });
 
-        expect(hospRes.status).toBe(201);
+        expect(hospRes.status).toBe(200);
         const hospToken = hospRes.body.accessToken;
 
         // 2. Register User
@@ -136,12 +159,10 @@ describe('RedPulse Backend Integration Tests', () => {
             fullName: 'Donor SC3',
             dob: '1995-01-01'
         });
-        expect(userRes.status).toBe(201);
+        expect(userRes.status).toBe(200);
         const userToken = userRes.body.accessToken;
-        const userId = userRes.body.user._id;
-
         // 3. Award points (Simulation)
-        const user = await UserModel.findById(userId);
+        const user = await UserModel.findOne({ username: userRes.body.user.username });
         if (user) {
             user.points += 50;
             await user.save();
@@ -198,7 +219,7 @@ describe('RedPulse Backend Integration Tests', () => {
             fullName: 'Donor SC4',
             dob: '1995-01-01'
         });
-        expect(userRes.status).toBe(201);
+        expect(userRes.status).toBe(200);
         const userToken = userRes.body.accessToken;
 
         const redemptionsRes = await request(app)

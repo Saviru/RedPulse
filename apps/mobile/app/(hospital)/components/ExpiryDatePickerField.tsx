@@ -5,7 +5,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 
 import { Input, Button, Typo } from "@/packages/ui/components/ui";
 import { useThemeColor } from "@/packages/ui/hooks";
-import { isValidYmd } from "@/apps/mobile/app/lib/bloodValidation";
+import { isValidYmd } from "@/apps/mobile/src/lib/bloodValidation";
 
 function toYmd(date: Date): string {
   const y = date.getFullYear();

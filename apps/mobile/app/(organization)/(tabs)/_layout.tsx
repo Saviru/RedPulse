@@ -27,14 +27,6 @@ export default function OrgTabsLayout() {
           } as any}
         />
         <Tabs.Screen
-          name="activity"
-          options={{
-            title: "Donations",
-            tabBarIconName: "volunteer-activism",
-            href: null,
-          } as any}
-        />
-        <Tabs.Screen
           name="campaigns"
           options={{
             title: "Campaigns",

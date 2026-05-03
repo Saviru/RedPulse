@@ -2,11 +2,13 @@ import React, { useState, useRef } from "react";
 import { View, StyleSheet, ScrollView, Animated, TouchableOpacity } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
+
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Input, Button, Avatar, Badge, AnimatedHeader } from "@/packages/ui/components/ui";
-import { useAuth } from "../../../src/context/AuthContext";
+import { useAuth } from "@/apps/mobile/src/context/AuthContext";
 import { Alert } from "react-native";
 
 
@@ -29,7 +31,9 @@ export default function DonorProfileScreen() {
     bloodGroup: user?.bloodGroup || "",
     phone: user?.phone || "",
     weight: user?.weight || "",
+    avatarUrl: user?.avatar || "",
   });
+
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Not set";
@@ -45,15 +49,12 @@ export default function DonorProfileScreen() {
     }
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to log out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Logout", style: "destructive", onPress: logout }
-      ]
-    );
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (err: any) {
+      console.error("Logout failed:", err);
+    }
   };
 
   const handleDeleteAccount = () => {
@@ -87,6 +88,27 @@ export default function DonorProfileScreen() {
       </View>
     );
   };
+
+  const handleImagePick = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets && result.assets[0].uri) {
+      setFormData({ ...formData, avatarUrl: result.assets[0].uri });
+    }
+  };
+
+  const getAvatarSource = () => {
+    if (formData.avatarUrl) {
+      return { uri: formData.avatarUrl.startsWith('http') || formData.avatarUrl.startsWith('file') ? formData.avatarUrl : `http://10.0.2.2:5000${formData.avatarUrl}` };
+    }
+    return undefined;
+  };
+
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -125,20 +147,38 @@ export default function DonorProfileScreen() {
         <View style={styles.avatarSection}>
           <View style={styles.avatarWrapper}>
             <View style={[styles.avatarRing, { borderColor: `${colors.tint}33` }]}>
-              <Avatar size={120} />
+              <Avatar size={120} source={getAvatarSource()} />
             </View>
             {isEditing && (
-              <TouchableOpacity style={[styles.editAvatarBtn, { backgroundColor: colors.tint, borderColor: colors.background }]}>
+              <TouchableOpacity 
+                style={[styles.editAvatarBtn, { backgroundColor: colors.tint, borderColor: colors.background }]}
+                onPress={handleImagePick}
+              >
                 <MaterialIcons name="photo-camera" size={16} color={colors.background} />
               </TouchableOpacity>
             )}
+
           </View>
           <Typo variant="h2" style={styles.userName}>{user?.fullName || user?.username || "User"}</Typo>
           <View style={styles.userBadges}>
             <Badge label={user?.bloodGroup || "N/A"} variant="info" />
             <Typo variant="caption" color={colors.textMuted}>•</Typo>
-            <Typo variant="caption" color={colors.textMuted} style={{ fontWeight: "500" }}>Donor</Typo>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <MaterialIcons name="stars" size={14} color={colors.tint} style={{ marginRight: 4 }} />
+              <Typo variant="caption" color={colors.tint} style={{ fontWeight: "700" }}>{(user as any)?.points ?? 0} Points</Typo>
+            </View>
           </View>
+
+          {!isEditing && (
+            <Button
+              label="My Campaign Tasks"
+              variant="outline"
+              size="sm"
+              onPress={() => router.push("/(user)/campaign-tasks" as any)}
+              style={{ marginTop: 16, borderRadius: 20 }}
+              icon={<MaterialIcons name="assignment" size={18} />}
+            />
+          )}
         </View>
 
         {/* Trophy Case */}

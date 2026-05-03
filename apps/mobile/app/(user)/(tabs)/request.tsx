@@ -8,8 +8,10 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
-  Modal
+  Modal,
+  Image
 } from "react-native";
+import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -24,11 +26,11 @@ import {
   getMyBloodRequests,
   cancelBloodRequest,
   getAcceptedBloodRequests
-} from "@/apps/mobile/app/lib/bloodRequestApi";
-import type { BloodGroup, UrgencyLevel } from "@/apps/mobile/app/lib/bloodRequestApi";
-import { useUserStore } from "../../store/UserContext";
-import { isDuplicateRequest, recordSubmission, cleanInput } from "@/apps/mobile/app/lib/validationUtils";
-import { SRI_LANKA_DISTRICTS, SRI_LANKA_CITIES } from "@/apps/mobile/app/lib/srilankaGeography";
+} from "@/apps/mobile/src/lib/bloodRequestApi";
+import type { BloodGroup, UrgencyLevel } from "@/apps/mobile/src/lib/bloodRequestApi";
+import { useUserStore } from "@/apps/mobile/src/store/UserContext";
+import { isDuplicateRequest, recordSubmission, cleanInput } from "@/apps/mobile/src/lib/validationUtils";
+import { SRI_LANKA_DISTRICTS, SRI_LANKA_CITIES } from "@/apps/mobile/src/lib/srilankaGeography";
 
 const BLOOD_GROUPS: BloodGroup[] = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const GENDERS = ["Male", "Female", "Other"] as const;
@@ -120,6 +122,19 @@ export default function UserRequestBloodScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true); // Always loading initially to fetch list
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [receiptUri, setReceiptUri] = useState<string | null>(null);
+
+  const pickReceipt = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setReceiptUri(result.assets[0].uri);
+    }
+  };
 
   const fetchRequests = async () => {
     try {
@@ -309,6 +324,7 @@ export default function UserRequestBloodScreen() {
         urgencyLevel: isEmergency ? "critical" : urgencyLevel,
         isEmergency,
         role: "user",
+        receiptUri: receiptUri || undefined,
       };
 
       if (isEditing && editingId) {
@@ -631,6 +647,26 @@ export default function UserRequestBloodScreen() {
               </View>
             </Card>
 
+            {/* 5. Hospital Receipt (Optional) */}
+            <Card variant="elevated" style={styles.cardGroup}>
+              <SectionTitle title="5. Hospital Receipt (Optional)" icon="receipt" />
+              <TouchableOpacity onPress={pickReceipt} style={styles.uploadBtn}>
+                {receiptUri ? (
+                  <Image source={{ uri: receiptUri }} style={styles.previewImage} />
+                ) : (
+                  <View style={styles.uploadPlaceholder}>
+                    <MaterialIcons name="add-a-photo" size={32} color={colors.icon} />
+                    <Typo variant="caption" style={{ marginTop: 8 }}>Upload Hospital Receipt</Typo>
+                  </View>
+                )}
+              </TouchableOpacity>
+              {receiptUri && (
+                <TouchableOpacity onPress={() => setReceiptUri(null)} style={{ alignSelf: 'center', marginTop: 10 }}>
+                  <Typo variant="caption" style={{ color: colors.error }}>Remove Image</Typo>
+                </TouchableOpacity>
+              )}
+            </Card>
+
             {/* 3. Location & Contact Information */}
             <Card variant="elevated" style={styles.cardGroup}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15 }}>
@@ -822,23 +858,25 @@ export default function UserRequestBloodScreen() {
             </Card>
 
             {/* Submit Button */}
-            <TouchableOpacity
-              activeOpacity={0.8}
-              style={[styles.submitButton, { backgroundColor: colors.tint, opacity: isSubmitting ? 0.6 : 1 }]}
-              disabled={isSubmitting}
-              onPress={handleSubmit}
-            >
-              {isSubmitting ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <>
-                  <MaterialIcons name={isEditing ? "edit" : "cell-tower"} size={22} color="#FFF" style={{ marginRight: 8 }} />
-                  <Typo variant="body" style={{ color: "#FFF", fontWeight: "bold" }}>
-                    {isEditing ? "Update Request" : "Request Blood"}
-                  </Typo>
-                </>
-              )}
-            </TouchableOpacity>
+            <View style={styles.submitContainer}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={[styles.submitButton, { backgroundColor: colors.tint, opacity: isSubmitting ? 0.6 : 1 }]}
+                disabled={isSubmitting}
+                onPress={handleSubmit}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <>
+                    <MaterialIcons name={isEditing ? "edit" : "cell-tower"} size={22} color="#FFF" style={{ marginRight: 8 }} />
+                    <Typo variant="body" style={{ color: "#FFF", fontWeight: "bold" }}>
+                      {isEditing ? "Update Request" : "Request Blood"}
+                    </Typo>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
           </ScrollView>
         )}
       </KeyboardAvoidingView>

@@ -5,6 +5,14 @@ import { errorHandler } from './shared/middleware/errorHandler.middleware';
 import authRoutes from './auth/routes/authRoutes';
 import userRoutes from './auth/routes/userRoutes';
 import pointRoutes from './points/routes/pointRoutes';
+import { emergencyRouter } from './emergency-alerts/routes/emergency.routes';
+import { bloodRequestRouter } from './emergency-alerts/routes/blood-request.routes';
+import bloodRoutes from './blood-inventory/routes/bloodRoutes';
+import { medicalRouter } from './medical-records/routes/medicalRoutes';
+import { eligibilityRouter } from './medical-records/routes/eligibilityRoutes';
+import { campaignRouter } from './campaigns/routes/campaignRoutes';
+import { organizationRouter } from './organizations/routes/organizationRoutes';
+import { feedbackRoutes } from './routes/feedbackRoutes';
 
 import path from 'path';
 
@@ -24,6 +32,24 @@ app.get('/health', (req, res) => {
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
 app.use('/points', pointRoutes);
+app.use('/medical', medicalRouter);
+app.use('/eligibility', eligibilityRouter);
+app.use('/campaigns', campaignRouter);
+app.use('/organizations', organizationRouter);
+app.use('/', feedbackRoutes);
+
+// Duplicate under /api for secondary mobile client compatibility
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/points', pointRoutes);
+app.use('/api', emergencyRouter);
+app.use('/api', bloodRequestRouter);
+app.use('/api/blood', bloodRoutes);
+app.use('/api/medical', medicalRouter);
+app.use('/api/eligibility', eligibilityRouter);
+app.use('/api/campaigns', campaignRouter);
+app.use('/api/organizations', organizationRouter);
+app.use('/api', feedbackRoutes);
 
 app.use(errorHandler);
 

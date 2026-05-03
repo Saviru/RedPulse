@@ -21,7 +21,7 @@ import {
   fetchHospitalUsernames,
   isoDateToLocalYmd,
   updateBloodUnit,
-} from "@/apps/mobile/app/lib/bloodApi";
+} from "@/apps/mobile/src/lib/bloodApi";
 import {
   ALLOWED_BLOOD_TYPES,
   isAllowedBloodType,
@@ -30,8 +30,8 @@ import {
   isValidYmd,
   isVolumeValid,
   parseVolume,
-} from "@/apps/mobile/app/lib/bloodValidation";
-import { BLOOD_MSG } from "@/apps/mobile/app/lib/bloodMessages";
+} from "@/apps/mobile/src/lib/bloodValidation";
+import { BLOOD_MSG } from "@/apps/mobile/src/lib/bloodMessages";
 import ExpiryDatePickerField from "./components/ExpiryDatePickerField";
 
 type FieldErrors = {
