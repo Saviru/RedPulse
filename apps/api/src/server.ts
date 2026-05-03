@@ -8,11 +8,10 @@ dns.setServers(['8.8.8.8']);
 import mongoose from 'mongoose';
 import app from './app';
 
-// FIX: Convert 'require' to standard 'import' to match the rest of the file
 import { runExpiringSoonAlertJob, startExpiringSoonAlertScheduler } from './jobs/expiringSoonAlertJob';
 import { runLowInventoryAlertJob, startLowInventoryAlertScheduler } from './jobs/lowInventoryAlertJob';
 
-// FIX: Default to 8080, which is the Azure App Service default for Node Linux containers
+
 const PORT = process.env.PORT || 8080;
 const MONGODB_URI = process.env.MONGODB_URI;
 
