@@ -12,7 +12,7 @@ const medicalRecordSchema = new Schema({
   fileName: { type: String, required: true },
   fileUrl: { type: String, required: true },
   categoryId: { type: Schema.Types.ObjectId, ref: 'MedicalCategory', required: true },
-  donorId: { type: Schema.Types.ObjectId, ref: 'Donor', required: true },
+  donorId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   createdAt: { type: Date, default: Date.now }
 });
 

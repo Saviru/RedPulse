@@ -42,8 +42,18 @@ export default function MedicalRecordsScreen() {
     try {
       const res = await api.get(`${API_BASE_URL}/categories`);
       const json = res.data;
-      if (json.success) setCategories(json.data);
+      console.log('DEBUG Frontend: API Response:', json);
+      console.log('DEBUG Frontend: Is array?', Array.isArray(json));
+      console.log('DEBUG Frontend: Response type:', typeof json);
+      
+      // API interceptor unwraps {success: true, data: []} to just the data
+      if (Array.isArray(json)) {
+        setCategories(json);
+      } else {
+        console.log('DEBUG Frontend: Unexpected response format');
+      }
     } catch (err) {
+      console.log('DEBUG Frontend: Error fetching categories:', err);
       Alert.alert("Error", "Failed to fetch categories.");
     } finally {
       setLoading(false);
@@ -53,13 +63,20 @@ export default function MedicalRecordsScreen() {
   const fetchRecords = async (categoryId: string) => {
     setLoadingRecords(true);
     try {
+      console.log('DEBUG Frontend: Fetching records for category:', categoryId);
       const res = await api.get(`${API_BASE_URL}/categories/${categoryId}/records`);
       const json = res.data;
-      if (json.success) {
-        setCatRecords((prev) => ({ ...prev, [categoryId]: json.data }));
+      console.log('DEBUG Frontend: Records response:', json);
+      console.log('DEBUG Frontend: Is array?', Array.isArray(json));
+      
+      // API interceptor unwraps the response
+      if (Array.isArray(json)) {
+        setCatRecords((prev) => ({ ...prev, [categoryId]: json }));
+      } else {
+        console.log('DEBUG Frontend: Unexpected records response format');
       }
     } catch (err) {
-      console.log(err);
+      console.log('DEBUG Frontend: Error fetching records:', err);
     } finally {
       setLoadingRecords(false);
     }
@@ -78,16 +95,20 @@ export default function MedicalRecordsScreen() {
   const saveCategory = async () => {
     if (!catNameInput.trim()) return;
     try {
+      console.log('DEBUG Frontend: Saving category:', catNameInput);
       if (editingCatId) {
-        await api.put(`${API_BASE_URL}/categories/${editingCatId}`, { name: catNameInput });
+        const res = await api.put(`${API_BASE_URL}/categories/${editingCatId}`, { name: catNameInput });
+        console.log('DEBUG Frontend: Update response:', res.data);
       } else {
-        await api.post(`${API_BASE_URL}/categories`, { name: catNameInput });
+        const res = await api.post(`${API_BASE_URL}/categories`, { name: catNameInput });
+        console.log('DEBUG Frontend: Create response:', res.data);
       }
       setCatModalVisible(false);
       setCatNameInput("");
       setEditingCatId(null);
       fetchCategories();
     } catch (err) {
+      console.log('DEBUG Frontend: Error saving category:', err);
       Alert.alert("Error", "Failed to save category.");
     }
   };
@@ -151,10 +172,12 @@ export default function MedicalRecordsScreen() {
 
   const uploadFile = async (categoryId: string) => {
     try {
+      console.log('DEBUG Frontend: Starting file upload for category:', categoryId);
       const result = await DocumentPicker.getDocumentAsync({});
       if (result.canceled || !result.assets || result.assets.length === 0) return;
 
       const file = result.assets[0];
+      console.log('DEBUG Frontend: Selected file:', file.name);
       const formData = new FormData();
       formData.append("categoryId", categoryId);
 
@@ -173,16 +196,19 @@ export default function MedicalRecordsScreen() {
       });
  
       const response = res.data;
-      if (!response.success) {
-        throw new Error(response.message);
-      }
-
+      console.log('DEBUG Frontend: Upload response:', response);
+      
+      // API interceptor unwraps the response, so we don't check response.success
+      // If we get here without an error, the upload was successful
+      
       if (expandedCatId === categoryId) {
         fetchRecords(categoryId);
       } else {
         setLoadingRecords(false);
       }
+      Alert.alert("Success", "File uploaded successfully!");
     } catch (err: any) {
+      console.log('DEBUG Frontend: Upload error:', err);
       setLoadingRecords(false);
       Alert.alert("Upload Error", err.message || "Failed to upload file.");
     }
