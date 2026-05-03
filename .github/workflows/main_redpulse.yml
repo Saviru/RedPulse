@@ -18,33 +18,35 @@ jobs:
         with:
           node-version: '22.x'
           
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
-          run_install: false
-          
-      - name: Build and Package Standalone API
+      - name: Install and Build (NPM Workspaces)
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
         run: |
           # 1. Install all monorepo dependencies
-          pnpm install
+          npm install
           
-          # 2. Build shared types and the API
-          pnpm --filter redpulse-types run build
-          pnpm --filter redpulse-api run build
+          # 2. Build the types and API using npm workspace flags
+          npm run build --workspace=redpulse-types
+          npm run build --workspace=redpulse-api
           
-          # 3. THE MAGIC BULLET: pnpm deploy
-          # This extracts the API workspace, its 'dist' folder, and resolves ALL 
-          # symlinks into a real, standalone node_modules folder ready for Azure.
-          pnpm --filter redpulse-api deploy --prod ./deploy_artifact
+      - name: Isolate and Prepare Deployment Artifact
+        run: |
+          # 3. Create a clean folder for Azure
+          mkdir -p deploy_artifact
+          
+          # 4. Copy ONLY the compiled output and package.json
+          cp -r apps/api/dist deploy_artifact/
+          cp apps/api/package.json deploy_artifact/
+          
+          # 5. Install ONLY production dependencies natively (no symlinks)
+          cd deploy_artifact
+          npm install --omit=dev --no-package-lock
           
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: ./deploy_artifact/ # Upload ONLY the isolated, symlink-free build
+          path: ./deploy_artifact/ # Upload the clean, self-contained app
 
   deploy:
     runs-on: ubuntu-latest
@@ -72,4 +74,4 @@ jobs:
         with:
           app-name: 'redpulse'
           slot-name: 'Production'
-          package: ./deploy_artifact # Push the standalone package to Azure
+          package: ./deploy_artifact
