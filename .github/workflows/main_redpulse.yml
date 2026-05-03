@@ -27,6 +27,9 @@ jobs:
           run_install: false
 
       - name: pnpm install and build
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      
         run: |
           pnpm install
           cd apps/api
