@@ -441,12 +441,11 @@ export const FeedbackFormModal: React.FC<FeedbackFormModalProps> = ({
             </View>
           )}
 
-          {/* Attachments — only for complaints */}
-          {type === "complaint" && (
-            <View style={{ marginTop: 12 }}>
-              <Typo variant="caption" style={[styles.fieldLabel, { color: colors.textMuted }]}>
-                Attachments (Images & PDFs)
-              </Typo>
+          {/* Attachments */}
+          <View style={{ marginTop: 12 }}>
+            <Typo variant="caption" style={[styles.fieldLabel, { color: colors.textMuted }]}>
+              Attachments (Images & PDFs)
+            </Typo>
               <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
                 <Button
                   label="Add Image"
@@ -512,8 +511,7 @@ export const FeedbackFormModal: React.FC<FeedbackFormModalProps> = ({
                   ))}
                 </View>
               )}
-            </View>
-          )}
+          </View>
 
           {/* Target */}
           {initialData ? (

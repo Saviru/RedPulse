@@ -7,7 +7,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { Typo } from "@/packages/ui/components/ui";
 import { useThemeColor } from "@/packages/ui/hooks";
-import { BloodUnitResponse, fetchBloodUnits } from "@/apps/mobile/app/lib/bloodApi";
+import { BloodUnitResponse, fetchBloodUnits } from "@/apps/mobile/src/lib/bloodApi";
 import { BloodUnitCard } from "./components/BloodUnitCard";
 
 export default function BloodTypeUnitsScreen() {

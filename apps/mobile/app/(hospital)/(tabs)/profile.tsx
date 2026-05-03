@@ -6,7 +6,7 @@ import { useRouter } from "expo-router";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Input, Button, Avatar, Badge, Toggle, AnimatedHeader } from "@/packages/ui/components/ui";
-import { useAuth } from "../../../src/context/AuthContext";
+import { useAuth } from "@/apps/mobile/src/context/AuthContext";
 import { Alert } from "react-native";
 
 
@@ -29,15 +29,12 @@ export default function HospitalProfileScreen() {
     urgentRequests: true,
   });
 
-  const handleLogout = () => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to log out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Logout", style: "destructive", onPress: logout }
-      ]
-    );
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (err: any) {
+      console.error("Logout failed:", err);
+    }
   };
 
   const handleDeleteAccount = () => {

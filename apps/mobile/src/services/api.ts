@@ -1,14 +1,10 @@
 import axios from 'axios';
-import * as SecureStore from '../utils/storage';
 import { Platform } from 'react-native';
+import { getAccessToken } from '../lib/session';
 
 const getBaseUrl = () => {
   if (Platform.OS === 'android') {
-    /**
-     * For Android Emulator, use 10.0.2.2
-     * For physical devices, use your machine's local IP address (e.g., 10.47.123.162)
-     */
-    return 'http://10.47.123.162:5000';
+    return 'http://10.0.2.2:5000';
   }
   return 'http://localhost:5000';
 };
@@ -24,7 +20,7 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     try {
-      const token = await SecureStore.getItemAsync('userToken');
+      const token = await getAccessToken();
       console.log(`API [Request]: ${config.method?.toUpperCase()} ${config.url}`);
 
       if (token) {
@@ -34,11 +30,11 @@ api.interceptors.request.use(
         // Skip warning for public auth routes
         const isAuthRoute = config.url?.includes('/auth/login') || config.url?.includes('/auth/register');
         if (!isAuthRoute) {
-          console.warn('API [Auth]: No token found in SecureStore');
+          console.warn('API [Auth]: No token found in session cache');
         }
       }
     } catch (error) {
-      console.error('Error fetching token from SecureStore', error);
+      console.error('Error fetching token from session', error);
     }
     return config;
   },
@@ -51,6 +47,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     console.log(`API [Success]: ${response.config.method?.toUpperCase()} ${response.config.url} - Status ${response.status}`);
+    
+    // Automatically unwrap the standard backend envelope { success: true, data: T, message: string }
+    if (response.data && typeof response.data === 'object' && response.data.success === true && 'data' in response.data) {
+      return {
+        ...response,
+        data: response.data.data
+      };
+    }
+    
     return response;
   },
   (error) => {

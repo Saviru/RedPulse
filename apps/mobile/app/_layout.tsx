@@ -1,4 +1,4 @@
-import { useThemeColor } from "@/packages/ui/hooks";
+import { useThemeColor, FeedbackProvider } from "@/packages/ui/hooks";
 import {
   DarkTheme,
   DefaultTheme,
@@ -17,12 +17,12 @@ SplashScreen.preventAutoHideAsync();
 
 export { ErrorBoundary } from "expo-router";
 
-import { AuthProvider, useAuth } from "../src/context/AuthContext";
-import { UserProvider } from "./store/UserContext";
+import { AuthProvider, useAuth } from "@/apps/mobile/src/context/AuthContext";
+import { UserProvider } from "@/apps/mobile/src/store/UserContext";
 import { useRouter, useSegments, usePathname } from "expo-router";
 import { UIThemeProvider } from "@/packages/ui/context/ThemeContext";
-import { ToastProvider, useToast } from "../src/context/ToastContext";
-import { healthCheck } from "../src/services/api";
+import { ToastProvider, useToast } from "@/apps/mobile/src/context/ToastContext";
+import { healthCheck } from "@/apps/mobile/src/services/api";
 
 export default function RootLayout() {
   return (
@@ -30,7 +30,9 @@ export default function RootLayout() {
       <ToastProvider>
         <AuthProvider>
           <UserProvider>
-            <InnerLayout />
+            <FeedbackProvider>
+              <InnerLayout />
+            </FeedbackProvider>
           </UserProvider>
         </AuthProvider>
       </ToastProvider>
@@ -64,6 +66,12 @@ function InnerLayout() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const segments = useSegments();
+  const segmentString = segments.join("/");
+  const isUserSection = segmentString.includes("(user)");
+  const isOrgSection = segmentString.includes("(organization)");
+  const isHospitalSection = segmentString.includes("(hospital)");
+  const isPublicGroup = segmentString.includes("(public)");
+  const inProtectedGroup = isUserSection || isOrgSection || isHospitalSection;
 
   // Perform API Health Check before launch
   useEffect(() => {
@@ -72,9 +80,8 @@ function InnerLayout() {
         await healthCheck();
         setIsHealthChecked(true);
       } catch (err: any) {
-        // Show persistent toast on network/connection failure
-        showToast(err.message || 'Cannot reach the server', 'error', 0, true);
-        setIsHealthChecked(true); // Still proceed, allow cached or retry logic
+        showToast(err.message || "Cannot reach the server", "error", 0, true);
+        setIsHealthChecked(true);
       }
     }
     checkServer();
@@ -88,15 +95,6 @@ function InnerLayout() {
 
   useEffect(() => {
     if (!hasLoadedAssets || isLoading || !isHealthChecked) return;
-
-    const segmentString = segments.join('/');
-    const isUserSection = segmentString.includes('(user)');
-    const isOrgSection = segmentString.includes('(organization)');
-    const isHospitalSection = segmentString.includes('(hospital)');
-    const inProtectedGroup = isUserSection || isOrgSection || isHospitalSection;
-
-    // Detect public screens
-    const isPublicGroup = segmentString.includes('(public)');
 
     if (!user && inProtectedGroup) {
       // Redirect to login if unauthenticated user tries to access a protected route
@@ -131,9 +129,15 @@ function InnerLayout() {
         router.replace(correctDashboard as any);
       }
     }
-  }, [user, isLoading, hasLoadedAssets, segments, isHealthChecked]);
+  }, [user, isLoading, hasLoadedAssets, segments, isHealthChecked, inProtectedGroup, isHospitalSection, isOrgSection, isUserSection]);
 
-  if (!hasLoadedAssets || !isHealthChecked) {
+  if (!hasLoadedAssets || !isHealthChecked || isLoading) {
+    return null;
+  }
+
+
+  // Prevent mounting protected screens if not logged in
+  if (!user && inProtectedGroup) {
     return null;
   }
 
@@ -148,9 +152,7 @@ function InnerLayout() {
             animation: "slide_from_right",
             contentStyle: { backgroundColor: colors.background },
           }}
-        >
-          <Stack.Screen name="index" />
-        </Stack>
+        />
       </SafeAreaProvider>
     </ThemeProvider>
   );

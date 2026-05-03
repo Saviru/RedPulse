@@ -7,8 +7,8 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Button, Input, Typo, Divider, Avatar, AnimatedHeader, Select } from "@/packages/ui/components/ui";
-import { useAuth } from "../../src/context/AuthContext";
-import { useToast } from "../../src/context/ToastContext";
+import { useAuth } from "@/apps/mobile/src/context/AuthContext";
+import { useToast } from "@/apps/mobile/src/context/ToastContext";
 
 export default function OrganizationRegistrationScreen() {
   const router = useRouter();
@@ -46,7 +46,7 @@ export default function OrganizationRegistrationScreen() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.5,

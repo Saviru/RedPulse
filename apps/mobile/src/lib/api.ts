@@ -67,7 +67,12 @@ export const requestJson = async <T>(path: string, init?: RequestJsonInit): Prom
   const method = init?.method || "GET";
 
   const headers = new Headers();
-  headers.set("Content-Type", "application/json");
+  const isFormData = init?.body instanceof FormData;
+
+  if (!isFormData) {
+    headers.set("Content-Type", "application/json");
+  }
+  
   if (init?.headers) {
     Object.entries(init.headers).forEach(([k, v]) => headers.set(k, String(v)));
   }

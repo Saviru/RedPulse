@@ -4,9 +4,12 @@ import { UserModel } from '../../models/User';
 import { RegularUserModel, OrganizationUserModel, HospitalUserModel } from '../../models/Discriminators';
 import { AuthCodeModel } from '../../models/AuthCode';
 import { OtpModel } from '../../models/Otp';
+import { DonorProfileModel } from '../../models/DonorProfile';
 import { generateAuthorizationCode, generateToken, verifyCodeChallenge } from '../../shared/utils/jwt';
 import { AuthRequest } from '../../shared/middleware/auth.middleware';
 import { emailService } from '../../shared/services/EmailService';
+import { CampaignRegistrationModel } from '../../models/CampaignRegistration';
+
 
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -173,7 +176,26 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
       res.status(404).json({ message: 'User not found' });
       return;
     }
-    res.json(user);
+
+    const userData: any = user.toObject();
+
+    // Include lastDonationDate and totalDonations for users
+    if (user.role === 'USER') {
+      const donorProfile = await DonorProfileModel.findOne({ donorId: user.username });
+      if (donorProfile) {
+        userData.lastDonationDate = donorProfile.lastDonationDate;
+      }
+      
+      const totalDonations = await CampaignRegistrationModel.countDocuments({
+        userId: user._id,
+        role: 'DONOR',
+        donationStatus: 'DONATION_COMPLETED'
+      });
+      userData.totalDonations = totalDonations;
+    }
+
+
+    res.json(userData);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

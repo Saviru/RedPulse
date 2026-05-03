@@ -17,11 +17,11 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Input, Toggle, Card } from "@/packages/ui/components/ui";
-import { createBloodRequest, getBloodRequest, updateBloodRequest, getMyBloodRequests, cancelBloodRequest } from "@/apps/mobile/app/lib/bloodRequestApi";
-import type { BloodGroup, BloodRequestResponse } from "@/apps/mobile/app/lib/bloodRequestApi";
-import { useUserStore } from "@/apps/mobile/app/store/UserContext";
-import { isDuplicateRequest, recordSubmission, cleanInput } from "@/apps/mobile/app/lib/validationUtils";
-import { SRI_LANKA_DISTRICTS, SRI_LANKA_CITIES } from "@/apps/mobile/app/lib/srilankaGeography";
+import { createBloodRequest, getBloodRequest, updateBloodRequest, getMyBloodRequests, cancelBloodRequest } from "@/apps/mobile/src/lib/bloodRequestApi";
+import type { BloodGroup, BloodRequestResponse } from "@/apps/mobile/src/lib/bloodRequestApi";
+import { useUserStore } from "@/apps/mobile/src/store/UserContext";
+import { isDuplicateRequest, recordSubmission, cleanInput } from "@/apps/mobile/src/lib/validationUtils";
+import { SRI_LANKA_DISTRICTS, SRI_LANKA_CITIES } from "@/apps/mobile/src/lib/srilankaGeography";
 
 const BLOOD_GROUPS: BloodGroup[] = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const URGENCY_LEVELS = ["critical", "high", "medium", "low"] as const;
