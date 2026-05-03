@@ -5,7 +5,7 @@ export interface IOfferDocument extends Document {
   description: string;
   pointsCost: number;
   type: 'Checkup' | 'Discount' | 'Gift' | 'Other';
-  hospitalId: string;
+  hospitalId: mongoose.Types.ObjectId;
   isActive: boolean;
 }
 
@@ -15,7 +15,7 @@ const offerSchema = new Schema<IOfferDocument>(
     description: { type: String, required: true },
     pointsCost: { type: Number, required: true },
     type: { type: String, enum: ['Checkup', 'Discount', 'Gift', 'Other'], default: 'Checkup' },
-    hospitalId: { type: String, required: true },
+    hospitalId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }

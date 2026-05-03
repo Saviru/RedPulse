@@ -18,7 +18,6 @@ SplashScreen.preventAutoHideAsync();
 export { ErrorBoundary } from "expo-router";
 
 import { AuthProvider, useAuth } from "../src/context/AuthContext";
-import { UserProvider } from "./store/UserContext";
 import { useRouter, useSegments, usePathname } from "expo-router";
 import { UIThemeProvider } from "@/packages/ui/context/ThemeContext";
 import { ToastProvider, useToast } from "../src/context/ToastContext";
@@ -29,9 +28,7 @@ export default function RootLayout() {
     <UIThemeProvider>
       <ToastProvider>
         <AuthProvider>
-          <UserProvider>
-            <InnerLayout />
-          </UserProvider>
+          <InnerLayout />
         </AuthProvider>
       </ToastProvider>
     </UIThemeProvider>

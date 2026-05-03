@@ -1,276 +1,189 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter, useFocusEffect } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
+import React, { useRef } from "react";
+import { View, StyleSheet, Animated, TouchableOpacity, ScrollView } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import { useThemeColor } from "@/packages/ui/hooks";
-import { Typo, Card, Badge } from "@/packages/ui/components/ui";
-import { useUserStore } from "@/apps/mobile/app/store/UserContext";
-import { getMyBloodRequests, getVisibleBloodRequests, BloodRequestResponse } from "@/apps/mobile/app/lib/bloodRequestApi";
+import { Typo, Card, Button, AnimatedHeader, Divider, Badge } from "@/packages/ui/components/ui";
+import { useScroll } from "@/packages/ui/context/ScrollContext";
 
 export default function HospitalHomeScreen() {
-  const { colors } = useThemeColor();
-  const router = useRouter();
-  const { user, refreshUser } = useUserStore();
-  const [myRequests, setMyRequests] = useState<BloodRequestResponse[]>([]);
-  const [incomingRequests, setIncomingRequests] = useState<BloodRequestResponse[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const { colors, theme } = useThemeColor();
+  const insets = useSafeAreaInsets();
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const { handleScroll } = useScroll();
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [my, incoming] = await Promise.all([
-        getMyBloodRequests(),
-        getVisibleBloodRequests(),
-      ]);
-      setMyRequests(my);
-      setIncomingRequests(incoming.filter(r => !r.responses.some(resp => resp.responderId === user?.username)));
-    } catch (e) {
-      console.error("Failed to load data:", e);
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.username]);
-
-  useFocusEffect(
-    useCallback(() => {
-      refreshUser();
-      loadData();
-    }, [])
-  );
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await Promise.all([refreshUser(), loadData()]);
-    setRefreshing(false);
-  }, [refreshUser, loadData]);
-
-  const acceptedCount = myRequests
-    .filter(r => r.status !== "cancelled")
-    .flatMap(r => r.responses.filter(resp => resp.status === "accepted")).length;
+  const inventorySummary = [
+    { type: "O+", status: "Critical", count: "2 Units" },
+    { type: "A-", status: "Stable", count: "8 Units" },
+    { type: "B+", status: "Low", count: "3 Units" },
+  ];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <AnimatedHeader
+        title="Hospital Admin"
+        scrollY={scrollY}
+        rightElement={
+          <TouchableOpacity style={styles.iconButton}>
+            <MaterialIcons name="settings" size={24} color={colors.text} />
+          </TouchableOpacity>
         }
+      />
+
+      <Animated.ScrollView
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { 
+            useNativeDriver: true,
+            listener: handleScroll 
+          }
+        )}
+        scrollEventThrottle={16}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: 80 + insets.top, paddingBottom: insets.bottom + 100 }
+        ]}
       >
-        
-        {/* Header Section */}
-        <View style={styles.header}>
-          <View>
-            <Typo variant="h1" style={{ fontWeight: "bold", fontSize: 28 }}>
-              {user?.hospitalName || "Hospital Portal"}
-            </Typo>
-            <Typo variant="body" color={colors.textMuted} style={{ marginTop: 4 }}>
-              Manage blood requests and donations
-            </Typo>
-          </View>
-
+        {/* Quick Actions */}
+        <View style={styles.quickActions}>
+          <TouchableOpacity style={[styles.actionBox, { backgroundColor: `${colors.tint}1A` }]}>
+            <MaterialIcons name="add-alert" size={32} color={colors.tint} />
+            <Typo variant="caption" style={{ marginTop: 8, fontWeight: "bold" }}>Request Blood</Typo>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.actionBox, { backgroundColor: `${colors.success || '#4CAF50'}1A` }]}>
+            <MaterialIcons name="inventory" size={32} color={colors.success || '#4CAF50'} />
+            <Typo variant="caption" style={{ marginTop: 8, fontWeight: "bold" }}>Update Stock</Typo>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.actionBox, { backgroundColor: `#FF98001A` }]}>
+            <MaterialIcons name="campaign" size={32} color="#FF9800" />
+            <Typo variant="caption" style={{ marginTop: 8, fontWeight: "bold" }}>Host Camp</Typo>
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.statsRow}>
-          <Card variant="elevated" style={[styles.statCard, { borderColor: colors.border }]}>
-            <Typo variant="h1" style={{ color: colors.tint, fontWeight: "bold" }}>
-              {myRequests.filter(r => r.status !== "cancelled").length}
-            </Typo>
-            <Typo variant="caption" color={colors.textMuted}>My Requests</Typo>
-          </Card>
-          <Card variant="elevated" style={[styles.statCard, { borderColor: colors.border }]}>
-            <Typo variant="h1" style={{ color: colors.success, fontWeight: "bold" }}>{acceptedCount}</Typo>
-            <Typo variant="caption" color={colors.textMuted}>Accepted</Typo>
-          </Card>
-          <Card variant="elevated" style={[styles.statCard, { borderColor: colors.border }]}>
-            <Typo variant="h1" style={{ color: colors.error, fontWeight: "bold" }}>{incomingRequests.length}</Typo>
-            <Typo variant="caption" color={colors.textMuted}>Incoming</Typo>
-          </Card>
-        </View>
-
-        {/* Dashboard Grid */}
-        <View style={styles.dashboardGrid}>
-          
-          {/* Action 1: Inventory */}
-          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push("/(hospital)/(tabs)/inventory" as any)}>
-            <Card variant="elevated" style={[styles.actionCard, { borderColor: colors.border }]}>
-              <View style={[styles.iconWrapper, { backgroundColor: `${colors.tint}15` }]}>
-                <MaterialIcons name="inventory" size={32} color={colors.tint} />
-              </View>
-              <View style={styles.cardText}>
-                <Typo variant="h2" style={{ fontWeight: "bold" }}>Manage Inventory</Typo>
-                <Typo variant="caption" color={colors.textMuted} style={{ marginTop: 4 }}>
-                  Track blood stock levels, expiring units, and wastage.
-                </Typo>
-              </View>
-              <MaterialIcons name="chevron-right" size={24} color={colors.icon} />
-            </Card>
-          </TouchableOpacity>
-
-          {/* Action 2: Request Blood */}
-          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push("/(hospital)/(tabs)/request" as any)}>
-            <Card variant="elevated" style={[styles.actionCard, { borderColor: colors.border }]}>
-              <View style={[styles.iconWrapper, { backgroundColor: `${colors.error}15` }]}>
-                <MaterialIcons name="bloodtype" size={32} color={colors.error} />
-              </View>
-              <View style={styles.cardText}>
-                <Typo variant="h2" style={{ fontWeight: "bold" }}>Request Blood</Typo>
-                <Typo variant="caption" color={colors.textMuted} style={{ marginTop: 4 }}>
-                  Request blood from other hospitals in the network.
-                </Typo>
-              </View>
-              <MaterialIcons name="chevron-right" size={24} color={colors.icon} />
-            </Card>
-          </TouchableOpacity>
-
-          {/* Action 2: Alerts */}
-          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push("/(hospital)/(tabs)/alerts" as any)}>
-            <Card variant="elevated" style={[styles.actionCard, { borderColor: colors.border }]}>
-              <View style={[styles.iconWrapper, { backgroundColor: `${colors.tint}15` }]}>
-                <MaterialIcons name="notifications-active" size={32} color={colors.tint} />
-              </View>
-              <View style={styles.cardText}>
-                <Typo variant="h2" style={{ fontWeight: "bold" }}>Alerts</Typo>
-                <Typo variant="caption" color={colors.textMuted} style={{ marginTop: 4 }}>
-                  Review incoming blood requests from other hospitals.
-                </Typo>
-              </View>
-              <MaterialIcons name="chevron-right" size={24} color={colors.icon} />
-            </Card>
-          </TouchableOpacity>
-
-        </View>
-        {/* Priority Requests */}
+        {/* Critical Inventory */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Typo variant="h2" style={{ fontWeight: "bold" }}>Priority Requests</Typo>
-            <TouchableOpacity onPress={() => router.push("/(hospital)/(tabs)/alerts" as any)}>
-              <Typo variant="caption" style={{ color: colors.tint }}>View All →</Typo>
+            <Typo variant="h2">Inventory Snapshot</Typo>
+            <TouchableOpacity>
+              <Typo variant="caption" color={colors.tint}>Manage All</Typo>
             </TouchableOpacity>
           </View>
-
-          {loading ? (
-            <ActivityIndicator color={colors.tint} />
-          ) : incomingRequests.filter(r => r.isEmergency).length === 0 ? (
-            <Card variant="outlined" style={[styles.emptyCard, { borderColor: colors.border }]}>
-              <MaterialIcons name="done-all" size={28} color={colors.icon} />
-              <Typo variant="caption" color={colors.textMuted} style={{ marginTop: 8, textAlign: "center" }}>
-                No emergency alerts from other hospitals right now.
-              </Typo>
-            </Card>
-          ) : (
-            incomingRequests.filter(r => r.isEmergency).slice(0, 3).map((req) => (
-              <TouchableOpacity key={req._id} onPress={() => router.push("/(hospital)/(tabs)/alerts" as any)}>
-                <Card
-                  variant="elevated"
-                  style={[styles.requestCard, { borderColor: colors.error }]}
-                >
-                  <View style={styles.requestRow}>
-                    <View style={[styles.bloodBadge, { backgroundColor: `${colors.error}15` }]}>
-                      <Typo variant="h2" style={{ color: colors.error, fontWeight: "bold" }}>{req.bloodGroup}</Typo>
-                    </View>
-                    <View style={{ flex: 1, marginLeft: 12 }}>
-                      <Typo variant="body" style={{ fontWeight: "bold" }}>{req.reason || "Blood Request"}</Typo>
-                      <Typo variant="caption" color={colors.textMuted}>
-                        {(() => {
-                          const base = req.city || req.locationText || req.hospitalLocation || req.requesterLocation;
-                          const ext = req.hospitalName;
-                          if (base && ext) return `${base} — ${ext}`;
-                          return base || ext || "Unknown Location";
-                        })()}
-                      </Typo>
-                    </View>
-                    <Badge label="EMERGENCY" variant="danger" />
+          
+          <Card style={styles.inventoryCard}>
+            {inventorySummary.map((item, i) => (
+              <View key={i}>
+                <View style={styles.inventoryRow}>
+                  <View style={styles.typeBox}>
+                    <Typo variant="h2">{item.type}</Typo>
                   </View>
-                </Card>
-              </TouchableOpacity>
-            ))
-          )}
+                  <View style={{ flex: 1, marginLeft: 16 }}>
+                    <Typo variant="body" style={{ fontWeight: "600" }}>{item.count}</Typo>
+                    <Typo variant="caption" color={colors.textMuted}>{item.status}</Typo>
+                  </View>
+                  <Badge 
+                    label={item.status} 
+                    variant={item.status === "Critical" ? "danger" : item.status === "Low" ? "warning" : "success"} 
+                  />
+                </View>
+                {i < inventorySummary.length - 1 && <Divider spacing={24} />}
+              </View>
+            ))}
+          </Card>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+
+        {/* Pending Requests */}
+        <View style={styles.section}>
+          <Typo variant="h2" style={{ marginBottom: 16 }}>Recent Requests</Typo>
+          {[1, 2].map((_, i) => (
+            <Card key={i} variant="outlined" style={styles.missionCard}>
+              <View style={styles.missionHeader}>
+                <Typo variant="body" style={{ fontWeight: "bold" }}>Urgent O+ Needed</Typo>
+                <Typo variant="caption" color={colors.textMuted}>Posted 2h ago</Typo>
+              </View>
+              <Typo variant="caption" color={colors.textMuted} style={{ marginTop: 4 }}>
+                Status: Awaiting Donor Matching
+              </Typo>
+              <View style={styles.missionFooter}>
+                <View style={styles.donorsFound}>
+                  <MaterialIcons name="people" size={16} color={colors.tint} />
+                  <Typo variant="caption" style={{ marginLeft: 4 }}>3 potential donors detected</Typo>
+                </View>
+              </View>
+            </Card>
+          ))}
+        </View>
+      </Animated.ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scrollContent: { padding: 24, paddingBottom: 100 },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 24,
-    marginTop: 16,
-  },
-
-  statsRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 24,
-  },
-  statCard: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    alignItems: "center",
-  },
-  dashboardGrid: {
-    gap: 16,
-  },
-  actionCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 20,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  iconWrapper: {
-    width: 60,
-    height: 60,
-    borderRadius: 16,
+  iconButton: {
+    width: 40,
+    height: 40,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 16,
   },
-  cardText: {
+  scrollContent: {
+    paddingHorizontal: 16,
+  },
+  quickActions: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 32,
+  },
+  actionBox: {
     flex: 1,
-    marginRight: 8,
+    padding: 16,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
   section: {
-    marginTop: 24,
+    marginBottom: 32,
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 16,
   },
-  emptyCard: {
-    padding: 24,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    alignItems: "center",
-  },
-  requestCard: {
+  inventoryCard: {
     padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    marginBottom: 12,
+    borderRadius: 24,
   },
-  requestRow: {
+  inventoryRow: {
     flexDirection: "row",
     alignItems: "center",
   },
-  bloodBadge: {
-    width: 56,
-    height: 56,
+  typeBox: {
+    width: 48,
+    height: 48,
     borderRadius: 12,
+    backgroundColor: "rgba(0,0,0,0.05)",
     alignItems: "center",
     justifyContent: "center",
+  },
+  missionCard: {
+    padding: 16,
+    borderRadius: 20,
+    marginBottom: 12,
+  },
+  missionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  missionFooter: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0,0,0,0.05)",
+  },
+  donorsFound: {
+    flexDirection: "row",
+    alignItems: "center",
   },
 });

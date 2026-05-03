@@ -8,7 +8,7 @@ import { useThemeColor } from "@/packages/ui/hooks";
 import { Typo, Card, Button, Input, Select, AnimatedHeader, Divider } from "@/packages/ui/components/ui";
 import { useScroll } from "@/packages/ui/context/ScrollContext";
 import { pointsService, Offer } from "@/apps/mobile/src/services/pointsService";
-import { useAuth } from "../../../src/context/AuthContext";
+import { useAuth } from "@/apps/mobile/src/context/AuthContext";
 
 export default function ManageShopScreen() {
   const { colors } = useThemeColor();

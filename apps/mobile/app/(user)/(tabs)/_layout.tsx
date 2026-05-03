@@ -27,20 +27,6 @@ export default function UserTabsLayout() {
           } as any}
         />
         <Tabs.Screen
-          name="alerts"
-          options={{
-            title: "Alerts",
-            tabBarIconName: "notifications",
-          } as any}
-        />
-        <Tabs.Screen
-          name="request"
-          options={{
-            title: "Request",
-            tabBarIconName: "bloodtype",
-          } as any}
-        />
-        <Tabs.Screen
           name="shop"
           options={{
             title: "Shop",

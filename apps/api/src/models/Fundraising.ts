@@ -5,7 +5,7 @@ export interface IFundraisingDocument extends Document {
   description: string;
   goalLKR: number;
   currentPoints: number;
-  organizationId: string;
+  organizationId: mongoose.Types.ObjectId;
   isActive: boolean;
 }
 
@@ -15,7 +15,7 @@ const fundraisingSchema = new Schema<IFundraisingDocument>(
     description: { type: String, required: true },
     goalLKR: { type: Number, required: true },
     currentPoints: { type: Number, default: 0 },
-    organizationId: { type: String, required: true },
+    organizationId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }

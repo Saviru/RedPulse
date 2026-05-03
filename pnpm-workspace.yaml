@@ -5,8 +5,5 @@ packages:
 nodeLinker: hoisted
 
 onlyBuiltDependencies:
-  - '@firebase/util'
-  - esbuild
   - mongodb-memory-server
-  - protobufjs
   - unrs-resolver
