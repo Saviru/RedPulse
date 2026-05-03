@@ -1,5 +1,7 @@
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 import dns from 'dns';
 // use Google DNS
@@ -31,13 +33,13 @@ async function startServer() {
       console.log('DB [Request]: Attempting to connect to MongoDB...');
       // force IPv4 and bypass IPv6 DNS timeouts
       await mongoose.connect(MONGODB_URI, { family: 4 });
-      
+
       const { runExpiringSoonAlertJob, startExpiringSoonAlertScheduler } = require('./jobs/expiringSoonAlertJob');
       const { runLowInventoryAlertJob, startLowInventoryAlertScheduler } = require('./jobs/lowInventoryAlertJob');
-      
+
       await runExpiringSoonAlertJob();
       startExpiringSoonAlertScheduler();
-      
+
       await runLowInventoryAlertJob();
       startLowInventoryAlertScheduler();
     }
