@@ -47,7 +47,10 @@ jobs:
           # 2. Create the .env file for Expo
           echo "EXPO_PUBLIC_API_BASE_URL=$API_URL_SECRET" > .env
           
-          # 3. Enter the android directory and build the APK
+          # 3. Generate native android directory
+          pnpm exec expo prebuild --platform android
+          
+          # 4. Enter the android directory and build the APK
           cd android
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon --console=plain
