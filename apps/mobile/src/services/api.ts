@@ -3,10 +3,12 @@ import { Platform } from 'react-native';
 import { getAccessToken } from '../lib/session';
 
 const getBaseUrl = () => {
+  const explicit = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
+  if (explicit) return explicit.replace(/\/$/, "");
   if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:5000';
+    return 'http://10.0.2.2:5000/api';
   }
-  return 'http://localhost:5000';
+  return 'http://localhost:5000/api';
 };
 
 const api = axios.create({
